@@ -132,6 +132,10 @@ runHederaTest (void);
 extern void
 runTezosTest (void);
 
+// Stellar
+extern void
+runStellarTest (void);
+
 #ifdef __cplusplus
 }
 #endif
