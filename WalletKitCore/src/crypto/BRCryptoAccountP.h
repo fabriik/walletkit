@@ -20,6 +20,7 @@
 #include "ripple/BRRippleAccount.h"
 #include "hedera/BRHederaAccount.h"
 #include "tezos/BRTezosAccount.h"
+#include "stellar/BRStellarAccount.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,6 +32,7 @@ struct BRCryptoAccountRecord {
     BRRippleAccount xrp;
     BRHederaAccount hbar;
     BRTezosAccount xtz;
+    BRStellarAccount xlm;
     // ...
 
     char *uids;
@@ -84,6 +86,11 @@ cryptoAccountAsHBAR (BRCryptoAccount account) {
 static inline BRTezosAccount
 cryptoAccountAsXTZ (BRCryptoAccount account) {
     return account->xtz;
+}
+
+static inline BRStellarAccount
+cryptoAccountAsXLM (BRCryptoAccount account) {
+    return account->xlm;
 }
 
 #ifdef __cplusplus

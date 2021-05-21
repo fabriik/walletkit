@@ -101,6 +101,20 @@ extern BRCryptoWalletHandlers cryptoWalletHandlersXTZ;
 extern BRCryptoFeeBasisHandlers cryptoFeeBasisHandlersXTZ;
 extern BRCryptoWalletManagerHandlers cryptoWalletManagerHandlersXTZ;
 
+// MARK: - XLM Handlers
+
+extern BRCryptoAddressHandlers cryptoAddressHandlersXLM;
+extern BRCryptoNetworkHandlers cryptoNetworkHandlersXLM;
+extern BRCryptoTransferHandlers cryptoTransferHandlersXLM;
+extern BRCryptoWalletHandlers cryptoWalletHandlersXLM;
+// Wallet Sweep
+// ExportablePaperHandlers
+// Payment Protocol
+extern BRCryptoFeeBasisHandlers cryptoFeeBasisHandlersXLM;
+extern BRCryptoWalletManagerHandlers cryptoWalletManagerHandlersXLM;
+
+
+
 #ifdef __cplusplus
 }
 #endif

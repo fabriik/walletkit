@@ -105,6 +105,19 @@ static BRCryptoHandlers handlers[NUMBER_OF_NETWORK_TYPES] = {
         &cryptoFeeBasisHandlersXTZ,
         &cryptoWalletManagerHandlersXTZ
     },
+
+    {
+        CRYPTO_NETWORK_TYPE_XLM,
+        &cryptoNetworkHandlersXLM,
+        &cryptoAddressHandlersXLM,
+        &cryptoTransferHandlersXLM,
+        &cryptoWalletHandlersXLM,
+        NULL,//WKWalletSweeperHandlers not supported
+        NULL,//WKExportablePaperWalletHandlers
+        NULL,//WKPaymentProtocolHandlers not supported
+        &cryptoFeeBasisHandlersXLM,
+        &cryptoWalletManagerHandlersXLM
+    },
 };
 
 extern const BRCryptoHandlers *

@@ -171,10 +171,12 @@ extern uint64_t BLOCK_HEIGHT_UNBOUND_VALUE;
         CRYPTO_NETWORK_TYPE_XRP,
         CRYPTO_NETWORK_TYPE_HBAR,
         CRYPTO_NETWORK_TYPE_XTZ,
-        // CRYPTO_NETWORK_TYPE_XLM,
+        CRYPTO_NETWORK_TYPE_XLM,
+
+        CRYPTO_NETWORK_LAST //must be last
     } BRCryptoBlockChainType;
 
-#    define NUMBER_OF_NETWORK_TYPES     (1 + CRYPTO_NETWORK_TYPE_XTZ)
+#    define NUMBER_OF_NETWORK_TYPES     (CRYPTO_NETWORK_LAST)
 #    define CRYPTO_NETWORK_TYPE_UNKNOWN (UINT32_MAX)
     //
     // Crypto Network Base Currency
@@ -189,6 +191,7 @@ extern uint64_t BLOCK_HEIGHT_UNBOUND_VALUE;
 #    define CRYPTO_NETWORK_CURRENCY_XRP     "xrp"
 #    define CRYPTO_NETWORK_CURRENCY_HBAR    "hbar"
 #    define CRYPTO_NETWORK_CURRENCY_XTZ     "xtz"
+#    define CRYPTO_NETWORK_CURRENCY_XLM     "xlm"
 
     extern const char *
     cryptoBlockChainTypeGetCurrencyCode (BRCryptoBlockChainType type);

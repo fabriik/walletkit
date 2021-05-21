@@ -37,7 +37,7 @@ cryptoBlockChainTypeGetCurrencyCode (BRCryptoBlockChainType type) {
         CRYPTO_NETWORK_CURRENCY_XRP,
         CRYPTO_NETWORK_CURRENCY_HBAR,
         CRYPTO_NETWORK_CURRENCY_XTZ,
-        // "Stellar"
+        CRYPTO_NETWORK_CURRENCY_XLM,
     };
     assert (type < NUMBER_OF_NETWORK_TYPES);
     return currencies[type];
