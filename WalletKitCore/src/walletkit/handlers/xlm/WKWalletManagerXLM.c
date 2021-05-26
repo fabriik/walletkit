@@ -177,39 +177,32 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleXLM (BRCryptoWalletManag
 
 static void
 cryptoWalletManagerRecoverTransferFromTransferBundleXLM (BRCryptoWalletManager manager,
-                                                          OwnershipKept BRCryptoClientTransferBundle bundle)
-{
-
-}
-/*
-static void
-cryptoWalletManagerRecoverTransferFromTransferBundleXLM (BRCryptoWalletManager manager,
                                                           OwnershipKept BRCryptoClientTransferBundle bundle) {
     // create BRStellarTransaction
     
     BRStellarAccount xlmAccount = cryptoAccountAsXLM (manager->account);
     
-    BRStellarAmount amount, fee = 0;
-    sscanf(bundle->amount, "%" PRIi64, &amount);
-    if (NULL != bundle->fee) sscanf(bundle->fee, "%" PRIi64, &fee);
+    BRStellarAmount amount = 0;
+    sscanf(bundle->amount, "%lf", &amount);
+    BRStellarFee fee = 0;
+    if (NULL != bundle->fee) sscanf(bundle->fee, "%" PRIi32, &fee);
+    BRStellarFeeBasis stellarFeeBasis = { fee, 1};
     BRStellarAddress toAddress   = stellarAddressCreateFromString(bundle->to,   false);
     BRStellarAddress fromAddress = stellarAddressCreateFromString(bundle->from, false);
     // Convert the hash string to bytes
     BRStellarTransactionHash txHash;
     memset(txHash.bytes, 0x00, sizeof(txHash.bytes));
     if (bundle->hash != NULL) {
-        assert(96 == strlen(bundle->hash));
         hexDecode(txHash.bytes, sizeof(txHash.bytes), bundle->hash, strlen(bundle->hash));
     }
 
     int error = (CRYPTO_TRANSFER_STATE_ERRORED == bundle->status);
 
     bool xlmTransactionNeedFree = true;
-    BRStellarTransaction xlmTransaction = stellarTransactionCreate(fromAddress,
+    BRStellarTransaction xlmTransaction = stellarTransactionCreateFull(fromAddress,
                                                                   toAddress,
                                                                   amount,
-                                                                  fee,
-                                                                  bundle->identifier,
+                                                                  stellarFeeBasis,
                                                                   txHash,
                                                                   bundle->blockTimestamp,
                                                                   bundle->blockNumber,
@@ -226,7 +219,7 @@ cryptoWalletManagerRecoverTransferFromTransferBundleXLM (BRCryptoWalletManager m
     BRCryptoTransfer baseTransfer = cryptoWalletGetTransferByHash (wallet, hash);
     cryptoHashGive(hash);
 
-    BRCryptoFeeBasis      feeBasis = cryptoFeeBasisCreateAsXLM (wallet->unit, stellarTransactionGetFeeBasis(xlmTransaction));
+    BRCryptoFeeBasis      feeBasis = cryptoFeeBasisCreateAsXLM (wallet->unit, stellarTransactionGetFee(xlmTransaction));
     BRCryptoTransferState state    = cryptoClientTransferBundleGetTransferState (bundle, feeBasis);
 
     if (NULL == baseTransfer) {
@@ -253,7 +246,7 @@ cryptoWalletManagerRecoverTransferFromTransferBundleXLM (BRCryptoWalletManager m
     if (xlmTransactionNeedFree)
         stellarTransactionFree (xlmTransaction);
 }
-*/
+
 extern BRCryptoWalletSweeperStatus
 cryptoWalletManagerWalletSweeperValidateSupportedXLM (BRCryptoWalletManager manager,
                                                        BRCryptoWallet wallet,

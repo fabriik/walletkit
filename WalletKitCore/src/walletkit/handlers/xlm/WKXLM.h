@@ -102,7 +102,7 @@ typedef struct BRCryptoFeeBasisXLMRecord {
 } *BRCryptoFeeBasisXLM;
 
 private_extern BRCryptoFeeBasis
-cryptoFeeBasisCreateAsXLM (BRCryptoUnit unit, BRStellarAmount fee);
+cryptoFeeBasisCreateAsXLM (BRCryptoUnit unit, BRStellarFee fee);
 
 private_extern BRStellarFeeBasis
 cryptoFeeBasisAsXLM (BRCryptoFeeBasis feeBasis);

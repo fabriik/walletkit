@@ -32,7 +32,7 @@ cryptoFeeBasisCreateCallbackXLM (BRCryptoFeeBasisCreateContext context,
 }
 
 private_extern BRCryptoFeeBasis
-cryptoFeeBasisCreateAsXLM (BRCryptoUnit unit, BRStellarAmount fee) {
+cryptoFeeBasisCreateAsXLM (BRCryptoUnit unit, BRStellarFee fee) {
     BRStellarFeeBasis xlmFeeBasis;
     xlmFeeBasis.costFactor = 1;
     xlmFeeBasis.pricePerCostFactor = fee;
