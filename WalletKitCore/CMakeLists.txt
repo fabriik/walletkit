@@ -643,6 +643,20 @@ target_sources (corecrypto
         ${PROJECT_SOURCE_DIR}/src/walletkit/handlers/xlm/WKXLM.h
         )
 
+
+# Crypto XLM
+target_sources (corecrypto
+        PRIVATE
+        ${PROJECT_SOURCE_DIR}/src/walletkit/handlers/xlm/WKAddressXLM.c
+        ${PROJECT_SOURCE_DIR}/src/walletkit/handlers/xlm/WKFeeBasisXLM.c
+        ${PROJECT_SOURCE_DIR}/src/walletkit/handlers/xlm/WKNetworkXLM.c
+        ${PROJECT_SOURCE_DIR}/src/walletkit/handlers/xlm/WKSupportXLM.c
+        ${PROJECT_SOURCE_DIR}/src/walletkit/handlers/xlm/WKTransferXLM.c
+        ${PROJECT_SOURCE_DIR}/src/walletkit/handlers/xlm/WKWalletXLM.c
+        ${PROJECT_SOURCE_DIR}/src/walletkit/handlers/xlm/WKWalletManagerXLM.c
+        ${PROJECT_SOURCE_DIR}/src/walletkit/handlers/xlm/WKXLM.h
+        )
+
 # Crypto Tests
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     target_sources (corecryptotest

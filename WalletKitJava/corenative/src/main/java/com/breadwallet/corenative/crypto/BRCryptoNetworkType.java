@@ -49,6 +49,13 @@ public enum BRCryptoNetworkType {
         public int toCore() {
             return CRYPTO_NETWORK_TYPE_XTZ_VALUE;
         }
+    },
+
+    CRYPTO_NETWORK_TYPE_XLM {
+        @Override
+        public int toCore() {
+            return CRYPTO_NETWORK_TYPE_XLM_VALUE;
+        }
     };
 
     private static final int CRYPTO_NETWORK_TYPE_BTC_VALUE = 0;
@@ -58,6 +65,7 @@ public enum BRCryptoNetworkType {
     private static final int CRYPTO_NETWORK_TYPE_XRP_VALUE = 4;
     private static final int CRYPTO_NETWORK_TYPE_HBAR_VALUE = 5;
     private static final int CRYPTO_NETWORK_TYPE_XTZ_VALUE = 6;
+    private static final int CRYPTO_NETWORK_TYPE_XLM_VALUE = 7;
 
     public static BRCryptoNetworkType fromCore(int nativeValue) {
         switch (nativeValue) {
@@ -68,6 +76,7 @@ public enum BRCryptoNetworkType {
             case CRYPTO_NETWORK_TYPE_XRP_VALUE: return CRYPTO_NETWORK_TYPE_XRP;
             case CRYPTO_NETWORK_TYPE_HBAR_VALUE:return CRYPTO_NETWORK_TYPE_HBAR;
             case CRYPTO_NETWORK_TYPE_XTZ_VALUE: return CRYPTO_NETWORK_TYPE_XTZ;
+            case CRYPTO_NETWORK_TYPE_XLM_VALUE: return CRYPTO_NETWORK_TYPE_XLM;
             default: throw new IllegalArgumentException("Invalid core value");
         }
     }
