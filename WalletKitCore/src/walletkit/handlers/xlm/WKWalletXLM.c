@@ -194,7 +194,7 @@ cryptoWalletCreateTransferXLM (BRCryptoWallet  wallet,
     UInt256 value = cryptoAmountGetValue (amount);
     
     BRStellarAddress source  = stellarAccountGetAddress(walletXLM->xlmAccount);
-    BRStellarAmount amountXLM = (double)value.u64[0];
+    BRStellarAmount amountXLM = value.u64[0];
 
     // TODO - Carl - I think this is when we create a new transaction to submit
     BRStellarTransaction xlmTransaction = stellarTransactionCreate (source,
@@ -279,7 +279,7 @@ cryptoWalletAnnounceTransferXLM (BRCryptoWallet wallet,
 
     // We need to keep track of the first block number where this account shows up to do this:
     // initial_sequence = blockNumber << 32;
-    int64_t minBlockHeight = INT64_MAX;
+    uint64_t minBlockHeight = UINT64_MAX;
     for (size_t index = 0; index < array_count(wallet->transfers); index++) {
         BRStellarTransaction xlmTransfer = cryptoTransferAsXLM (wallet->transfers[index]);
 

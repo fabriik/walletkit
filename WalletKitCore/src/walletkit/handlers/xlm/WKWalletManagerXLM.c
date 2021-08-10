@@ -161,7 +161,9 @@ cryptoWalletManagerEstimateFeeBasisXLM (BRCryptoWalletManager manager,
                                          OwnershipKept BRCryptoTransferAttribute *attributes) {
     UInt256 value = cryptoAmountGetValue (cryptoNetworkFeeGetPricePerCostFactor (networkFee));
     BRStellarFeeBasis xlmFeeBasis;
-    xlmFeeBasis.pricePerCostFactor = (BRStellarAmount) value.u64[0];
+
+    // No margin needed.
+    xlmFeeBasis.pricePerCostFactor = (BRStellarFee) value.u32[0];
     xlmFeeBasis.costFactor = 1;  // 'cost factor' is 'transaction'
 
     // TODO - Carl
@@ -183,7 +185,7 @@ cryptoWalletManagerRecoverTransferFromTransferBundleXLM (BRCryptoWalletManager m
     BRStellarAccount xlmAccount = cryptoAccountAsXLM (manager->account);
     
     BRStellarAmount amount = 0;
-    sscanf(bundle->amount, "%lf", &amount);
+    sscanf(bundle->amount, "%" PRIu64, &amount);
     BRStellarFee fee = 0;
     if (NULL != bundle->fee) sscanf(bundle->fee, "%" PRIi32, &fee);
     BRStellarFeeBasis stellarFeeBasis = { fee, 1};

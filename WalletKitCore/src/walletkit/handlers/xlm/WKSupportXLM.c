@@ -19,7 +19,7 @@ private_extern BRCryptoAmount
 cryptoAmountCreateAsXLM (BRCryptoUnit unit,
                          BRCryptoBoolean isNegative,
                          BRStellarAmount value) {
-    return cryptoAmountCreate (unit, isNegative, uint256Create (value));
+    return cryptoAmountCreate (unit, isNegative, uint256Create ((uint64_t)value));
 }
 
 private_extern BRCryptoHash
