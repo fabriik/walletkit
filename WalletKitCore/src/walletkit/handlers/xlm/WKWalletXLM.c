@@ -196,36 +196,20 @@ cryptoWalletCreateTransferXLM (BRCryptoWallet  wallet,
     BRStellarAddress source  = stellarAccountGetAddress(walletXLM->xlmAccount);
     BRStellarAmount amountXLM = value.u64[0];
 
-    // TODO - Carl - I think this is when we create a new transaction to submit
     BRStellarTransaction xlmTransaction = stellarTransactionCreate (source,
                                                                   cryptoAddressAsXLM(target),
                                                                   amountXLM,
                                                                   cryptoFeeBasisAsXLM(estimatedFeeBasis));
+    stellarAddressFree(source);
 
-    if (NULL == xlmTransaction)
-        return NULL;
-
-    // TODO - attributes?
+    // TODO - check out if Stellar needs any attributes for submitted transactions
+    /*
     for (size_t index = 0; index < attributesCount; index++) {
         BRCryptoTransferAttribute attribute = attributes[index];
         if (NULL != cryptoTransferAttributeGetValue(attribute)) {
-            /*
-            if (stellarCompareFieldOption (cryptoTransferAttributeGetKey(attribute), FIELD_OPTION_DESTINATION_TAG)) {
-                BRCoreParseStatus tag;
-                sscanf (cryptoTransferAttributeGetValue(attribute), "%u", &tag);
-                stellarTransactionSetDestinationTag (xlmTransaction, tag);
-            }
-            else if (stellarCompareFieldOption (cryptoTransferAttributeGetKey(attribute), FIELD_OPTION_INVOICE_ID)) {
-                // TODO: Handle INVOICE_ID (note: not used in BRD App)
-            }
-            else {
-                // TODO: Impossible if validated?
-            }
-             */
         }
     }
-
-    stellarAddressFree(source);
+    */
 
     BRCryptoTransferState state    = cryptoTransferStateInit(CRYPTO_TRANSFER_STATE_CREATED);
     BRCryptoTransfer      transfer = cryptoTransferCreateAsXLM (wallet->listenerTransfer,

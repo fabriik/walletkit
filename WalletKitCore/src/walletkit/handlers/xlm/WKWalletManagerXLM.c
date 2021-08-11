@@ -92,11 +92,9 @@ cryptoWalletManagerSignTransactionWithSeedXLM (BRCryptoWalletManager manager,
                                                 BRCryptoTransfer transfer,
                                                 UInt512 seed) {
     BRStellarAccount account = cryptoAccountAsXLM (manager->account);
-    BRKey publicKey = stellarAccountGetPublicKey (account);
     BRStellarTransaction transaction = cryptoTransferCoerceXLM(transfer)->xlmTransaction;
 
-    // TODO - carl
-    size_t tx_size = 0; //stellarTransactionSignTransaction (transaction, publicKey, seed, nodeAddress);
+    size_t tx_size = stellarAccountSignTransaction (account, transaction, seed);
 
     return AS_CRYPTO_BOOLEAN(tx_size > 0);
 }
@@ -110,7 +108,6 @@ cryptoWalletManagerSignTransactionWithKeyXLM (BRCryptoWalletManager manager,
     return CRYPTO_FALSE;
 }
 
-//TODO:XLM make common?
 static BRCryptoAmount
 cryptoWalletManagerEstimateLimitXLM (BRCryptoWalletManager manager,
                                       BRCryptoWallet  wallet,
@@ -160,14 +157,12 @@ cryptoWalletManagerEstimateFeeBasisXLM (BRCryptoWalletManager manager,
                                          size_t attributesCount,
                                          OwnershipKept BRCryptoTransferAttribute *attributes) {
     UInt256 value = cryptoAmountGetValue (cryptoNetworkFeeGetPricePerCostFactor (networkFee));
-    BRStellarFeeBasis xlmFeeBasis;
+    BRStellarFee fee;
 
     // No margin needed.
-    xlmFeeBasis.pricePerCostFactor = (BRStellarFee) value.u32[0];
-    xlmFeeBasis.costFactor = 1;  // 'cost factor' is 'transaction'
+    fee = (BRStellarFee) value.u32[0];
 
-    // TODO - Carl
-    return NULL; //cryptoFeeBasisCreateAsXLM (wallet->unitForFee, xlmFeeBasis);
+    return cryptoFeeBasisCreateAsXLM (wallet->unitForFee, fee);
 }
 
 static void
