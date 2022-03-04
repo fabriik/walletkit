@@ -128,20 +128,14 @@ DEFINE_ADDRESS_SCHEMES  ("ethereum-mainnet", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("ethereum-mainnet", CRYPTO_SYNC_MODE_API_ONLY)
 
 #if HAS_ETH_TESTNET
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_ETH,  "ethereum-ropsten", NETWORK_NAME, "testnet", false, 9588166, 6, 15)
-DEFINE_NETWORK_FEE_ESTIMATE ("ethereum-ropsten", "17500000000", "1m", 1 * 60 * 1000)
-DEFINE_CURRENCY ("ethereum-ropsten",     "ethereum-ropsten:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_ETH,  "native",   NULL,   true)
-    DEFINE_UNIT ("ethereum-ropsten:__native__",      "Wei",         "wei",      0,      "WEI")
-    DEFINE_UNIT ("ethereum-ropsten:__native__",      "Gwei",        "gwei",     9,      "GWEI")
-    DEFINE_UNIT ("ethereum-ropsten:__native__",      "Ether",       "eth",     18,      "Ξ")
-DEFINE_CURRENCY ("ethereum-ropsten",    "ethereum-ropsten:0x7108ca7c4718efa810457f228305c9c71390931a",  "BRD Token Testnet",    "brd",  "erc20",   "0x7108ca7c4718efa810457f228305c9c71390931a",   true)
-    DEFINE_UNIT ("ethereum-ropsten:0x7108ca7c4718efa810457f228305c9c71390931a",      "BRD Token INT",         "brdi",      0,      "BRDI")
-    DEFINE_UNIT ("ethereum-ropsten:0x7108ca7c4718efa810457f228305c9c71390931a",      "BRD Token",             "brd",       18,     "BRD")
-DEFINE_CURRENCY ("ethereum-ropsten",    "ethereum-ropsten:0x722dd3f80bac40c951b51bdd28dd19d435762180",  "Standard Test Token",    "tst",  "erc20",   "0x722dd3f80bac40c951b51bdd28dd19d435762180",   true)
-    DEFINE_UNIT ("ethereum-ropsten:0x722dd3f80bac40c951b51bdd28dd19d435762180",      "TST Token INT",         "tsti",      0,      "TSTI")
-    DEFINE_UNIT ("ethereum-ropsten:0x722dd3f80bac40c951b51bdd28dd19d435762180",      "TST Token",             "tst",       18,     "TST")
-DEFINE_ADDRESS_SCHEMES  ("ethereum-ropsten", CRYPTO_ADDRESS_SCHEME_NATIVE)
-DEFINE_MODES            ("ethereum-ropsten", CRYPTO_SYNC_MODE_API_ONLY)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_ETH,  "ethereum-goerli", NETWORK_NAME, "testnet", false, 9588166, 6, 15)
+DEFINE_NETWORK_FEE_ESTIMATE ("ethereum-goerli", "10000000000", "1m", 1 * 60 * 1000)
+DEFINE_CURRENCY ("ethereum-goerli",     "ethereum-goerli:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_ETH,  "native",   NULL,   true)
+    DEFINE_UNIT ("ethereum-goerli:__native__",      "Wei",         "wei",      0,      "WEI")
+    DEFINE_UNIT ("ethereum-goerli:__native__",      "Gwei",        "gwei",     9,      "GWEI")
+    DEFINE_UNIT ("ethereum-goerli:__native__",      "Ether",       "eth",     18,      "Ξ")
+DEFINE_ADDRESS_SCHEMES  ("ethereum-goerli", CRYPTO_ADDRESS_SCHEME_NATIVE)
+DEFINE_MODES            ("ethereum-goerli", CRYPTO_SYNC_MODE_API_ONLY)
 #endif
 #undef NETWORK_NAME
 
