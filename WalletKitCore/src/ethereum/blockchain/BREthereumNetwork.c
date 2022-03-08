@@ -163,23 +163,19 @@ MainnetChainConfig = &ChainConfig{
 // Testnet
 //
 static struct BREthereumNetworkRecord ethNetworkTestnetRecord = {
-    "testnet", // aka "ropsten"
-    3,
-    EMPTY_HASH_INIT,
-    EMPTY_HASH_INIT,
-    // Seeds
-    {   "seed.ropsten.eth.brd.breadwallet.com",
-        "seed.ropsten.eth.community.breadwallet.com",
-        NULL },
+        "goerli",
+        5,
+        EMPTY_HASH_INIT,
+        EMPTY_HASH_INIT,
+        // Seeds
+        {NULL},
 
-    // Enodes
+        // Enodes
 
-    // BRD
-    {   "enode://87ef58b88a9c7574eb870097675e26f78dcd958834bd768b678aa01eabd316c74df1ff01bfbe030c5b75878646df4108554434df61de591a2c6859e329bbacde@138.68.6.252:8888",
-        NULL },
-    { NULL },
-    { NULL },
-    { NULL }
+        {NULL},
+        {NULL},
+        {NULL},
+        {NULL}
 };
 const BREthereumNetwork ethNetworkTestnet = &ethNetworkTestnetRecord;
 
@@ -292,13 +288,13 @@ networkInitilizeAllIfAppropriate (void) {
         ethNetworkMainnetRecord.trustedCheckpointBlockHeaderHash =
         ethHashCreate("0x04c2114a8cbe49ba5c37a03cc4b4b8d3adfc0bd2c78e0e726405dd84afca1d63");
 
-        // Testnet / 'Ropsten'
+        // Testnet / 'Goerli'
 
         ethNetworkTestnetRecord.genesisBlockHeaderHash =
-        ethHashCreate("0x41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d");
+        ethHashCreate("0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a");
 
         ethNetworkTestnetRecord.trustedCheckpointBlockHeaderHash =
-        ethHashCreate("0x1b1ba890510e06411fdee9bb64ca7705c56a1a4ce3559ddb34b3680c526cb419");
+        ethHashCreate("0x0938fafd9624e76047c1b8f2eb60908f8750bf4f6bc2fec3bc33f7992b2919c7");
 
         // Rinkeby
 
