@@ -1481,7 +1481,7 @@ public class BlocksetSystemClient: SystemClient {
         guard var urlBuilder = URLComponents (string: baseURL)
             else { completion (Result.failure(SystemClientError.url("URLComponents"))); return }
 
-        urlBuilder.path = path.starts(with: "/") ? path : "/\(path)"
+        urlBuilder.path += path.starts(with: "/") ? path : "/\(path)"
         if let query = query {
             urlBuilder.queryItems = query.map { URLQueryItem (name: $0, value: $1) }
         }
