@@ -114,6 +114,7 @@ DEFINE_MODES            ("bitcoinsv-testnet", CRYPTO_SYNC_MODE_P2P_ONLY)
 
 // MARK: - ETH
 
+
 #define NETWORK_NAME    "Ethereum"
 DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_ETH,  "ethereum-mainnet", NETWORK_NAME, "mainnet", true, 11779945, 6, 15)
 DEFINE_NETWORK_FEE_ESTIMATE ("ethereum-mainnet", "25000000000", "1m", 1 * 60 * 1000)
@@ -121,9 +122,13 @@ DEFINE_CURRENCY ("ethereum-mainnet",     "ethereum-mainnet:__native__",   NETWOR
     DEFINE_UNIT ("ethereum-mainnet:__native__",      "Wei",         "wei",      0,      "WEI")
     DEFINE_UNIT ("ethereum-mainnet:__native__",      "Gwei",        "gwei",     9,      "GWEI")
     DEFINE_UNIT ("ethereum-mainnet:__native__",      "Ether",       "eth",     18,      "Ξ")
-DEFINE_CURRENCY ("ethereum-mainnet",    "ethereum-mainnet:0x558ec3152e2eb2174905cd19aea4e34a23de9ad6",  "BRD Token",    "brd",  "erc20",   "0x558ec3152e2eb2174905cd19aea4e34a23de9ad6",   true)
-    DEFINE_UNIT ("ethereum-mainnet:0x558ec3152e2eb2174905cd19aea4e34a23de9ad6",      "BRD Token INT",         "brdi",      0,      "BRDI")
-    DEFINE_UNIT ("ethereum-mainnet:0x558ec3152e2eb2174905cd19aea4e34a23de9ad6",      "BRD Token",             "brd",       18,     "BRD")
+DEFINE_CURRENCY ("ethereum-mainnet",    "ethereum-mainnet:0xdac17f958d2ee523a2206206994597c13d831ec7",  "Tether USD",    "usdt",  "erc20",   "0xdac17f958d2ee523a2206206994597c13d831ec7",   true)
+DEFINE_UNIT ("ethereum-mainnet:0xdac17f958d2ee523a2206206994597c13d831ec7",      "Tether USD Int",             "usdti",       0,     "USDTI")
+DEFINE_UNIT ("ethereum-mainnet:0xdac17f958d2ee523a2206206994597c13d831ec7",      "Tether USD",             "usdt",       6,     "USDT")
+DEFINE_CURRENCY ("ethereum-mainnet",    "ethereum-mainnet:0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",  "Shiba Inu",    "shib",  "erc20",   "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",   true)
+DEFINE_UNIT ("ethereum-mainnet:0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",      "Shiba Inu Int",             "shibi",       0,     "SHIBI")
+DEFINE_UNIT ("ethereum-mainnet:0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",      "Shiba Inu",             "shib",       18,     "SHIB")
+
 DEFINE_ADDRESS_SCHEMES  ("ethereum-mainnet", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("ethereum-mainnet", CRYPTO_SYNC_MODE_API_ONLY)
 
@@ -134,6 +139,12 @@ DEFINE_CURRENCY ("ethereum-goerli",     "ethereum-goerli:__native__",   NETWORK_
     DEFINE_UNIT ("ethereum-goerli:__native__",      "Wei",         "wei",      0,      "WEI")
     DEFINE_UNIT ("ethereum-goerli:__native__",      "Gwei",        "gwei",     9,      "GWEI")
     DEFINE_UNIT ("ethereum-goerli:__native__",      "Ether",       "eth",     18,      "Ξ")
+DEFINE_CURRENCY ("ethereum-goerli",    "ethereum-goerli:0x509ee0d083ddf8ac028f2a56731412edd63223b9",  "Tether USD Goerli",    "usdt-goerli",  "erc20",   "0x509ee0d083ddf8ac028f2a56731412edd63223b9",   true)
+DEFINE_UNIT ("ethereum-goerli:0x509ee0d083ddf8ac028f2a56731412edd63223b9",      "Tether USD Goerli Int",             "usdt-goerli-i",       0,     "USDT-GOERLI-I")
+DEFINE_UNIT ("ethereum-goerli:0x509ee0d083ddf8ac028f2a56731412edd63223b9",      "Tether USD Goerli",             "usdt-goerli",       6,     "USDT-GOERLI")
+DEFINE_CURRENCY ("ethereum-goerli",    "ethereum-goerli:0x326c977e6efc84e512bb9c30f76e30c160ed06fb",  "ChainLink Goerli",    "link_goerli",  "erc20",   "0x326c977e6efc84e512bb9c30f76e30c160ed06fb",   true)
+DEFINE_UNIT ("ethereum-goerli:0x326c977e6efc84e512bb9c30f76e30c160ed06fb",      "ChainLink Goerli Int",             "link_goerli_i",       0,     "LINK_GOERLI_I")
+DEFINE_UNIT ("ethereum-goerli:0x326c977e6efc84e512bb9c30f76e30c160ed06fb",      "ChainLink Goerli",             "link_goerli",       18,     "LINK_GOERLI")
 DEFINE_ADDRESS_SCHEMES  ("ethereum-goerli", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("ethereum-goerli", CRYPTO_SYNC_MODE_API_ONLY)
 #endif
