@@ -132,6 +132,10 @@ typedef void
  */
 typedef struct WKClientTransactionBundleRecord *WKClientTransactionBundle;
 
+typedef struct WKClientTransactionInputRecord *WKClientTransactionInput;
+
+typedef struct WKClientTransactionOutputRecord *WKClientTransactionOutput;
+
 /**
  * Create a Transaction Bundle.  The `transaction` byte-array is the raw transaction data in the
  * form appropriate for the blockchain.
@@ -142,6 +146,30 @@ wkClientTransactionBundleCreate (WKTransferStateType status,
                                  size_t transactionLength,
                                  WKTimestamp timestamp,
                                  WKBlockNumber blockHeight);
+
+extern WKClientTransactionBundle
+wkClientTransactionBundleCreateWOC (WKTransferStateType status,
+                                 OwnershipKept uint8_t *transaction,
+                                 size_t transactionLength,
+                                 WKTimestamp timestamp,
+                                 WKBlockNumber blockHeight,
+                                 const char *txHash,
+                                 int64_t version,
+                                 int64_t lockTime,
+                                 int64_t time,
+                                 int inCount,
+                                 WKClientTransactionInput *inputs,
+                                 int outCount,
+                                 WKClientTransactionOutput *outputs);
+
+extern WKClientTransactionInput
+wkClientTransactionInputCreateWOC (const char* txHash,
+                                   const char *script,
+                                   const char* signature,
+                                   int64_t sequence);
+
+extern WKClientTransactionOutput
+wkClientTransactionOutputCreateWOC (const char *script);
 
 /**
  * Release a Transaction Bundle
@@ -182,6 +210,16 @@ wkClientAnnounceTransactionsSuccess (OwnershipKept WKWalletManager cwm,
                                      OwnershipGiven WKClientCallbackState callbackState,
                                      WKClientTransactionBundle *bundles,
                                      size_t bundlesCount);
+
+extern void
+wkClientAnnounceTransactionsSuccessWOC (OwnershipKept WKWalletManager manager,
+                                     OwnershipGiven WKClientCallbackState callbackState,
+                                     WKClientTransactionBundle *bundles,  // given elements, not array
+                                     size_t bundlesCount,
+                                        WKClientTransactionInput **inputs,
+                                        size_t inCount,
+                                        WKClientTransactionOutput **outputs,
+                                        size_t outCount);
 
 extern void
 wkClientAnnounceTransactionsFailure (OwnershipKept WKWalletManager cwm,

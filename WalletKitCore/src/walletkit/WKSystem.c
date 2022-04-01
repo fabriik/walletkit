@@ -274,7 +274,7 @@ wkSystemCreate (WKClient client,
         }
         wkClientCurrencyBundleSetRelease(currencyBundles);
     }
-
+     
     // The System has been created.
     wkSystemGenerateEvent (system, (WKSystemEvent) {
         WK_SYSTEM_EVENT_CREATED
@@ -291,10 +291,11 @@ wkSystemCreate (WKClient client,
     wkSystemGenerateEvent (system, (WKSystemEvent) {
         WK_SYSTEM_EVENT_DISCOVERED_NETWORKS
     });
-
+     
 #if defined (NOT_WORKABLE_NEEDS_RO_REFERENCE_THE_SWIFT__JAVA_INSTANCE)
     wkAllSystemsAdd (system);
 #endif
+    
 
     return system;
 }
@@ -638,6 +639,9 @@ wkSystemGetWalletManagersCount (WKSystem system) {
 private_extern void
 wkSystemAddWalletManager (WKSystem system,
                               WKWalletManager manager) {
+    if(strcmp(manager->network->name, "WhatsOnChain") == 0) {
+        printf("WhatsOnChain\n");
+    }
     pthread_mutex_lock (&system->lock);
     if (WK_FALSE == wkSystemHasWalletManagerFor (system, manager, NULL, false)) {
         array_add (system->managers, wkWalletManagerTake(manager));

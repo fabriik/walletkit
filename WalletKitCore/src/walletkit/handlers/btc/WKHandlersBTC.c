@@ -151,3 +151,30 @@ WKHandlers wkHandlersDOGE = {
     &wkWalletManagerHandlersDOGE
 };
 
+// MARK: - WOC Handlers
+
+//extern WKAccountHandlers wkAccountHandlersWOC;
+//extern WKAddressHandlers wkAddressHandlersWOC;
+//extern WKNetworkHandlers wkNetworkHandlersWOC;
+//extern WKTransferHandlers wkTransferHandlersWOC;
+//extern WKWalletHandlers wkWalletHandlersWOC;
+//extern WKWalletSweeperHandlers wkWalletSweeperHandlersWOC;
+// ExportablePaperHandlers
+// Payment Protocol
+// Fee Basis
+//extern WKWalletManagerHandlers wkWalletManagerHandlersWOC;
+
+WKHandlers wkHandlersWOC = {
+    WK_NETWORK_TYPE_WOC,
+    &wkAccountHandlersBTC,
+    &wkNetworkHandlersBTC,
+    &wkAddressHandlersBTC,
+    &wkTransferHandlersBTC,
+    &wkWalletHandlersBTC,
+    &wkWalletSweeperHandlersBTC,
+    &wkExportablePaperWalletHandlersBTC,
+    &wkPaymentProtocolHandlersBTC,
+    NULL,//WKWalletConnector
+    &wkFeeBasisHandlersBTC,
+    &wkWalletManagerHandlersBTC
+};

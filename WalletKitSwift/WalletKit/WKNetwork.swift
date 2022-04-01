@@ -307,6 +307,7 @@ public enum NetworkType: CustomStringConvertible {
     case ltc
     case doge
     case eth
+    case woc
     case xrp
     case hbar
     case xtz
@@ -321,6 +322,7 @@ public enum NetworkType: CustomStringConvertible {
         case WK_NETWORK_TYPE_LTC:  self = .ltc
         case WK_NETWORK_TYPE_DOGE: self = .doge
         case WK_NETWORK_TYPE_ETH:  self = .eth
+        case WK_NETWORK_TYPE_WOC:  self = .woc
         case WK_NETWORK_TYPE_XRP:  self = .xrp
         case WK_NETWORK_TYPE_HBAR: self = .hbar
         case WK_NETWORK_TYPE_XTZ:  self = .xtz
@@ -338,6 +340,7 @@ public enum NetworkType: CustomStringConvertible {
         case .ltc: return WK_NETWORK_TYPE_LTC
         case .doge: return WK_NETWORK_TYPE_DOGE
         case .eth: return WK_NETWORK_TYPE_ETH
+        case .woc: return WK_NETWORK_TYPE_WOC
         case .xrp: return WK_NETWORK_TYPE_XRP
         case .hbar: return WK_NETWORK_TYPE_HBAR
         case .xtz: return WK_NETWORK_TYPE_XTZ

@@ -173,6 +173,9 @@ public final class WalletManager: Equatable, CustomStringConvertible {
     ///
     public func connect (using peer: NetworkPeer? = nil) {
         precondition (peer == nil || peer!.network == network)
+        if(self.network.name == "WhatsOnChain") {
+            print("WhatsOnChain")
+        }
         wkWalletManagerConnect (core, peer?.core)
     }
 
@@ -252,8 +255,18 @@ public final class WalletManager: Equatable, CustomStringConvertible {
         self.network = Network (core: wkWalletManagerGetNetwork (core), take: false)
         self.unit    = self.network.defaultUnitFor (currency: self.network.currency)!
         self.path    = asUTF8String (wkWalletManagerGetPath(core))
-        self.client  = system.client
-
+        if (self.network.name == "WhatsOnChain") {
+             
+            let appBundle = Bundle(for: WalletManager.self)
+            let testConfiguration     = TestConfiguration.loadFrom (bundle: appBundle, resource: "WalletKitTestsConfig")!
+            let blocksetAccess = testConfiguration.blocksetAccess
+            //self.client = WhatsOnChainSystemClient.createForTest (bdbBaseURL: blocksetAccess.baseURL, bdbToken:   blocksetAccess.token)
+            self.client = WhatsOnChainSystemClient.createForTest (bdbBaseURL: "https://api.whatsonchain.com", bdbToken:   blocksetAccess.token)
+        }
+        else {
+            self.client  = system.client
+        }
+        //self.client  = system.client
         self.defaultNetworkFee = self.network.minimumFee
     }
 

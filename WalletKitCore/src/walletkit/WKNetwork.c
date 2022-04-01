@@ -38,6 +38,7 @@ wkNetworkTypeGetCurrencyCode (WKNetworkType type) {
         WK_NETWORK_CURRENCY_LTC,
         WK_NETWORK_CURRENCY_DOGE,
         WK_NETWORK_CURRENCY_ETH,
+        WK_NETWORK_CURRENCY_WOC,
         WK_NETWORK_CURRENCY_XRP,
         WK_NETWORK_CURRENCY_HBAR,
         WK_NETWORK_CURRENCY_XTZ,
@@ -58,6 +59,7 @@ wkNetworkTypeIsBitcoinBased (WKNetworkType type) {
         true,       // DOGE
 
         false,      // ETH
+        true,       // WOC
         false,      // XRP
         false,      // HBAR
         false,      // XTZ
@@ -955,7 +957,10 @@ wkNetworkInstallBuiltins (WKCount *networksCount,
                                                              defaultAddressScheme,
                                                              defaultSyncMode,
                                                              nativeCurrency);
-
+        if(strcmp(network->name, "WhatsOnChain") == 0) {
+            printf("WhatsOnChain\n");
+        }
+        
         WKCurrency currency = NULL;
 
         BRArrayOf(WKUnit) units;

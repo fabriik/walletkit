@@ -207,6 +207,7 @@ typedef enum {
     WK_NETWORK_TYPE_LTC,
     WK_NETWORK_TYPE_DOGE,
     WK_NETWORK_TYPE_ETH,
+    WK_NETWORK_TYPE_WOC,
     WK_NETWORK_TYPE_XRP,
     WK_NETWORK_TYPE_HBAR,
     WK_NETWORK_TYPE_XTZ,
@@ -229,6 +230,7 @@ typedef enum {
 #define WK_NETWORK_CURRENCY_LTC     "ltc"
 #define WK_NETWORK_CURRENCY_DOGE    "doge"
 #define WK_NETWORK_CURRENCY_ETH     "eth"
+#define WK_NETWORK_CURRENCY_WOC     "woc"
 #define WK_NETWORK_CURRENCY_XRP     "xrp"
 #define WK_NETWORK_CURRENCY_HBAR    "hbar"
 #define WK_NETWORK_CURRENCY_XTZ     "xtz"

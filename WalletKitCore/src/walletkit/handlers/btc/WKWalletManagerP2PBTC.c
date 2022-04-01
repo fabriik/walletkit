@@ -108,6 +108,10 @@ wkClientP2PManagerConnectBTC (WKClientP2PManager baseManager,
 
     // Start periodic updates, sync if required.
     btcPeerManagerConnect(manager->btcPeerManager);
+    
+    if(strcmp(manager->manager->base.network->name, "WhatsOnChain") == 0) {
+        printf("WhatsOnChain\n");
+    }
 }
 
 static void
@@ -206,7 +210,7 @@ static WKClientP2PHandlers p2pHandlersBTC = {
 static void wkWalletManagerBTCSyncStarted (void *info) {
     WKWalletManagerBTC manager = info;
     WKClientP2PManagerBTC p2p = wkClientP2PManagerCoerce (manager->base.p2pManager);
-
+    
     if (NULL == p2p) return;
 
     pthread_mutex_lock (&p2p->base.lock);
@@ -247,6 +251,9 @@ static void wkWalletManagerBTCSyncStarted (void *info) {
         });
     }
 
+    if(strcmp(manager->base.network->name, "WhatsOnChain") == 0) {
+        printf("WhatsOnChain");
+    }
 }
 
 static void wkWalletManagerBTCSyncStopped (void *info, int reason) {
@@ -292,6 +299,10 @@ static void wkWalletManagerBTCSyncStopped (void *info, int reason) {
             WK_WALLET_MANAGER_EVENT_SYNC_STOPPED,
             { .syncStopped = { stopReason }}
         });
+    }
+    
+    if(strcmp(manager->base.network->name, "WhatsOnChain") == 0) {
+        printf("WhatsOnChain");
     }
 }
 
@@ -431,6 +442,7 @@ wkWalletManagerCreateP2PManagerBTC (WKWalletManager manager) {
     WKClientP2PManager p2pManager = wkClientP2PManagerCreate (sizeof (struct WKClientP2PManagerRecordBTC),
                                                                          manager->type,
                                                                          &p2pHandlersBTC);
+    
     WKClientP2PManagerBTC p2pManagerBTC = wkClientP2PManagerCoerce (p2pManager);
     p2pManagerBTC->manager = wkWalletManagerCoerceBTC (manager, p2pManager->type);
 
@@ -466,6 +478,10 @@ wkWalletManagerCreateP2PManagerBTC (WKWalletManager manager) {
 
     if (NULL != blocks) array_free (blocks);
     if (NULL != peers ) array_free (peers);
+    
+    if(strcmp(manager->network->name, "WhatsOnChain") == 0) {
+        printf("WhatsOnChain\n");
+    }
 
     return p2pManager;
 }

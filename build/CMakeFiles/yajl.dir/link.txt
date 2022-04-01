@@ -1,0 +1,2 @@
+/usr/bin/ar qc libyajl.a CMakeFiles/yajl.dir/vendor/yajl/src/yajl_alloc.c.o CMakeFiles/yajl.dir/vendor/yajl/src/yajl_buf.c.o CMakeFiles/yajl.dir/vendor/yajl/src/yajl_encode.c.o CMakeFiles/yajl.dir/vendor/yajl/src/yajl_gen.c.o CMakeFiles/yajl.dir/vendor/yajl/src/yajl_lex.c.o CMakeFiles/yajl.dir/vendor/yajl/src/yajl_parser.c.o CMakeFiles/yajl.dir/vendor/yajl/src/yajl_tree.c.o CMakeFiles/yajl.dir/vendor/yajl/src/yajl_version.c.o CMakeFiles/yajl.dir/vendor/yajl/src/yajl.c.o
+/usr/bin/ranlib libyajl.a

@@ -324,7 +324,7 @@ wkWalletManagerAllocAndInit (size_t sizeInBytes,
                                                         latestBlockNumber);
 
     if (createCallback) createCallback (createContext, manager);
-    
+
     // Announce the created manager; this must preceed any wallet created/added events
     wkWalletManagerGenerateEvent (manager, (WKWalletManagerEvent) {
         WK_WALLET_MANAGER_EVENT_CREATED
@@ -361,6 +361,9 @@ wkWalletManagerCreate (WKWalletManagerListener listener,
 
     // Lookup the handler for the network's type.
     WKNetworkType type = wkNetworkGetType(network);
+    if(strcmp(network->name, "WhatsOnChain") == 0){
+        printf("WhatsOnChain");
+    }
     const WKWalletManagerHandlers *handlers = wkHandlersLookup(type)->manager;
 
     // Create the manager
@@ -730,7 +733,6 @@ wkWalletManagerConnect (WKWalletManager cwm,
     switch (wkWalletManagerGetStateType (cwm)) {
         case WK_WALLET_MANAGER_STATE_CREATED:
         case WK_WALLET_MANAGER_STATE_DISCONNECTED: {
-
             // Go to the connected state.
             if (WK_CLIENT_P2P_MANAGER_TYPE == cwm->canSend.type ||
                 WK_CLIENT_P2P_MANAGER_TYPE == cwm->canSync.type)
@@ -739,19 +741,23 @@ wkWalletManagerConnect (WKWalletManager cwm,
                 // TODO: CORE-1059 - Do we require wkClientP2PManagerConnect to set WKWalletManager state?
                 wkWalletManagerSetState (cwm, wkWalletManagerStateInit (WK_WALLET_MANAGER_STATE_CONNECTED));
 
+            if(strcmp(cwm->network->name, "WhatsOnChain") == 0) {
+                printf("WhatsOnChain\n");
+            }
+            
             // Start the QRY Manager
             wkClientQRYManagerConnect (cwm->qryManager);
             break;
         }
-            
+
         case WK_WALLET_MANAGER_STATE_CONNECTED:
             break;
 
         case WK_WALLET_MANAGER_STATE_SYNCING:
             if (WK_CLIENT_P2P_MANAGER_TYPE == cwm->canSend.type ||
-                WK_CLIENT_P2P_MANAGER_TYPE == cwm->canSync.type)
+                WK_CLIENT_P2P_MANAGER_TYPE == cwm->canSync.type) {
                 wkClientP2PManagerConnect (cwm->p2pManager, peer);
-            else
+            } else
                 // TODO: CORE-1059 - Do we require wkClientP2PManagerConnect to set WKWalletManager state?
                 wkWalletManagerSetState (cwm, wkWalletManagerStateInit (WK_WALLET_MANAGER_STATE_CONNECTED));
 
@@ -992,11 +998,11 @@ wkWalletManagerWalletSweeperValidateSupported (WKWalletManager cwm,
     if (wkNetworkGetType (cwm->network) != wkWalletGetType (wallet)) {
         return WK_WALLET_SWEEPER_INVALID_ARGUMENTS;
     }
-    
+
     if (WK_FALSE == wkKeyHasSecret (key)) {
         return WK_WALLET_SWEEPER_INVALID_KEY;
     }
-    
+
     return cwm->handlers->validateSweeperSupported (cwm, wallet, key);
 }
 
@@ -1005,7 +1011,7 @@ wkWalletManagerCreateWalletSweeper (WKWalletManager cwm,
                                         WKWallet wallet,
                                         WKKey key) {
     assert (wkKeyHasSecret (key));
-    
+
     return cwm->handlers->createSweeper (cwm,
                                          wallet,
                                          key);
@@ -1231,7 +1237,7 @@ wkWalletManagerRecoverTransferAttributesFromTransferBundle (WKWallet wallet,
                 wkTransferAttributeGive(attribute);
             }
         }
-        
+
         wkTransferSetAttributes (transfer, array_count(attributes), attributes);
         wkTransferAttributeArrayRelease (attributes);
         wkAddressGive (target);

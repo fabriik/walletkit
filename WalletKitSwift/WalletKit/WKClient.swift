@@ -144,6 +144,18 @@ public protocol SystemClient {
     
     // Transaction
     
+    typealias Inputs = (
+        txHash: String,
+        script: String,
+        signature: String,
+        sequence: Int64
+    )
+    
+    typealias Outputs = (
+        script: String,
+        amount: String
+    )
+    
     typealias Transaction = (
         id: String,
         blockchainId: String,
@@ -161,8 +173,44 @@ public protocol SystemClient {
         fee: Amount,
         transfers: [Transfer],
         acknowledgements: UInt64,
-        metaData: Dictionary<String,String>?
+        metaData: Dictionary<String,String>?,
+        version: Int64?,
+        lockTime: Int64?,
+        time: Int64?,
+        inCount: Int?,
+        inputs: [Inputs]?,
+        outCount: Int?,
+        outputs: [Outputs]?
     )
+    
+    
+    typealias TransactionWOC = (
+        id: String,
+        blockchainId: String,
+        hash: String,
+        identifier: String,
+        blockHash: String?,
+        blockHeight: UInt64?,
+        index: UInt64?,
+        confirmations: UInt64?,
+        status: String,
+        size: UInt64,
+        timestamp: Date?,
+        firstSeen: Date?,
+        raw: Data?,
+        fee: Amount,
+        transfers: [Transfer],
+        acknowledgements: UInt64,
+        metaData: Dictionary<String,String>?,
+        version: Int64,
+        lockTime: Int64,
+        time: Int64,
+        inCount: UInt64,
+        inputs: [Inputs],
+        outCount: UInt64,
+        outputs: [Outputs]
+    )
+
 
     typealias TransactionIdentifier = (
         id: String,
@@ -305,6 +353,11 @@ public protocol SystemClient {
     func createHederaAccount (blockchainId: String,
                               publicKey: String,
                               completion: @escaping (Result<[HederaAccount], SystemClientError>) -> Void)
+    
+    typealias TransactionHistory = (
+        tx_hash: String?,
+        height: UInt64?
+    )
 }
 
 extension SystemClient {

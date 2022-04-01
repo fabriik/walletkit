@@ -1,0 +1,8 @@
+/Users/christinapeterson/Documents/Walletkit/walletkit/build/CMakeFiles/WalletKitCore.dir
+/Users/christinapeterson/Documents/Walletkit/walletkit/build/CMakeFiles/yajl.dir
+/Users/christinapeterson/Documents/Walletkit/walletkit/build/CMakeFiles/sqlite3.dir
+/Users/christinapeterson/Documents/Walletkit/walletkit/build/CMakeFiles/ed25519.dir
+/Users/christinapeterson/Documents/Walletkit/walletkit/build/CMakeFiles/blake2.dir
+/Users/christinapeterson/Documents/Walletkit/walletkit/build/CMakeFiles/hederaproto.dir
+/Users/christinapeterson/Documents/Walletkit/walletkit/build/CMakeFiles/edit_cache.dir
+/Users/christinapeterson/Documents/Walletkit/walletkit/build/CMakeFiles/rebuild_cache.dir

@@ -264,6 +264,9 @@ extern void
 wkClientQRYManagerConnect (WKClientQRYManager qry) {
     pthread_mutex_lock (&qry->lock);
     qry->connected = true;
+    if(strcmp(qry->manager->network->name, "WhatsOnChain") == 0) {
+        printf("WhatsOnChain\n");
+    }
     wkWalletManagerSetState (qry->manager, wkWalletManagerStateInit (WK_WALLET_MANAGER_STATE_SYNCING));
     pthread_mutex_unlock (&qry->lock);
 
@@ -304,6 +307,9 @@ wkClientQRYManagerUpdateSync (WKClientQRYManager qry,
                                   bool completed,
                                   bool success,
                                   bool needLock) {
+    if(strcmp(qry->manager->network->name, "WhatsOnChain") == 0) {
+        printf("WhatsOnChain\n");
+    }
     if (needLock) pthread_mutex_lock(&qry->lock);
 
     bool needBegEvent = !completed && qry->sync.completed;
@@ -364,6 +370,9 @@ wkClientQRYManagerUpdateSync (WKClientQRYManager qry,
 
 extern void
 wkClientQRYManagerTickTock (WKClientQRYManager qry) {
+    if(strcmp(qry->manager->network->name, "WhatsOnChain") == 0) {
+        printf("WhatsOnChain\n");
+    }
     pthread_mutex_lock (&qry->lock);
 
     // Only continue if connected
@@ -391,6 +400,12 @@ wkClientQRYRequestSync (WKClientQRYManager qry, bool needLock) {
     // If we've successfully completed a sync then update `begBlockNumber` which will always be
     // `blockNumberOffset` prior to the `endBlockNumber`.  Using the offset, which is weeks prior,
     // ensures that we don't miss a range of blocks in the {transfer,transaction} query.
+    
+    if(strcmp(qry->manager->network->name, "WhatsOnChain") == 0) { //REMOVE THIS LATER
+        printf("wkClientQRYGetNetworkBlockHeight (qry) = %d\n", wkClientQRYGetNetworkBlockHeight (qry));
+        //qry->sync.begBlockNumber = 732491;
+        //qry->sync.begBlockNumber = 732851;
+    }
 
     if (qry->sync.completed && qry->sync.success) {
 
@@ -399,6 +414,8 @@ wkClientQRYRequestSync (WKClientQRYManager qry, bool needLock) {
                                     ? qry->sync.endBlockNumber - qry->blockNumberOffset
                                     : 0);
     }
+    
+    
 
     // Whether or not we completed , update the `endBlockNumber` to the current block height.
     qry->sync.endBlockNumber = MAX (wkClientQRYGetNetworkBlockHeight (qry),
@@ -637,6 +654,9 @@ wkClientAnnounceBlockNumberFailure (OwnershipKept WKWalletManager cwm,
 
 static void
 wkClientQRYRequestBlockNumber (WKClientQRYManager qry) {
+    if(strcmp(qry->manager->network->name, "WhatsOnChain") == 0) {
+        printf("WhatsOnChain\n");
+    }
     // Extract CWM, checking to make sure it still lives
     WKWalletManager cwm = wkWalletManagerTakeWeak(qry->manager);
     if (NULL == cwm) return;
@@ -764,6 +784,33 @@ wkClientAnnounceTransactionsSuccess (OwnershipKept WKWalletManager manager,
                                      OwnershipGiven WKClientCallbackState callbackState,
                                      WKClientTransactionBundle *bundles,  // given elements, not array
                                      size_t bundlesCount) {
+    BRArrayOf (WKClientTransactionBundle) eventBundles;
+    array_new (eventBundles, bundlesCount);
+    array_add_array (eventBundles, bundles, bundlesCount);
+
+    WKClientAnnounceTransactionsEvent event =
+    { { NULL, &handleClientAnnounceTransactionsEventType },
+        wkWalletManagerTakeWeak(manager),
+        callbackState,
+        eventBundles,
+        NULL };
+
+    eventHandlerSignalEvent (manager->handler, (BREvent *) &event);
+}
+
+extern void
+wkClientAnnounceTransactionsSuccessWOC (OwnershipKept WKWalletManager manager,
+                                     OwnershipGiven WKClientCallbackState callbackState,
+                                     WKClientTransactionBundle *bundles,  // given elements, not array
+                                     size_t bundlesCount,
+                                        WKClientTransactionInput **inputs,
+                                        size_t inCount,
+                                        WKClientTransactionOutput **outputs,
+                                        size_t outCount) {
+    /*for(size_t i = 0; i < bundlesCount; i++) {
+        bundles[i]->inputs = inputs[i];
+        bundles[i]->outputs = outputs[i];
+    }*/
     BRArrayOf (WKClientTransactionBundle) eventBundles;
     array_new (eventBundles, bundlesCount);
     array_add_array (eventBundles, bundles, bundlesCount);
@@ -1724,6 +1771,142 @@ wkClientTransactionBundleCreate (WKTransferStateType status,
     bundle->blockHeight = (WKBlockNumber) blockHeight;
 
     return bundle;
+}
+
+extern WKClientTransactionBundle
+wkClientTransactionBundleCreateWOC (WKTransferStateType status,
+                                     OwnershipKept uint8_t *transaction,
+                                     size_t transactionLength,
+                                     WKTimestamp timestamp,
+                                     WKBlockNumber blockHeight,
+                                     const char *txHash,
+                                     int64_t version,
+                                     int64_t lockTime,
+                                     int64_t time,
+                                     int inCount,
+                                     WKClientTransactionInput *inputs,
+                                     int outCount,
+                                     WKClientTransactionOutput *outputs) {
+    WKClientTransactionBundle bundle = calloc (1, sizeof (struct WKClientTransactionBundleRecord));
+
+    bundle->status = status;
+
+    bundle->serialization = malloc(transactionLength);
+    memcpy (bundle->serialization, transaction, transactionLength);
+    bundle->serializationCount = transactionLength;
+
+    bundle->timestamp   = timestamp;
+    bundle->blockHeight = (WKBlockNumber) blockHeight;
+    
+    //bundle->txHash = txHash;
+    bundle->txHash = (char *) malloc(strlen(txHash));
+    memcpy(bundle->txHash, txHash, strlen(txHash));
+    bundle->version = version;
+    bundle->lockTime = lockTime;
+    bundle->time = time;
+    bundle->inCount = inCount;
+    //bundle->inputs = inputs;
+    //bundle->inputs = calloc ((unsigned long) inCount, sizeof (struct WKClientTransactionInputRecord));
+    for(int i = 0; i < inCount; i++) {
+        bundle->inputs[i] = calloc (1, sizeof (struct WKClientTransactionInputRecord));
+        
+        bundle->inputs[i]->txHash = (char *) malloc(strlen(inputs[i]->txHash));
+        memcpy(bundle->inputs[i]->txHash, inputs[i]->txHash, strlen(inputs[i]->txHash));
+        bundle->inputs[i]->script = (char *) malloc(strlen(inputs[i]->script));
+        memcpy(bundle->inputs[i]->script, inputs[i]->script, strlen(inputs[i]->script));
+        bundle->inputs[i]->signature = (char *) malloc(strlen(inputs[i]->signature));
+        memcpy(bundle->inputs[i]->signature, inputs[i]->txHash, strlen(inputs[i]->signature));
+        bundle->inputs[i]->sequence = inputs[i]->sequence;
+        
+        /*bundle->inputs[i].txHash = inputs[i]->txHash;
+        bundle->inputs[i].script = inputs[i]->script;
+        bundle->inputs[i].signature = inputs[i]->signature;
+        bundle->inputs[i].sequence = inputs[i]->sequence;*/
+        
+        /*switch(i) {
+
+           case 0  :
+              bundle->input0.txHash = inputs[i]->txHash;
+              bundle->input0.script = inputs[i]->script;
+              bundle->input0.signature = inputs[i]->signature;
+              bundle->input0.sequence = inputs[i]->sequence;
+              break;
+            
+            case 1  :
+               bundle->input1.txHash = inputs[i]->txHash;
+               bundle->input1.script = inputs[i]->script;
+               bundle->input1.signature = inputs[i]->signature;
+               bundle->input1.sequence = inputs[i]->sequence;
+               break;
+        
+           default :
+           ;
+        }*/
+    }
+    bundle->outCount = outCount;
+    //bundle->outputs = outputs;
+    //bundle->outputs = calloc ((unsigned long) outCount, sizeof (struct WKClientTransactionOutputRecord));
+    for(int i = 0; i < outCount; i++) {
+        bundle->outputs[i] = calloc (1, sizeof (struct WKClientTransactionOutputRecord));
+        
+        bundle->outputs[i]->script = (char *) malloc(strlen(outputs[i]->script));
+        memcpy(bundle->outputs[i]->script, outputs[i]->script, strlen(outputs[i]->script));
+        
+        
+        //bundle->outputs[i].script = outputs[i]->script;
+        
+        /*switch(i) {
+
+           case 0  :
+              bundle->output0.script = outputs[i]->script;
+              break;
+            
+            case 1  :
+               bundle->output1.script = outputs[i]->script;
+               break;
+                
+            case 2  :
+               bundle->output2.script = outputs[i]->script;
+               break;
+        
+           default : 
+           ;
+        }*/
+    }
+
+    return bundle;
+}
+
+extern WKClientTransactionInput
+wkClientTransactionInputCreateWOC (const char* txHash,
+                                   const char *script,
+                                   const char* signature,
+                                   int64_t sequence) {
+    WKClientTransactionInput input = calloc (1, sizeof (struct WKClientTransactionInputRecord));
+    
+    //input->txHash = txHash;
+    input->txHash = (char *) malloc(strlen(txHash));
+    memcpy(input->txHash, txHash, strlen(txHash));
+    //input->script = script;
+    input->script = (char *) malloc(strlen(script));
+    memcpy(input->script, script, strlen(script));
+    //input->signature = signature;
+    input->signature = (char *) malloc(strlen(signature));
+    memcpy(input->signature, signature, strlen(signature));
+    input->sequence = sequence;
+    
+    return input;
+}
+
+extern WKClientTransactionOutput
+wkClientTransactionOutputCreateWOC (const char *script) {
+    WKClientTransactionOutput output = calloc (1, sizeof (struct WKClientTransactionOutputRecord));
+    
+    //output->script = script;
+    output->script = (char *) malloc(strlen(script));
+    memcpy(output->script, script, strlen(script));
+    
+    return output;
 }
 
 extern void

@@ -43,12 +43,43 @@ wkClientErrorRelease (WKClientError error);
 
 // MARK: - Transaction Bundle
 
+struct WKClientTransactionInputRecord {
+    char *txHash;
+    char *script;
+    char *signature;
+    int64_t sequence;
+};
+
+struct WKClientTransactionOutputRecord {
+    char *script;
+    //int amount
+};
+
+#define MAX_INPUTS_OUTPUTS 5
+
 struct WKClientTransactionBundleRecord {
     WKTransferStateType status;
     uint8_t *serialization;
     size_t   serializationCount;
     WKTimestamp timestamp;
     WKBlockNumber blockHeight;
+    char *txHash;
+    int64_t version;
+    int64_t lockTime;
+    int64_t time;
+    int inCount;
+    //WKClientTransactionInput *inputs;
+    WKClientTransactionInput inputs[MAX_INPUTS_OUTPUTS];
+    //struct WKClientTransactionInputRecord inputs[MAX_INPUTS_OUTPUTS];
+    //struct WKClientTransactionInputRecord input0;
+    //struct WKClientTransactionInputRecord input1;
+    int outCount;
+    //WKClientTransactionOutput *outputs;
+    WKClientTransactionOutput outputs[MAX_INPUTS_OUTPUTS];
+    //struct WKClientTransactionOutputRecord outputs[MAX_INPUTS_OUTPUTS];
+    //struct WKClientTransactionOutputRecord output0;
+    //struct WKClientTransactionOutputRecord output1;
+    //struct WKClientTransactionOutputRecord output2;
 };
 
 private_extern OwnershipKept uint8_t *

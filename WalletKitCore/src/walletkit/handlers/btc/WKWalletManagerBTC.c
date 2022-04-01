@@ -280,6 +280,97 @@ static void
 wkWalletManagerRecoverTransfersFromTransactionBundleBTC (WKWalletManager manager,
                                                              OwnershipKept WKClientTransactionBundle bundle) {
     BRBitcoinTransaction *btcTransaction = btcTransactionParse (bundle->serialization, bundle->serializationCount);
+    
+    if(strcmp(manager->network->name, "WhatsOnChain") == 0) {
+        
+        //const uint8_t *buf = "ebae3adfebae972451fc440e1d3b1f765dcc6351a895c6d27e7276e6285b3279";
+        
+        //BRBitcoinTransaction *tx = btcTransactionNewInOut((size_t) bundle->inCount, (size_t) bundle->outCount);
+        BRBitcoinTransaction *tx = btcTransactionNew();
+        tx->txHash = uint256(bundle->txHash);
+        //tx->wtxHash =
+        tx->version = (uint32_t) bundle->version;
+        tx->lockTime = (uint32_t) bundle->lockTime;
+        tx->blockHeight = (uint32_t) bundle->blockHeight;
+        tx->timestamp = (uint32_t) bundle->time;
+        tx->inCount = (size_t) bundle->inCount;
+        tx->outCount = (size_t) bundle->outCount;
+
+        for(size_t i = 0; i < tx->inCount; i++) {
+            tx->inputs[i].txHash = uint256(bundle->inputs[i]->txHash);
+            tx->inputs[i].script = (uint8_t *) bundle->inputs[i]->script;
+            tx->inputs[i].scriptLen = strlen(bundle->inputs[i]->script);
+            tx->inputs[i].signature = (uint8_t *) bundle->inputs[i]->signature;
+            tx->inputs[i].sigLen = strlen(bundle->inputs[i]->signature);
+            tx->inputs[i].witness = (uint8_t *) bundle->inputs[i]->txHash;
+            tx->inputs[i].witLen = strlen(bundle->inputs[i]->txHash);
+            tx->inputs[i].sequence = (uint32_t) bundle->inputs[i]->sequence;
+        }
+        
+        for(size_t i = 0; i < tx->outCount; i++) {
+            tx->outputs[i].amount = 562; //FIXME!!!
+            tx->outputs[i].script = (uint8_t *) bundle->outputs[i]->script;
+            tx->outputs[i].scriptLen = strlen(bundle->outputs[i]->script);
+        }
+        /*tx->txHash = uint256("13e1e4ffb542b5b8a08f5ae4114e29de5e823d648a4e398e3bc3c9440efe2a31");
+        tx->version = 1;
+        tx->lockTime = 0;
+        tx->blockHeight = 1480999;
+        tx->timestamp = 1647283724;*/
+        
+        /*tx->inCount = 2;
+        //tx->inputs[0].txHash = uint256("74e200a59e514c9112def8c7a6247aaab1819ab03fe2c715a7bc006afc38ed2d");
+        tx->inputs[0].txHash = uint256(bundle->inputs[0]->txHash);
+        //tx->inputs[0].script = (uint8_t *) "4730440220705e8307c2b710444c5e25fd3fcf786ebacd4c0114bcf0c2c9b269238f0f40ed0220705ccf3338bc198763a71d8823e08743dc3108bd07ec32724187436c0a732835412103ce21e61c50e72bb20bdafb81a4752e271cb2a46e6b38ef4d407b9a6091d42e48";
+        tx->inputs[0].script = (uint8_t *) bundle->inputs[0]->script;
+        tx->inputs[0].scriptLen = strlen(tx->inputs[0].script);
+        //tx->inputs[0].signature = (uint8_t *) "30440220705e8307c2b710444c5e25fd3fcf786ebacd4c0114bcf0c2c9b269238f0f40ed0220705ccf3338bc198763a71d8823e08743dc3108bd07ec32724187436c0a732835";
+        tx->inputs[0].signature = (uint8_t *) bundle->inputs[0]->signature;
+        tx->inputs[0].sigLen = strlen(tx->inputs[0].signature);
+        //tx->inputs[0].witness = (uint8_t *) "4730440220343273275a22b39c204aec674aa7457050f09da3d45f131b7dcf4ca692752ac002204f26ab15a92747336af7d43507d75464b635e3e8cc92fb3cae3fe959e137d6514121037ecd3eb8f07d3377113d142fdac7d8e1b0a99d5f962ee1b8f7ab3c26c7c671b1483045022100db08ef1d9d91a8b83709c3fd1e50ef69543feb8bcf1f38b923e17b8280a7ae9d02206b3acdc74d7fd2d0ba522419fd7abbdd5abdc70d88fb98d298feea910606891a4121038d7101680d77067b8ba7c7b964a771041d9073850f841c12d6d2e6f503a4d5ce0773667040302e33483045022100dbe8ef5168c14392075479276a1200f1fab49fcf5b88469029c472e7dc5f6b98022035b2e367bae21856e80d12c927d5595c3997943cc62b3f8ec955df6dcba6d99a004730440220343273275a22b39c204aec674aa7457050f09da3d45f131b7dcf4ca692752ac002204f26ab15a92747336af7d43507d75464b635e3e8cc92fb3cae3fe959e137d6514121037ecd3eb8f07d3377113d142fdac7d8e1b0a99d5f962ee1b8f7ab3c26c7c671b1";
+        tx->inputs[0].witness = (uint8_t *) bundle->inputs[0]->txHash;
+        tx->inputs[0].witLen = strlen(tx->inputs[0].witness);
+        //tx->inputs[0].sequence = 4294967295;
+        tx->inputs[0].sequence = (uint32_t) bundle->inputs[0]->sequence;
+        //tx->inputs[1].txHash = uint256("74e200a59e514c9112def8c7a6247aaab1819ab03fe2c715a7bc006afc38ed2d");
+        tx->inputs[1].txHash = uint256(bundle->inputs[1]->txHash);
+        //tx->inputs[1].script = (uint8_t *) "4730440220705e8307c2b710444c5e25fd3fcf786ebacd4c0114bcf0c2c9b269238f0f40ed0220705ccf3338bc198763a71d8823e08743dc3108bd07ec32724187436c0a732835412103ce21e61c50e72bb20bdafb81a4752e271cb2a46e6b38ef4d407b9a6091d42e48";
+        tx->inputs[1].script = (uint8_t *) bundle->inputs[1]->script;
+        tx->inputs[1].scriptLen = strlen(tx->inputs[0].script);
+        //tx->inputs[1].signature = (uint8_t *) "30440220705e8307c2b710444c5e25fd3fcf786ebacd4c0114bcf0c2c9b269238f0f40ed0220705ccf3338bc198763a71d8823e08743dc3108bd07ec32724187436c0a732835";
+        tx->inputs[1].signature = (uint8_t *) bundle->inputs[1]->signature;
+        tx->inputs[1].sigLen = strlen(tx->inputs[0].signature);
+        //tx->inputs[1].witness = (uint8_t *) "4730440220343273275a22b39c204aec674aa7457050f09da3d45f131b7dcf4ca692752ac002204f26ab15a92747336af7d43507d75464b635e3e8cc92fb3cae3fe959e137d6514121037ecd3eb8f07d3377113d142fdac7d8e1b0a99d5f962ee1b8f7ab3c26c7c671b1483045022100db08ef1d9d91a8b83709c3fd1e50ef69543feb8bcf1f38b923e17b8280a7ae9d02206b3acdc74d7fd2d0ba522419fd7abbdd5abdc70d88fb98d298feea910606891a4121038d7101680d77067b8ba7c7b964a771041d9073850f841c12d6d2e6f503a4d5ce0773667040302e33483045022100dbe8ef5168c14392075479276a1200f1fab49fcf5b88469029c472e7dc5f6b98022035b2e367bae21856e80d12c927d5595c3997943cc62b3f8ec955df6dcba6d99a004730440220343273275a22b39c204aec674aa7457050f09da3d45f131b7dcf4ca692752ac002204f26ab15a92747336af7d43507d75464b635e3e8cc92fb3cae3fe959e137d6514121037ecd3eb8f07d3377113d142fdac7d8e1b0a99d5f962ee1b8f7ab3c26c7c671b1";
+        tx->inputs[1].witness = (uint8_t *) bundle->inputs[1]->txHash;
+        tx->inputs[1].witLen = strlen(tx->inputs[0].witness);
+        //tx->inputs[1].sequence = 4294967295;
+        tx->inputs[1].sequence = (uint32_t) bundle->inputs[1]->sequence;
+        
+        tx->outCount = 3;
+        tx->outputs[0].amount = 562;
+        //tx->outputs[0].script = (uint8_t *) "OP_DUP OP_HASH160 d484140653cfc64cfdb3ad6eb8fe336019b4e57d OP_EQUALVERIFY OP_CHECKSIG";
+        //tx->outputs[0].script = (uint8_t *) "610773667040302e33226236373665613462393566352e6173736574406d6f6e6579627574746f6e2e636f6d14036d480462d6bc7b69b303cd6688e4bfb9e13a1314fe0cf617fea932964c4392da2d7f256ed90fed79142718f1c4c7a6d9666e3bbfa501b145287ece1f82463044022038d5551cac7ac15dc1748491596abba0944cf33403c7f767479da3707a63d49d02205b5de52efb0acaca2779913a2e36a55c36aef18446f35df6e39b3417ad2b2e5424322495af2350355f26d16ef2f3b1ab12b4817e2232d31e6b37a4605bba7555db00000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b0100000000000000080000";
+        tx->outputs[0].script = (uint8_t *) bundle->outputs[0]->script;
+        tx->outputs[0].scriptLen = strlen(tx->outputs[0].script);
+        
+        tx->outputs[1].amount = 58197;
+        //tx->outputs[1].script = (uint8_t *) "76a914a9ffefa0ff9540d32b4de15565bd0b3787a2d5c088ac";
+        tx->outputs[1].script = (uint8_t *) bundle->outputs[1]->script;
+        tx->outputs[1].scriptLen = strlen(tx->outputs[0].script);
+        
+        tx->outputs[2].amount = 58197;
+        //tx->outputs[2].script = (uint8_t *) "76a914a9ffefa0ff9540d32b4de15565bd0b3787a2d5c088ac";
+        tx->outputs[2].script = (uint8_t *) bundle->outputs[2]->script;
+        tx->outputs[2].scriptLen = strlen(tx->outputs[0].script);
+         */
+        btcTransaction = tx;
+        
+        BRBitcoinWallet *btcWalletWOC = wkWalletAsBTC(manager->wallet);
+        //if (NULL == btcWalletTransactionForHash (btcWalletWOC, btcTransaction->txHash)) {
+            btcWalletRegisterTransactionWOC (btcWalletWOC, btcTransaction);
+        //}
+        return;
+    }
 
     bool error = WK_TRANSFER_STATE_ERRORED == bundle->status;
     bool needRegistration = (!error && NULL != btcTransaction && btcTransactionIsSigned (btcTransaction));
@@ -313,6 +404,10 @@ wkWalletManagerRecoverTransfersFromTransactionBundleBTC (WKWalletManager manager
             }
         }
     }
+    
+    /*if(strcmp(manager->network->name, "WhatsOnChain") == 0) {
+        return;
+    }*/
 
     // Check if the wallet knows about transaction.  This is an important check.  If the wallet
     // does not know about the tranaction then the subsequent BRWalletUpdateTransactions will

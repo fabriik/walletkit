@@ -358,12 +358,28 @@ BRBitcoinTransaction *btcTransactionNew(void)
 
     assert(tx != NULL);
     tx->version = TX_VERSION;
-    array_new(tx->inputs, 1);
-    array_new(tx->outputs, 2);
+    //array_new(tx->inputs, 1);
+    //array_new(tx->outputs, 2);
+    array_new(tx->inputs, 5);
+    array_new(tx->outputs, 5);
     tx->lockTime = TX_LOCKTIME;
     tx->blockHeight = TX_UNCONFIRMED;
     return tx;
 }
+
+BRBitcoinTransaction *btcTransactionNewInOut(size_t inCount, size_t outCount)
+{
+    BRBitcoinTransaction *tx = calloc(1, sizeof(*tx));
+
+    assert(tx != NULL);
+    tx->version = TX_VERSION;
+    array_new(tx->inputs, inCount);
+    array_new(tx->outputs, outCount);
+    tx->lockTime = TX_LOCKTIME;
+    tx->blockHeight = TX_UNCONFIRMED;
+    return tx;
+}
+
 
 // returns a deep copy of tx and that must be freed by calling btcTransactionFree()
 BRBitcoinTransaction *btcTransactionCopy(const BRBitcoinTransaction *tx)
@@ -632,6 +648,8 @@ int btcTransactionIsSigned(const BRBitcoinTransaction *tx)
     assert(tx != NULL);
     
     for (size_t i = 0; tx && i < tx->inCount; i++) {
+        printf("! tx->inputs[i].signature = %d\n", ! tx->inputs[i].signature);
+        printf("! tx->inputs[i].witness = %d\n", ! tx->inputs[i].witness);
         if (! tx->inputs[i].signature || ! tx->inputs[i].witness) return 0;
     }
 

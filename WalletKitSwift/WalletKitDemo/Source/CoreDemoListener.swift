@@ -113,6 +113,7 @@ class CoreDemoListener: SystemListener {
             // specifically, test networks are announced and having a wallet manager for a
             // testnet won't happen in a deployed App.
             DispatchQueue.main.async {
+                print("Considering Network \(network.name), \(network.currency.name), \(network.currency.code), \(self.networkCurrencyCodesToMode[network.currency.code])")
                 if self.isMainnet == network.onMainnet,
                    network.currencies.contains(where: { nil != self.networkCurrencyCodesToMode[$0.code] }),
                    let currencyMode = self.networkCurrencyCodesToMode [network.currency.code] {
@@ -126,7 +127,7 @@ class CoreDemoListener: SystemListener {
 
                     let currencies = network.currencies
                         .filter { (c) in self.registerCurrencyCodes.contains { c.code == $0 } }
-
+                    print("Creating Wallet Manager for Network \(network.name)")
                     let success = system.createWalletManager (network: network,
                                                               mode: mode,
                                                               addressScheme: scheme,
@@ -199,6 +200,9 @@ class CoreDemoListener: SystemListener {
         case .managerAdded (let manager):
             //TODO: Don't connect here. connect on touch...
             DispatchQueue.main.async {
+                if(manager.network.name == "WhatsOnChain") {
+                    print("WhatsOnChain")
+                }
                 manager.connect (using: UIApplication.peer (network: manager.network))
             }
 

@@ -159,6 +159,8 @@ static int _btcWalletContainsTx(BRBitcoinWallet *wallet, const BRBitcoinTransact
 
         if (l > 0 && BRSetContains(wallet->allPKH, &hash)) r = 1;
     }
+    
+    //r = 1; //REMOVE LATER
 
     return r;
 }
@@ -808,6 +810,51 @@ int btcWalletRegisterTransaction(BRBitcoinWallet *wallet, BRBitcoinTransaction *
 
     return r;
 }
+
+// adds a transaction to the wallet, or returns false if it isn't associated with the wallet
+int btcWalletRegisterTransactionWOC(BRBitcoinWallet *wallet, BRBitcoinTransaction *tx)
+{
+    int wasAdded = 0, r = 1;
+    
+    assert(wallet != NULL);
+    assert(tx != NULL && btcTransactionIsSigned(tx));
+    
+    if (tx && btcTransactionIsSigned(tx)) {
+        pthread_mutex_lock(&wallet->lock);
+
+        if (! BRSetContains(wallet->allTx, tx)) {
+            //if (_btcWalletContainsTx(wallet, tx)) {
+                // TODO: verify signatures when possible
+                // TODO: handle tx replacement with input sequence numbers
+                //       (for now, replacements appear invalid until confirmation)
+                BRSetAdd(wallet->allTx, tx);
+                _btcWalletInsertTx(wallet, tx);
+                _btcWalletUpdateBalance(wallet);
+                wasAdded = 1;
+            //}
+            //else { // keep track of unconfirmed non-wallet tx for invalid tx checks and child-pays-for-parent fees
+                   // BUG: limit total non-wallet unconfirmed tx to avoid memory exhaustion attack
+                //if (tx->blockHeight == TX_UNCONFIRMED) BRSetAdd(wallet->allTx, tx);
+                //r = 0;
+                // BUG: XXX memory leak if tx is not added to wallet->allTx, and we can't just free it
+            //}
+        }
+    
+        pthread_mutex_unlock(&wallet->lock);
+    }
+    else r = 0;
+
+    if (wasAdded) {
+        // when a wallet address is used in a transaction, generate a new address to replace it
+        btcWalletUnusedAddrs(wallet, NULL, SEQUENCE_GAP_LIMIT_EXTERNAL, SEQUENCE_EXTERNAL_CHAIN);
+        btcWalletUnusedAddrs(wallet, NULL, SEQUENCE_GAP_LIMIT_INTERNAL, SEQUENCE_INTERNAL_CHAIN);
+        if (wallet->balanceChanged) wallet->balanceChanged(wallet->callbackInfo, wallet->balance);
+        if (wallet->txAdded) wallet->txAdded(wallet->callbackInfo, tx);
+    }
+
+    return r;
+}
+
 
 // removes a tx from the wallet, along with any tx that depend on its outputs
 void btcWalletRemoveTransaction(BRBitcoinWallet *wallet, UInt256 txHash)

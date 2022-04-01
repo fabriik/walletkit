@@ -72,6 +72,7 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
         let testConfiguration     = TestConfiguration.loadFrom (bundle: appBundle, resource: "WalletKitTestsConfig")!
         let accountSpecifications = testConfiguration.accountSpecifications
         let accountIdentifier     = (CommandLine.argc >= 2 ? CommandLine.arguments[1] : "ginger")
+        //let accountIdentifier     = "tape"
 
         guard let accountSpecification = accountSpecifications.first (where: { $0.identifier == accountIdentifier })
             ?? (accountSpecifications.count > 0 ? accountSpecifications[0] : nil)
@@ -99,8 +100,9 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
         // Ensure the storage path
         storagePath = FileManager.default
             .urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Core").path
-
+           .appendingPathComponent("Core").path
+        //storagePath = "/Users/christinapeterson/Documents/Walletkit/walletkit-dev/wallet/WalletKitCore/demo_data/"
+        
         do {
             // If data shouild be cleared, then remove `storagePath`
             if clearPersistentData {
@@ -132,6 +134,7 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
             "ltc" : .api_only,
             "doge": .api_only,
             "eth" : .api_only,
+            "woc" : .api_only,
             "xrp" : .api_only,
             "hbar": .api_only,
             "xtz" : .api_only,
@@ -169,6 +172,7 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
                                                               device: "ignore",
                                                               endpoint: subscriptionEp,
                                                               currencies: []);
+    
         self.system.subscribe (using: subscription)
 
         self.system.configure()

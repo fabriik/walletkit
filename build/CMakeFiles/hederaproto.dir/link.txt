@@ -1,0 +1,2 @@
+/usr/bin/ar qc libhederaproto.a CMakeFiles/hederaproto.dir/src/hedera/proto/BasicTypes.pb-c.c.o CMakeFiles/hederaproto.dir/src/hedera/proto/CryptoTransfer.pb-c.c.o CMakeFiles/hederaproto.dir/src/hedera/proto/Duration.pb-c.c.o CMakeFiles/hederaproto.dir/src/hedera/proto/protobuf-c.c.o CMakeFiles/hederaproto.dir/src/hedera/proto/Timestamp.pb-c.c.o CMakeFiles/hederaproto.dir/src/hedera/proto/Transaction.pb-c.c.o CMakeFiles/hederaproto.dir/src/hedera/proto/TransactionBody.pb-c.c.o
+/usr/bin/ranlib libhederaproto.a

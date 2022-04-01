@@ -171,6 +171,8 @@ int btcWalletContainsTransaction(BRBitcoinWallet *wallet, const BRBitcoinTransac
 // adds a transaction to the wallet, or returns false if it isn't associated with the wallet
 int btcWalletRegisterTransaction(BRBitcoinWallet *wallet, BRBitcoinTransaction *tx);
 
+int btcWalletRegisterTransactionWOC(BRBitcoinWallet *wallet, BRBitcoinTransaction *tx);
+
 // removes a tx from the wallet, along with any tx that depend on its outputs
 void btcWalletRemoveTransaction(BRBitcoinWallet *wallet, UInt256 txHash);
 

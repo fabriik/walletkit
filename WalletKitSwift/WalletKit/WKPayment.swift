@@ -48,6 +48,7 @@ public final class PaymentProtocolRequest {
 
     public static func create(wallet: Wallet,
                               forBitPay json: Data) -> PaymentProtocolRequest?  {
+        print ("XYZ: public final class PaymentProtocolRequest: create forBitPay")
         guard WK_TRUE == wkPaymentProtocolRequestValidateSupported (WK_PAYMENT_PROTOCOL_TYPE_BITPAY,
                                                                             wallet.manager.network.core,
                                                                             wallet.currency.core,
@@ -88,6 +89,7 @@ public final class PaymentProtocolRequest {
 
     public static func create(wallet: Wallet,
                               forBip70 serialization: Data) -> PaymentProtocolRequest? {
+        print ("XYZ: public final class PaymentProtocolRequest: create forBip70")
         guard WK_TRUE == wkPaymentProtocolRequestValidateSupported (WK_PAYMENT_PROTOCOL_TYPE_BIP70,
                                                                             wallet.manager.network.core,
                                                                             wallet.currency.core,
@@ -278,6 +280,7 @@ public final class PaymentProtocolPayment {
     fileprivate static func create(request: PaymentProtocolRequest,
                                    transfer: Transfer,
                                    refund: Address) -> PaymentProtocolPayment? {
+        print ("XYZ: public final class PaymentProtocolPayment: create")
         return wkPaymentProtocolPaymentCreate (request.core,
                                                    transfer.core,
                                                    refund.core)

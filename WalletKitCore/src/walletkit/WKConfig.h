@@ -208,6 +208,52 @@ DEFINE_MODES            ("ethereum-ropsten", WK_SYNC_MODE_API_ONLY)
 DEFINE_HANDLERS (WK_NETWORK_TYPE_ETH, ETH)
 #undef NETWORK_NAME
 
+/*#define NETWORK_NAME    "WhatsOnChain"
+DEFINE_NETWORK (WK_NETWORK_TYPE_WOC,  "whatsonchain-mainnet", NETWORK_NAME, "mainnet", true, 672728, 6, 10 * 60)
+DEFINE_NETWORK_FEE_ESTIMATE ("whatsonchain-mainnet", "2", "10m", 20 * 60 * 1000)
+DEFINE_CURRENCY ("whatsonchain-mainnet",     "whatsonchain-mainnet:__native__",   NETWORK_NAME,  WK_NETWORK_CURRENCY_WOC,  "native",   NULL,   true)
+    DEFINE_UNIT ("whatsonchain-mainnet:__native__",      "Satoshi",    "sat",      0,      "SAT")
+    DEFINE_UNIT ("whatsonchain-mainnet:__native__",      NETWORK_NAME, "woc",      8,      "WOC")
+DEFINE_ADDRESS_SCHEMES  ("whatsonchain-mainnet", WK_ADDRESS_SCHEME_BTC_LEGACY)
+DEFINE_MODES            ("whatsonchain-mainnet", WK_SYNC_MODE_API_ONLY, WK_SYNC_MODE_P2P_ONLY)
+
+DEFINE_NETWORK (WK_NETWORK_TYPE_WOC,  "whatsonchain-testnet", NETWORK_NAME, "testnet", false, 528135, 6, 10 * 60)
+DEFINE_NETWORK_FEE_ESTIMATE ("whatsonchain-testnet", "2", "10m", 20 * 60 * 1000)
+DEFINE_CURRENCY ("whatsonchain-testnet",     "whatsonchain-testnet:__native__",   NETWORK_NAME,  WK_NETWORK_CURRENCY_WOC,  "native",   NULL,   true)
+    DEFINE_UNIT ("whatsonchain-testnet:__native__",      "Satoshi",    "sat",      0,      "SAT")
+    DEFINE_UNIT ("whatsonchain-testnet:__native__",      NETWORK_NAME, "woc",      8,      "WOC")
+DEFINE_ADDRESS_SCHEMES  ("whatsonchain-testnet", WK_ADDRESS_SCHEME_BTC_LEGACY)
+#if HAS_BSV_TESTNET
+DEFINE_MODES            ("whatsonchain-testnet", WK_SYNC_MODE_API_ONLY,  WK_SYNC_MODE_P2P_ONLY)
+#else
+DEFINE_MODES            ("whatsonchain-testnet", WK_SYNC_MODE_P2P_ONLY)
+#endif
+DEFINE_HANDLERS (WK_NETWORK_TYPE_WOC, WOC)
+#undef NETWORK_NAME*/
+
+#define NETWORK_NAME    "WhatsOnChain"
+DEFINE_NETWORK (WK_NETWORK_TYPE_WOC,  "whatsonchain-mainnet", NETWORK_NAME, "mainnet", true, 668821, 6, 10 * 60)
+DEFINE_NETWORK_FEE_ESTIMATE ("whatsonchain-mainnet", "18", "10m", 10 * 60 * 1000)
+DEFINE_CURRENCY ("whatsonchain-mainnet",     "whatsonchain-mainnet:__native__",   NETWORK_NAME,  WK_NETWORK_CURRENCY_WOC,  "native",   NULL,   true)
+    DEFINE_UNIT ("whatsonchain-mainnet:__native__",      "Satoshi",    "sat",      0,      "SAT")
+    DEFINE_UNIT ("whatsonchain-mainnet:__native__",      NETWORK_NAME, "btc",      8,      "₿")
+DEFINE_ADDRESS_SCHEMES  ("whatsonchain-mainnet", WK_ADDRESS_SCHEME_BTC_SEGWIT,   WK_ADDRESS_SCHEME_BTC_LEGACY)
+DEFINE_MODES            ("whatsonchain-mainnet", WK_SYNC_MODE_API_ONLY,          WK_SYNC_MODE_P2P_ONLY)
+
+DEFINE_NETWORK (WK_NETWORK_TYPE_WOC,  "test", NETWORK_NAME, "testnet", false, 1931985, 6, 10 * 60)
+DEFINE_NETWORK_FEE_ESTIMATE ("test", "18", "10m", 10 * 60 * 1000)
+DEFINE_CURRENCY ("test",     "test:__native__",   NETWORK_NAME,  WK_NETWORK_CURRENCY_WOC,  "native",   NULL,   true)
+    DEFINE_UNIT ("test:__native__",      "Satoshi",    "sat",      0,      "SAT")
+    DEFINE_UNIT ("test:__native__",      NETWORK_NAME, "woc",      8,      "WOC")
+DEFINE_ADDRESS_SCHEMES  ("test", WK_ADDRESS_SCHEME_BTC_SEGWIT,   WK_ADDRESS_SCHEME_BTC_LEGACY)
+#if HAS_BTC_TESTNET
+DEFINE_MODES            ("test", WK_SYNC_MODE_API_ONLY,          WK_SYNC_MODE_P2P_ONLY)
+#else
+DEFINE_MODES            ("test", CWK_SYNC_MODE_P2P_ONLY)
+#endif
+DEFINE_HANDLERS (WK_NETWORK_TYPE_WOC, WOC)
+#undef NETWORK_NAME
+
 // MARK: XRP
 
 #define NETWORK_NAME    "Ripple"

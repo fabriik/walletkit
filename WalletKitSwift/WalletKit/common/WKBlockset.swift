@@ -405,6 +405,15 @@ public class BlocksetSystemClient: SystemClient {
                 return nil
             }
 
+            /*return (id: id, blockchainId: bid,
+                     hash: hash, identifier: identifier,
+                     blockHash: blockHash, blockHeight: blockHeight, index: index, confirmations: confirmations, status: status,
+                     size: size, timestamp: timestamp, firstSeen: firstSeen,
+                     raw: raw,
+                     fee: fee,
+                     transfers: transfers,
+                     acknowledgements: acks,
+                     metaData: meta)*/
             return (id: id, blockchainId: bid,
                      hash: hash, identifier: identifier,
                      blockHash: blockHash, blockHeight: blockHeight, index: index, confirmations: confirmations, status: status,
@@ -413,7 +422,15 @@ public class BlocksetSystemClient: SystemClient {
                      fee: fee,
                      transfers: transfers,
                      acknowledgements: acks,
-                     metaData: meta)
+                     metaData: meta,
+                     version: nil,
+                     lockTime: nil,
+                     time: nil,
+                     inCount: nil,
+                     inputs: nil,
+                     outCount: nil,
+                     outputs: nil
+                     )
         }
 
         static internal func asTransactionIdentifier (json: JSON) -> SystemClient.TransactionIdentifier? {

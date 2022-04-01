@@ -309,6 +309,10 @@ public final class System {
         precondition (network.supportsAddressScheme(addressScheme))
 
         var coreCurrences: [WKCurrency?] = currencies.map { $0.core }
+        
+        if(network.name == "WhatsOnChain") {
+            print("WhatsOnChain")
+        }
 
         return nil != wkSystemCreateWalletManager (core,
                                                        network.core,
@@ -1237,7 +1241,7 @@ extension System {
                     print ("SYS: Event: Manager (\(manager.name)): \(event.type): {\(WalletManagerState (core: event.u.state.old)) -> \(WalletManagerState (core: event.u.state.new))}")
                     walletManagerEvent = WalletManagerEvent.changed (oldState: WalletManagerState (core: event.u.state.old),
                                                                      newState: WalletManagerState (core: event.u.state.new))
-
+                    
                 case WK_WALLET_MANAGER_EVENT_DELETED:
                     walletManagerEvent = WalletManagerEvent.deleted
 
@@ -1261,7 +1265,10 @@ extension System {
 
                 case WK_WALLET_MANAGER_EVENT_SYNC_STARTED:
                     walletManagerEvent = WalletManagerEvent.syncStarted
-
+                    if(manager.network.name == "WhatsOnChain") {
+                        print("WhatsOnChain")
+                    }
+                    
                 case WK_WALLET_MANAGER_EVENT_SYNC_CONTINUES:
                     let timestamp: Date? = (0 == event.u.syncContinues.timestamp // NO_WK_TIMESTAMP
                                                 ? nil
@@ -1272,6 +1279,10 @@ extension System {
                     walletManagerEvent = WalletManagerEvent.syncProgress (
                         timestamp: timestamp,
                         percentComplete: event.u.syncContinues.percentComplete)
+                    
+                    if(manager.network.name == "WhatsOnChain") {
+                        print("WhatsOnChain");
+                    }
 
                 case WK_WALLET_MANAGER_EVENT_SYNC_STOPPED:
                     let reason = WalletManagerSyncStoppedReason(core: event.u.syncStopped.reason)
@@ -1546,6 +1557,28 @@ extension System {
             // Back to ascending order
             .reversed ()
     }
+    
+    internal static func canonicalizeTransactionsWOC (_ transactions: [SystemClient.TransactionWOC]) -> [SystemClient.TransactionWOC] {
+        var uids = Set<String>()
+
+        // Sort transactions to be ascending {blockHeight, Index}
+        return transactions
+            // Sort by { blockHeight, index }
+            .sorted {
+                let bh0 = $0.blockHeight ?? UInt64.max
+                let bh1 = $1.blockHeight ?? UInt64.max
+                let bi0 = $0.index       ?? UInt64.max
+                let bi1 = $1.index       ?? UInt64.max
+
+                return bh0 < bh1 || (bh0 == bh1 && bi0 < bi1 )
+            }
+            // Reverse to be descending
+            .reversed ()
+            // Remove duplicates; keeping newer entries (hence descending order)
+            .filter { uids.insert($0.id).inserted }
+            // Back to ascending order
+            .reversed ()
+    }
 
     internal static func makeTransactionBundle (_ model: SystemClient.Transaction) -> WKClientTransactionBundle {
         let timestamp = model.timestamp.map { $0.asUnixTimestamp } ?? 0
@@ -1557,6 +1590,55 @@ extension System {
         return data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) -> WKClientTransactionBundle in
             let bytesAsUInt8 = bytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
             return wkClientTransactionBundleCreate (status, bytesAsUInt8, bytesCount, timestamp, height)
+        }
+    }
+    
+    internal static func makeTransactionInputWOC (_ model: SystemClient.Transaction) -> [WKClientTransactionInput?] {
+        let inputs : [WKClientTransactionInput?] = model.inputs!.map { wkClientTransactionInputCreateWOC($0.txHash, $0.script, $0.signature, $0.sequence)}
+        return inputs
+    }
+    
+    internal static func makeTransactionOutputWOC (_ model: SystemClient.Transaction) -> [WKClientTransactionOutput?] {
+        let outputs : [WKClientTransactionOutput?] = model.outputs!.map { wkClientTransactionOutputCreateWOC($0.script)}
+        return outputs
+    }
+    
+    internal static func makeTransactionBundleWOC (_ model: SystemClient.Transaction) -> WKClientTransactionBundle {
+        let timestamp = model.timestamp.map { $0.asUnixTimestamp } ?? 0
+        let height    = model.blockHeight ?? BLOCK_HEIGHT_UNBOUND
+        let status    = System.getTransferStatus (model.status)
+        
+        let txHash    = model.hash
+        let version   = model.version!
+        let lockTime  = model.lockTime!
+        let time      = model.time!
+        let inCount   = Int32(model.inCount!)
+        //let inputs    = model.inputs!
+        var inputs : [WKClientTransactionInput?] = model.inputs!.map { wkClientTransactionInputCreateWOC($0.txHash, $0.script, $0.signature, $0.sequence)}
+        /*for item in model.inputs! {
+            inputs.append(wkClientTransactionInputCreateWOC(item.script, item.signature, item.witness, item.sequence!));
+        }*/
+        
+        
+        //let inputs    = UnsafeMutableRawPointer(mutating: model.inputs)
+        //var inputsPtr = model.inputs
+            //.map { OpaquePointer($0) }
+        let outCount  = Int32(model.outCount!)
+        //let outputs   = model.outputs
+        //let outputs   = UnsafeMutableRawPointer(mutating: model.outputs)
+        var outputs : [WKClientTransactionOutput?] = model.outputs!.map { wkClientTransactionOutputCreateWOC($0.script) }
+        /*var outputsPtr = model.outputs
+            .map { OpaquePointer($0) }*/
+
+        var data = model.raw!
+        let bytesCount = data.count
+        return data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) -> WKClientTransactionBundle in
+            let bytesAsUInt8 = bytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
+            //return wkClientTransactionBundleCreate (status, bytesAsUInt8, bytesCount, timestamp, height)
+            return wkClientTransactionBundleCreateWOC (status, bytesAsUInt8, bytesCount, timestamp, height,
+                                                       txHash, version, lockTime, time, inCount, &inputs, outCount, &outputs)
+            //return wkClientTransactionBundleCreateWOC (status, bytesAsUInt8, bytesCount, timestamp, height,
+            //                                           txHash, version, lockTime, time, inCount, outCount)
         }
     }
 
@@ -1613,7 +1695,11 @@ extension System {
                 guard let (_, manager) = System.systemExtract (context, cwm)
                 else { System.cleanup("SYS: GetBlockNumber: Missed {cwm}", cwm: cwm); return }
                 print ("SYS: GetBlockNumber")
-
+                
+                if(manager.network.name == "WhatsOnChain") {
+                    print("WhatsOnChain")
+                }
+                
                 manager.client.getBlockchain (blockchainId: manager.network.uids) {
                     (res: Result<SystemClient.Blockchain, SystemClientError>) in
                     defer { wkWalletManagerGive (cwm!) }
@@ -1629,6 +1715,7 @@ extension System {
 
             funcGetTransactions: { (context, cwm, sid, addresses, addressesCount, begBlockNumber, endBlockNumber) in
                 precondition (nil != context  && nil != cwm)
+                
 
                 guard let (_, manager) = System.systemExtract (context, cwm)
                 else { System.cleanup ("SYS: BTC: GetTransactions: Missed {cwm}", cwm: cwm); return }
@@ -1646,8 +1733,29 @@ extension System {
                     defer { wkWalletManagerGive (cwm!) }
                     res.resolve(
                         success: {
-                            var bundles: [WKClientTransactionBundle?] = System.canonicalizeTransactions ($0).map { System.makeTransactionBundle ($0) }
+                            print("SYS: GetTransactions: Success")
+                            var bundles: [WKClientTransactionBundle?]
+                            if(manager.network.name == "WhatsOnChain") {
+                                bundles = System.canonicalizeTransactions ($0).map { System.makeTransactionBundleWOC ($0) }
+                                //var inputs : [WKClientTransactionInput?] = model.inputs!.map { wkClientTransactionInputCreateWOC($0.txHash, $0.script, $0.signature, $0.sequence!)}
+                                
+                                //var inputs: [[WKClientTransactionInput?]] = System.canonicalizeTransactions ($0).map { System.makeTransactionInputWOC ($0) }
+                                
+                                //var outputs: [[WKClientTransactionOutput?]] = System.canonicalizeTransactions ($0).map { System.makeTransactionOutputWOC ($0) }
+                                
+                                //var inputsPtr = inputs.map { UnsafeMutablePointer(mutating: $0) }?
+                                
+                                //var outputsPtr = outputs.map { UnsafeMutablePointer(mutating: $0) }?
+                                
+                                //wkClientAnnounceTransactionsSuccess (cwm, sid,  &bundles, bundles.count)
+                                //wkClientAnnounceTransactionsSuccessWOC (cwm, sid,  &bundles, bundles.count, &inputs, inputs.count, &outputs, outputs.count)
+                            } else {
+                                bundles = System.canonicalizeTransactions ($0).map { System.makeTransactionBundle ($0) }
+                                //wkClientAnnounceTransactionsSuccess (cwm, sid,  &bundles, bundles.count)
+                            }
+                            //var bundles: [WKClientTransactionBundle?] = System.canonicalizeTransactions ($0).map { System.makeTransactionBundle ($0) }
                             wkClientAnnounceTransactionsSuccess (cwm, sid,  &bundles, bundles.count) },
+                        //},
                         failure: { (e) in
                             print ("SYS: GetTransactions: Error: \(e)")
                             wkClientAnnounceTransactionsFailure (cwm, sid, System.makeClientErrorCore (e)) })

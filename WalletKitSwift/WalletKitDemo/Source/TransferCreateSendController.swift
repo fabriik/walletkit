@@ -139,7 +139,7 @@ UITextViewDelegate, UIPickerViewDelegate, UIPickerViewDataSource {
         alert.addAction(UIAlertAction (title: "Yes", style: UIAlertAction.Style.destructive) { (action) in
             guard let target = Address.create (string: self.recvField.text!, network: self.wallet.manager.network)
                 else { self.submitTransferFailed("invalid target address"); return }
-
+            
             let unit = self.wallet.unit
             let amount = Amount.min (Amount.max (Amount.create (double: Double(value), unit: unit), self.minimum), self.maximum)
             print ("APP: TVV: Submit Amount: \(amount)");

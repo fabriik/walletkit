@@ -96,6 +96,8 @@ typedef struct {
 // returns a newly allocated empty transaction that must be freed by calling btcTransactionFree()
 BRBitcoinTransaction *btcTransactionNew(void);
 
+BRBitcoinTransaction *btcTransactionNewInOut(size_t inCount, size_t outCount);
+
 // returns a deep copy of tx and that must be freed by calling btcTransactionFree()
 BRBitcoinTransaction *btcTransactionCopy(const BRBitcoinTransaction *tx);
 
