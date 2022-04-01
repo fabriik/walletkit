@@ -120,11 +120,6 @@ size_t BRScriptElements(const uint8_t *elems[], size_t elemsCount, const uint8_t
     while (script && off < scriptLen) {
         if (elems && i < elemsCount) elems[i] = &script[off];
         
-        if(strcmp(script, "76a914a9ffefa0ff9540d32b4de15565bd0b3787a2d5c088ac") == 0) { //REMOVE LATER
-            printf("script[%lu] = %d\n", off, script[off]);
-        }
-        
-        
         switch (script[off]) {
             case OP_PUSHDATA1:
                 off++;

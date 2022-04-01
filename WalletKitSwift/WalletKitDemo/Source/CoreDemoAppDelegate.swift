@@ -52,7 +52,8 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
                      NetworkType.bch : (use: false, address: "18.182.43.60",   port: UInt16(8333))]
     var peers = [NetworkType:NetworkPeer]()
 
-    var clearPersistentData: Bool = false
+    //var clearPersistentData: Bool = false
+    var clearPersistentData: Bool = true
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
@@ -102,6 +103,8 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
             .urls(for: .documentDirectory, in: .userDomainMask)[0]
            .appendingPathComponent("Core").path
         //storagePath = "/Users/christinapeterson/Documents/Walletkit/walletkit-dev/wallet/WalletKitCore/demo_data/"
+        //storagePath = "/Users/christinapeterson/Library/Developer/CoreSimulator/Devices/37BB3DC8-8E96-4FD6-B455-EF5842282B92/data/Containers/Data/Application/89CDAFB6-21FC-4936-A4E3-D656FDCF4ADE/Documents/Core"
+        print("storatePath: \(storagePath!)")
         
         do {
             // If data shouild be cleared, then remove `storagePath`

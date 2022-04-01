@@ -208,6 +208,7 @@ wkWalletManagerCreateWalletBTC (WKWalletManager manager,
     // And, in fact, looking at btcWalletNew(), there is not even an attempt to generate callbacks
     // even if they could have been specified.
     BRBitcoinWallet *btcWallet = btcWalletNew (btcChainParams->addrParams, transactions, array_count(transactions), btcMPK);
+    //BRBitcoinWallet *btcWallet = btcWalletNew (btcChainParams->addrParams, transactions, 0, btcMPK);
     assert (NULL != btcWallet);
 
     // The btcWallet now should include *all* the transactions
