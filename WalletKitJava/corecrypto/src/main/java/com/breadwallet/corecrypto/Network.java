@@ -323,6 +323,10 @@ final class Network implements com.breadwallet.crypto.Network {
         core.setVerifiedBlockHashAsString(hash);
     }
 
+    void setConfirmationsUntilFinal(UnsignedInteger value) {
+      core.setConfirmationsUntilFinal(value);
+    }
+
     /* package */
     void setFees(List<NetworkFee> fees) {
         checkState(!fees.isEmpty());
