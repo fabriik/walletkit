@@ -175,6 +175,10 @@ extern "C" {
     extern uint32_t
     cryptoNetworkGetConfirmationsUntilFinal (BRCryptoNetwork network);
 
+    extern void
+    cryptoNetworkSetConfirmationsUntilFinal (BRCryptoNetwork network,
+                                             uint32_t confirmationsUntilFinal);
+
     /**
      * Returns the number of network currencies.  This is the index exclusive limit to be used
      * in `cryptoNetworkGetCurrencyAt()`.
