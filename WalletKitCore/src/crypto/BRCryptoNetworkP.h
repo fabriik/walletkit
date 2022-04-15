@@ -182,7 +182,7 @@ private_extern void
 cryptoNetworkSetHeight (BRCryptoNetwork network,
                         BRCryptoBlockNumber height);
 
-private_extern void
+extern void
 cryptoNetworkSetConfirmationsUntilFinal (BRCryptoNetwork network,
                                          uint32_t confirmationsUntilFinal);
 
