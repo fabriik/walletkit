@@ -653,6 +653,9 @@ public final class System {
                 if let verifiedBlockHash = blockChainModel.verifiedBlockHash {
                     cryptoNetworkSetVerifiedBlockHashAsString (network.core, verifiedBlockHash)
                 }
+                
+                // Set number of confirmations needed
+                cryptoNetworkSetConfirmationsUntilFinal(network.core, blockChainModel.confirmationsUntilFinal)
 
                 // Extract the network fees from the blockchainModel
                 let fees = blockChainModel.feeEstimates
