@@ -12,6 +12,7 @@ android {
     defaultConfig {
         versionCode 1
         versionName version
+        ndkVersion "21.4.7075529"
 
         minSdkVersion androidConfig.minSdkVersion
         targetSdkVersion androidConfig.targetSdkVersion

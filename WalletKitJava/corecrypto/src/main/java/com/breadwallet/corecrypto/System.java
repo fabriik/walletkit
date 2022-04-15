@@ -492,7 +492,7 @@ final class System implements com.breadwallet.crypto.System {
                     if (null != verifiedBlockHash)
                         network.setVerifiedBlockHashAsString(verifiedBlockHash);
 
-                    network.setConfirmationsUntilFinal(blockChainModel.confirmationsUntilFinal);
+                    network.setConfirmationsUntilFinal(blockChainModel.getConfirmationsUntilFinal());
 
                     List<NetworkFee> fees = new ArrayList<>();
                     for (BlockchainFee feeEstimate: blockChainModel.getFeeEstimates()) {
