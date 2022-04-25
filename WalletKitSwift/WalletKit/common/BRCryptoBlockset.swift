@@ -797,7 +797,7 @@ public class BlocksetSystemClient: SystemClient {
 
     // Transfers
 
-    static let ADDRESS_COUNT = 50
+    static let ADDRESS_COUNT = 100
     static let DEFAULT_MAX_PAGE_SIZE = 20
 
     private func canonicalAddresses (_ addresses: [String], _ blockchainId: String) -> [String] {
