@@ -271,7 +271,7 @@ cryptoNetworkGetConfirmationsUntilFinal (BRCryptoNetwork network) {
 extern void
 cryptoNetworkSetConfirmationsUntilFinal (BRCryptoNetwork network,
                                          uint32_t confirmationsUntilFinal) {
-    if confirmationsUntilFinal < 1 {
+    if (confirmationsUntilFinal < 1) {
         network->confirmationsUntilFinal = 1;
     } else {
         network->confirmationsUntilFinal = confirmationsUntilFinal;
