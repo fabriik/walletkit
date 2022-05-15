@@ -47,6 +47,10 @@ buildscript {
     }
 }
 
+plugins {
+  id "org.sonarqube" version "3.3"
+}
+
 allprojects {
     repositories {
         google()
@@ -56,4 +60,12 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+sonarqube {
+  properties {
+    property "sonar.projectKey", "fabriik_walletkit"
+    property "sonar.organization", "fabriik"
+    property "sonar.host.url", "https://sonarcloud.io"
+  }
 }
