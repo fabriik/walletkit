@@ -298,7 +298,7 @@ cryptoAccountSerialize (BRCryptoAccount account, size_t *bytesCount) {
 
     // XLM
     size_t   xlmSize = 0;
-    uint8_t *xlmBytes = stellarAccountGetSerialization (account->xlm, &xtzSize);
+    uint8_t *xlmBytes = stellarAccountGetSerialization (account->xlm, &xlmSize);
 
     // Overall size - summing all factors.
     *bytesCount = (chkSize + szSize + verSize + tsSize
