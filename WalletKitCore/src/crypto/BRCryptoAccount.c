@@ -244,6 +244,7 @@ cryptoAccountRelease (BRCryptoAccount account) {
     rippleAccountFree(account->xrp);
     hederaAccountFree(account->hbar);
     tezosAccountFree(account->xtz);
+    stellarAccountFree(account->xlm);
 
     free (account->uids);
     memset (account, 0, sizeof(*account));
