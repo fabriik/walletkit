@@ -128,6 +128,27 @@ DEFINE_CURRENCY ("ethereum-mainnet",    "ethereum-mainnet:0x95aD61b0a150d79219dC
 DEFINE_UNIT ("ethereum-mainnet:0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",      "Shiba Inu Int",             "shibi",       0,     "SHIBI")
 DEFINE_UNIT ("ethereum-mainnet:0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",      "Shiba Inu",             "shib",       18,     "SHIB")
 
+// BAT
+DEFINE_UNIT ("ethereum-mainnet:0x0D8775F648430679A709E98d2b0Cb6250d2887EF",      "Basic Attention Int",             "bati",       0,     "BATI")
+DEFINE_UNIT ("ethereum-mainnet:0x0D8775F648430679A709E98d2b0Cb6250d2887EF",      "Basic Attention",             "bat",       18,     "BAT")
+DEFINE_CURRENCY ("ethereum-mainnet",    "ethereum-mainnet:0x0D8775F648430679A709E98d2b0Cb6250d2887EF",  "Basic Attention",    "bat",  "erc20",   "0x0D8775F648430679A709E98d2b0Cb6250d2887EF",   true)
+
+// ChainLink
+DEFINE_UNIT ("ethereum-mainnet:0x514910771af9ca656af840dff83e8264ecf986ca",      "ChainLink Int",             "linki",       0,     "LINKI")
+DEFINE_UNIT ("ethereum-mainnet:0x514910771af9ca656af840dff83e8264ecf986ca",      "ChainLink",             "link",       18,     "LINK")
+DEFINE_CURRENCY ("ethereum-mainnet",    "ethereum-mainnet:0x514910771af9ca656af840dff83e8264ecf986ca",  "ChainLink",    "link",  "erc20",   "0x514910771af9ca656af840dff83e8264ecf986ca",   true)
+
+// Loopring
+DEFINE_UNIT ("ethereum-mainnet:0xbbbbca6a901c926f240b89eacb641d8aec7aeafd",      "Loopring Int",             "lrci",       0,     "LRCI")
+DEFINE_UNIT ("ethereum-mainnet:0xbbbbca6a901c926f240b89eacb641d8aec7aeafd",      "Loopring",             "lrc",       18,     "LRC")
+DEFINE_CURRENCY ("ethereum-mainnet",    "ethereum-mainnet:0xbbbbca6a901c926f240b89eacb641d8aec7aeafd",  "Loopring",    "lrc",  "erc20",   "0xbbbbca6a901c926f240b89eacb641d8aec7aeafd",   true)
+
+// 0x
+DEFINE_UNIT ("ethereum-mainnet:0xE41d2489571d322189246DaFA5ebDe1F4699F498",      "0x Int",             "zrxi",       0,     "ZRXI")
+DEFINE_UNIT ("ethereum-mainnet:0xE41d2489571d322189246DaFA5ebDe1F4699F498",      "0x",             "zrx",       18,     "ZRX")
+DEFINE_CURRENCY ("ethereum-mainnet",    "ethereum-mainnet:0xE41d2489571d322189246DaFA5ebDe1F4699F498",  "0x",    "zrx",  "erc20",   "0xE41d2489571d322189246DaFA5ebDe1F4699F498",   true)
+
+
 DEFINE_ADDRESS_SCHEMES  ("ethereum-mainnet", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("ethereum-mainnet", CRYPTO_SYNC_MODE_API_ONLY)
 
