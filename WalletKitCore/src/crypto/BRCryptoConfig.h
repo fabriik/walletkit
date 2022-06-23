@@ -148,7 +148,6 @@ DEFINE_UNIT ("ethereum-mainnet:0xE41d2489571d322189246DaFA5ebDe1F4699F498",     
 DEFINE_UNIT ("ethereum-mainnet:0xE41d2489571d322189246DaFA5ebDe1F4699F498",      "0x",             "zrx",       18,     "ZRX")
 DEFINE_CURRENCY ("ethereum-mainnet",    "ethereum-mainnet:0xE41d2489571d322189246DaFA5ebDe1F4699F498",  "0x",    "zrx",  "erc20",   "0xE41d2489571d322189246DaFA5ebDe1F4699F498",   true)
 
-
 DEFINE_ADDRESS_SCHEMES  ("ethereum-mainnet", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("ethereum-mainnet", CRYPTO_SYNC_MODE_API_ONLY)
 
