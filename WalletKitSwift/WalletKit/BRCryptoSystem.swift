@@ -750,7 +750,17 @@ public final class System {
 
         // Update network fees and currencies
         updateNetworkFees()
-        updateCurrencies()
+        updateCurrencies() { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success(let networks):
+                let event = SystemEvent.discoveredNetworks(networks: networks)
+                self.listener?.handleSystemEvent(system: self, event: event)
+                
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
+        }
 
         // Connect managers
         managers.forEach { $0.connect() }
