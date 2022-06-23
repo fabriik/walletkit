@@ -720,6 +720,10 @@ public final class System {
                     }
                     defer { bundles.forEach { cryptoClientCurrencyBundleRelease($0) }}
                     cryptoClientAnnounceCurrencies (self.core, &bundles, bundles.count)
+                    
+                    let event = SystemEvent.discoveredNetworks(networks: self.networks)
+                    self.listener?.handleSystemEvent(system: self, event: event)
+                    
                     completion? (Result.success(self.networks))
                 },
 
@@ -750,17 +754,7 @@ public final class System {
 
         // Update network fees and currencies
         updateNetworkFees()
-        updateCurrencies() { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let networks):
-                let event = SystemEvent.discoveredNetworks(networks: networks)
-                self.listener?.handleSystemEvent(system: self, event: event)
-                
-            case .failure(let error):
-                print(error.localizedDescription)
-            }
-        }
+        updateCurrencies()
 
         // Connect managers
         managers.forEach { $0.connect() }
@@ -780,8 +774,8 @@ public final class System {
     ///
     public func configure () {
         print ("SYS: Configure")
-        self.updateNetworkFees()
-        self.updateCurrencies()
+        updateNetworkFees()
+        updateCurrencies()
     }
 
     private static func makeCurrencyDemominationsERC20 (_ code: String, decimals: UInt8) -> [SystemClient.CurrencyDenomination] {
