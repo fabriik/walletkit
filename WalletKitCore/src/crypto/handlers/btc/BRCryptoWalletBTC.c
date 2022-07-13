@@ -19,7 +19,9 @@ private_extern BRCryptoWalletBTC
 cryptoWalletCoerceBTC (BRCryptoWallet wallet) {
     assert (CRYPTO_NETWORK_TYPE_BTC == wallet->type ||
             CRYPTO_NETWORK_TYPE_BCH == wallet->type ||
-            CRYPTO_NETWORK_TYPE_BSV == wallet->type);
+            //CRYPTO_NETWORK_TYPE_BSV == wallet->type);
+            CRYPTO_NETWORK_TYPE_BSV == wallet->type ||
+            CRYPTO_NETWORK_TYPE_RPC == wallet->type);
     return (BRCryptoWalletBTC) wallet;
 }
 

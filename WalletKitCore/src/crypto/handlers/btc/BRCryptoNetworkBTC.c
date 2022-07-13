@@ -12,6 +12,7 @@
 #include "bitcoin/BRChainParams.h"
 #include "bcash/BRBCashParams.h"
 #include "bsv/BRBSVParams.h"
+#include "rpc/BRRPCParams.h"
 #include "crypto/BRCryptoHashP.h"
 
 static BRCryptoNetworkBTC
@@ -24,7 +25,9 @@ static BRCryptoNetworkBTC
 cryptoNetworkCoerceANY (BRCryptoNetwork network) {
     assert (CRYPTO_NETWORK_TYPE_BTC == network->type ||
             CRYPTO_NETWORK_TYPE_BCH == network->type ||
-            CRYPTO_NETWORK_TYPE_BSV == network->type);
+            //CRYPTO_NETWORK_TYPE_BSV == network->type);
+            CRYPTO_NETWORK_TYPE_BSV == network->type ||
+            CRYPTO_NETWORK_TYPE_RPC == network->type);
     return (BRCryptoNetworkBTC) network;
 }
 
@@ -139,6 +142,37 @@ cyptoNetworkCreateBSV (BRCryptoNetworkListener listener,
                                       cryptoNetworkCreateCallbackBTC);
 }
 
+static BRCryptoNetwork
+cyptoNetworkCreateRPC (BRCryptoNetworkListener listener,
+                       const char *uids,
+                       const char *name,
+                       const char *desc,
+                       bool isMainnet,
+                       uint32_t confirmationPeriodInSeconds,
+                       BRCryptoAddressScheme defaultAddressScheme,
+                       BRCryptoSyncMode defaultSyncMode,
+                       BRCryptoCurrency nativeCurrency) {
+    assert (0 == strcmp (desc, (isMainnet ? "mainnet" : "testnet")));
+
+    BRCryptoNetworkCreateContextBTC contextBTC = {
+        (isMainnet ? BRRPCParams : BRRPCTestNetParams)
+    };
+
+    return cryptoNetworkAllocAndInit (sizeof (struct BRCryptoNetworkBTCRecord),
+                                      CRYPTO_NETWORK_TYPE_RPC,
+                                      listener,
+                                      uids,
+                                      name,
+                                      desc,
+                                      isMainnet,
+                                      confirmationPeriodInSeconds,
+                                      defaultAddressScheme,
+                                      defaultSyncMode,
+                                      nativeCurrency,
+                                      &contextBTC,
+                                      cryptoNetworkCreateCallbackBTC);
+}
+
 static void
 cryptoNetworkReleaseBTC (BRCryptoNetwork network) {
     BRCryptoNetworkBTC networkBTC = cryptoNetworkCoerceANY (network);
@@ -165,6 +199,14 @@ static BRCryptoAddress
 cryptoNetworkCreateAddressBSV (BRCryptoNetwork network,
                                 const char *addressAsString) {
     BRCryptoNetworkBTC networkBTC = cryptoNetworkCoerce (network, CRYPTO_NETWORK_TYPE_BSV);
+    assert (BRChainParamsIsBSV (networkBTC->params));
+    return cryptoAddressCreateFromStringAsBSV (networkBTC->params->addrParams, addressAsString);
+}
+
+static BRCryptoAddress
+cryptoNetworkCreateAddressRPC (BRCryptoNetwork network,
+                                const char *addressAsString) {
+    BRCryptoNetworkBTC networkBTC = cryptoNetworkCoerce (network, CRYPTO_NETWORK_TYPE_RPC);
     assert (BRChainParamsIsBSV (networkBTC->params));
     return cryptoAddressCreateFromStringAsBSV (networkBTC->params->addrParams, addressAsString);
 }
@@ -267,6 +309,17 @@ BRCryptoNetworkHandlers cryptoNetworkHandlersBSV = {
     cryptoNetworkEncodeHashBTC
 };
 
+BRCryptoNetworkHandlers cryptoNetworkHandlersRPC = {
+    cyptoNetworkCreateRPC,
+    cryptoNetworkReleaseBTC,
+    cryptoNetworkCreateAddressRPC,
+    cryptoNetworkGetBlockNumberAtOrBeforeTimestampBTC,
+    cryptoNetworkIsAccountInitializedBTC,
+    cryptoNetworkGetAccountInitializationDataBTC,
+    cryptoNetworkInitializeAccountBTC,
+    cryptoNetworkCreateHashFromStringBTC,
+    cryptoNetworkEncodeHashBTC
+};
 
 //static BRCryptoNetwork
 //cryptoNetworkCreateAsBTC (const char *uids,

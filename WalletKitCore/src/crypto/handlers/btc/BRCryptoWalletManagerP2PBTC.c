@@ -56,7 +56,9 @@ static BRCryptoClientP2PManagerBTC
 cryptoClientP2PManagerCoerce (BRCryptoClientP2PManager manager) {
     assert (CRYPTO_NETWORK_TYPE_BTC == manager->type ||
             CRYPTO_NETWORK_TYPE_BCH == manager->type ||
-            CRYPTO_NETWORK_TYPE_BSV == manager->type);
+            //CRYPTO_NETWORK_TYPE_BSV == manager->type);
+            CRYPTO_NETWORK_TYPE_BSV == manager->type ||
+            CRYPTO_NETWORK_TYPE_RPC == manager->type);
     return (BRCryptoClientP2PManagerBTC) manager;
 }
 
