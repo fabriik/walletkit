@@ -16,7 +16,7 @@
 #include <string.h>
 #include <assert.h>
 
-struct BRCryptoUnitRecord {
+/*struct BRCryptoUnitRecord {
     BRCryptoCurrency currency;
     char *uids;
     char *name;
@@ -24,7 +24,7 @@ struct BRCryptoUnitRecord {
     BRCryptoUnit base;
     uint8_t decimals;
     BRCryptoRef ref;
-};
+};*/
 
 IMPLEMENT_CRYPTO_GIVE_TAKE (BRCryptoUnit, cryptoUnit)
 

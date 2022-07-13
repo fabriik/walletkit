@@ -9,6 +9,7 @@
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
 //
 #include "BRCryptoBTC.h"
+#include "BRCryptoUnit.h"
 
 #include "crypto/BRCryptoAccountP.h"
 #include "crypto/BRCryptoNetworkP.h"
@@ -248,6 +249,80 @@ cryptoWalletManagerCreateWalletBTC (BRCryptoWalletManager manager,
     return wallet;
 }
 
+static BRCryptoWallet
+cryptoWalletManagerCreateWalletRPC (BRCryptoWalletManager manager,
+                                    BRCryptoCurrency currency,
+                                    Nullable OwnershipKept BRArrayOf(BRCryptoClientTransactionBundle) initialTransactionsBundles,
+                                    Nullable OwnershipKept BRArrayOf(BRCryptoClientTransferBundle) initialTransferBundles) {
+    assert (NULL == manager->wallet);
+    
+    // Get the btcMasterPublicKey
+    BRMasterPubKey btcMPK = cryptoAccountAsBTC(manager->account);
+
+    // Get the btcChainParams
+    const BRChainParams *btcChainParams = cryptoNetworkAsBTC(manager->network);
+
+    assert (NULL == initialTransactionsBundles || 0 == array_count (initialTransactionsBundles));
+    assert (NULL == initialTransferBundles     || 0 == array_count (initialTransferBundles));
+
+    BRArrayOf(BRTransaction*) transactions = initialTransactionsLoadRPC(manager);
+
+    // Create the BTC wallet
+    //
+    // Since the BRWallet callbacks are not set, none of these transactions generate callbacks.
+    // And, in fact, looking at BRWalletNew(), there is not even an attempt to generate callbacks
+    // even if they could have been specified.
+    BRWallet *btcWallet = BRWalletNew (btcChainParams->addrParams, transactions, array_count(transactions), btcMPK);
+    assert (NULL != btcWallet);
+
+    // The btcWallet now should include *all* the transactions
+    array_free (transactions);
+
+    // Set the callbacks
+    BRWalletSetCallbacks (btcWallet,
+                          cryptoWalletManagerCoerceBTC(manager, manager->network->type),
+                          cryptoWalletManagerBTCBalanceChanged,
+                          cryptoWalletManagerBTCTxAdded,
+                          cryptoWalletManagerBTCTxUpdated,
+                          cryptoWalletManagerBTCTxDeleted);
+
+    // Create the primary BRCryptoWallet
+    BRCryptoNetwork  network       = manager->network;
+    BRCryptoUnit     unitAsBase    = cryptoNetworkGetUnitAsBase    (network, currency);
+    BRCryptoUnit     unitAsDefault = cryptoNetworkGetUnitAsDefault (network, currency);
+
+    BRCryptoWallet wallet = cryptoWalletCreateAsBTC (manager->type,
+                                                     manager->listenerWallet,
+                                                     unitAsDefault,
+                                                     unitAsDefault,
+                                                     btcWallet);
+    cryptoWalletManagerAddWallet (manager, wallet);
+
+    // Process existing btcTransactions in the btcWallet into BRCryptoTransfers
+    size_t btcTransactionsCount = BRWalletTransactions(btcWallet, NULL, 0);
+    BRTransaction *btcTransactions[btcTransactionsCount > 0 ? btcTransactionsCount : 1]; // avoid a static analysis error
+    BRWalletTransactions (btcWallet, btcTransactions, btcTransactionsCount);
+
+    BRArrayOf(BRCryptoTransfer) transfers;
+    array_new (transfers, btcTransactionsCount);
+
+    for (size_t index = 0; index < btcTransactionsCount; index++) {
+        array_add (transfers,
+                   cryptoTransferCreateAsBTC (wallet->listenerTransfer,
+                                              unitAsDefault,
+                                              unitAsBase,
+                                              btcWallet,
+                                              BRTransactionCopy(btcTransactions[index]),
+                                              manager->type));
+    }
+    cryptoWalletAddTransfers (wallet, transfers); // OwnershipGiven transfers
+
+    cryptoUnitGive (unitAsDefault);
+    cryptoUnitGive (unitAsBase);
+
+    return wallet;
+}
+
 private_extern void
 cryptoWalletManagerSaveTransactionBundleBTC (BRCryptoWalletManager manager,
                                              OwnershipKept BRCryptoClientTransactionBundle bundle) {
@@ -359,6 +434,168 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleBTC (BRCryptoWalletManag
             }
         }
     }
+}
+
+static void
+cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManager manager,
+                                                             OwnershipKept BRCryptoClientTransactionBundle bundle) {
+    //BRTransaction *btcTransaction = BRTransactionParse (bundle->serialization, bundle->serializationCount);
+    
+    BRTransaction *btcTransaction;
+    
+    size_t size = array_count(manager->network->associations->units);
+    printf("association units size = %lu\n", array_count(manager->network->associations->units));
+    
+    size_t i = 0;
+    while(i < size) {
+        i++;
+        printf("manager->network->associations->units[%lu].name = %s\n", i-1, manager->network->associations->units[(i-1)]->name);
+        if(strcmp(manager->network->associations->units[(i-1)]->name, bundle->type) == 0) {
+            printf("type = %s\n", bundle->type);
+            break;
+        }
+    }
+    
+    if(i > 0) {
+        pthread_mutex_lock(&manager->wallet->lock);
+        manager->wallet->unit = manager->network->associations->units[(i-1)];
+        pthread_mutex_unlock(&manager->wallet->lock);
+    }
+        
+    BRTransaction *tx = BRTransactionNewRPC();
+    tx->txHash = uint256(bundle->txHash);
+    tx->wtxHash = uint256(bundle->txHash);
+    tx->version = (uint32_t) bundle->version;
+    tx->lockTime = (uint32_t) bundle->lockTime;
+    tx->blockHeight = (uint32_t) bundle->blockHeight;
+    tx->timestamp = (uint32_t) bundle->time;
+    tx->inCount = (size_t) bundle->inCount;
+    tx->outCount = (size_t) bundle->outCount;
+    tx->sendAmount = 100000000; //FIXME!!!
+
+
+    for(size_t i = 0; i < tx->inCount; i++) {
+        tx->inputs[i].txHash = uint256(bundle->inputs[i]->txHash);
+        tx->inputs[i].scriptLen = strlen(bundle->inputs[i]->script);
+        //tx->inputs[i].script = (uint8_t *) bundle->inputs[i]->script;
+        array_new(tx->inputs[i].script, tx->inputs[i].scriptLen);
+        array_add_array(tx->inputs[i].script, (uint8_t *) bundle->inputs[i]->script, tx->inputs[i].scriptLen);
+        
+        tx->inputs[i].sigLen = strlen(bundle->inputs[i]->signature);
+        //tx->inputs[i].signature = (uint8_t *) bundle->inputs[i]->signature;
+        array_new(tx->inputs[i].signature, tx->inputs[i].sigLen);
+        array_add_array(tx->inputs[i].signature, (uint8_t *) bundle->inputs[i]->signature, tx->inputs[i].sigLen);
+        
+        tx->inputs[i].witLen = strlen(bundle->inputs[i]->txHash);
+        //tx->inputs[i].witness = (uint8_t *) bundle->inputs[i]->txHash;
+        array_new(tx->inputs[i].witness, tx->inputs[i].witLen);
+        array_add_array(tx->inputs[i].witness, (uint8_t *) bundle->inputs[i]->txHash, tx->inputs[i].witLen);
+        
+        tx->inputs[i].sequence = (uint32_t) bundle->inputs[i]->sequence;
+    }
+    
+    for(size_t i = 0; i < tx->outCount; i++) {
+        tx->outputs[i].amount = bundle->outputs[i]->amount; //FIXME!!!
+        tx->outputs[i].scriptLen = strlen(bundle->outputs[i]->script);
+        //tx->outputs[i].script = (uint8_t *) bundle->outputs[i]->script;
+        array_new(tx->outputs[i].script, tx->outputs[i].scriptLen);
+        array_add_array(tx->outputs[i].script, (uint8_t *) bundle->outputs[i]->script, tx->outputs[i].scriptLen);
+    }
+    //BRWallet *btcWallet = cryptoWalletAsBTC(manager->wallet);
+    //BRWalletRegisterTransactionTokens (btcWallet, tx);
+    
+    btcTransaction = tx;
+    
+    bool error = CRYPTO_TRANSFER_STATE_ERRORED == bundle->status;
+    bool needRegistration = (!error && NULL != btcTransaction && BRTransactionIsSigned (btcTransaction));
+    bool needFree = true;
+
+    BRWallet *btcWallet = cryptoWalletAsBTC(manager->wallet);
+
+    // Convert from `uint64_t` to `uint32_t` with a bit of care regarding BLOCK_HEIGHT_UNBOUND
+    // and TX_UNCONFIRMED - they are directly coercible but be explicit about it.
+    uint32_t btcBlockHeight = (BLOCK_HEIGHT_UNBOUND == bundle->blockHeight ? TX_UNCONFIRMED : (uint32_t) bundle->blockHeight);
+    uint32_t btcTimestamp   = (uint32_t) bundle->timestamp;
+
+
+    //     if (needRegistration) {
+    //         if (0 == pthread_mutex_lock (&manager->lock)) {
+    //             // confirm completion is for in-progress sync
+    //             needRegistration &= (rid == BRClientSyncManagerScanStateGetRequestId (&manager->scanState) && manager->isConnected);
+    //             pthread_mutex_unlock (&manager->lock);
+    //         } else {
+    //             assert (0);
+    //         }
+    //     }
+
+    if (needRegistration) {
+        if (NULL == BRWalletTransactionForHash (btcWallet, btcTransaction->txHash)) {
+            // BRWalletRegisterTransaction doesn't reliably report if the txn was added to the wallet.
+            //BRWalletRegisterTransaction (btcWallet, btcTransaction);
+            BRWalletRegisterTransactionTokens (btcWallet, btcTransaction);
+            if (btcTransaction == BRWalletTransactionForHash (btcWallet, btcTransaction->txHash)) {
+                // If our transaction made it into the wallet, do not deallocate it
+                needFree = false;
+            }
+        }
+    }
+
+    // Check if the wallet knows about transaction.  This is an important check.  If the wallet
+    // does not know about the tranaction then the subsequent BRWalletUpdateTransactions will
+    // free the transaction (with BRTransactionFree()).
+    if (BRWalletContainsTransaction (btcWallet, btcTransaction)) {
+        if (error) {
+            // On an error, remove the transaction.  This will cascade through BRWallet callbacks
+            // to produce `balanceUpdated` and `txDeleted`.  The later will be handled by removing
+            // a BRTransactionWithState from the BRWalletManager.
+            BRWalletRemoveTransaction (btcWallet, btcTransaction->txHash);
+        }
+        else {
+            // If the transaction has transitioned from 'included' back to 'submitted' (like when
+            // there is a blockchain reord), the blockHeight will be TX_UNCONFIRMED and the
+            // timestamp will be 0.  This will cascade through BRWallet callbacks to produce
+            // 'balanceUpdated' and 'txUpdated'.
+            //
+            // If no longer 'included' this might cause dependent transactions to go to 'invalid'.
+            BRWalletUpdateTransactions (btcWallet,
+                                        &btcTransaction->txHash, 1,
+                                        btcBlockHeight,
+                                        btcTimestamp);
+        }
+    }
+
+    // Free if ownership hasn't been passed
+    if (needFree) {
+        BRTransactionFree (btcTransaction);
+    }
+
+    // The transaction is in the wallet, this has generated more BRWallet EXTERNAL and INTERNAL
+    // addresses.  Because the order of bundle arrival is not guaranteed to be by block number,
+    // it is possible that some other transaction in the wallet now has inputs or outputs that are
+    // now in BRWallet.  This changes the amount and fee, possibly.  Find those and replace them.
+    else if (TX_UNCONFIRMED != btcBlockHeight) {
+        for (size_t index = 0; index < array_count (manager->wallet->transfers); index++) {
+            BRCryptoTransfer oldTransfer = manager->wallet->transfers[index];
+            BRTransaction *tid = cryptoTransferCoerceBTC(oldTransfer)->tid;
+
+            if (TX_UNCONFIRMED   != tid->blockHeight &&
+                tid->blockHeight >= btcBlockHeight   &&
+                CRYPTO_TRUE == cryptoTransferChangedAmountBTC (oldTransfer, btcWallet)) {
+                cryptoTransferTake (oldTransfer);
+
+                BRCryptoTransfer newTransfer  = cryptoTransferCreateAsBTC (oldTransfer->listener,
+                                                                           oldTransfer->unit,
+                                                                           oldTransfer->unitForFee,
+                                                                           btcWallet,
+                                                                           BRTransactionCopy (tid),
+                                                                           oldTransfer->type);
+
+                cryptoWalletReplaceTransfer (manager->wallet, oldTransfer, newTransfer);
+                cryptoTransferGive (oldTransfer);
+            }
+        }
+    }
+    
 }
 
 static void
@@ -705,6 +942,28 @@ BRCryptoWalletManagerHandlers cryptoWalletManagerHandlersBSV = {
     cryptoWalletManagerSaveTransactionBundleBTC,
     NULL, // BRCryptoWalletManagerSaveTransactionBundleHandler
     cryptoWalletManagerRecoverTransfersFromTransactionBundleBTC,
+    cryptoWalletManagerRecoverTransferFromTransferBundleBTC,
+    NULL,//BRCryptoWalletManagerRecoverFeeBasisFromFeeEstimateHandler not supported
+    cryptoWalletManagerWalletSweeperValidateSupportedBTC,
+    cryptoWalletManagerCreateWalletSweeperBTC
+};
+
+BRCryptoWalletManagerHandlers cryptoWalletManagerHandlersRPC = {
+    cryptoWalletManagerCreateBTC,
+    cryptoWalletManagerReleaseBTC,
+    crytpWalletManagerCreateFileServiceBTC,
+    cryptoWalletManagerGetEventTypesBTC,
+    cryptoWalletManagerCreateP2PManagerBTC,
+    //cryptoWalletManagerCreateWalletBTC,
+    cryptoWalletManagerCreateWalletRPC,
+    cryptoWalletManagerSignTransactionWithSeedBTC,
+    cryptoWalletManagerSignTransactionWithKeyBTC,
+    cryptoWalletManagerEstimateLimitBTC,
+    cryptoWalletManagerEstimateFeeBasisBTC,
+    cryptoWalletManagerSaveTransactionBundleBTC,
+    NULL, // BRCryptoWalletManagerSaveTransactionBundleHandler
+    cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC,
+    //cryptoWalletManagerRecoverTransfersFromTransactionBundleBTC,
     cryptoWalletManagerRecoverTransferFromTransferBundleBTC,
     NULL,//BRCryptoWalletManagerRecoverFeeBasisFromFeeEstimateHandler not supported
     cryptoWalletManagerWalletSweeperValidateSupportedBTC,

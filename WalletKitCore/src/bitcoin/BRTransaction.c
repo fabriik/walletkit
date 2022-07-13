@@ -365,6 +365,19 @@ BRTransaction *BRTransactionNew(void)
     return tx;
 }
 
+BRTransaction *BRTransactionNewRPC(void)
+{
+    BRTransaction *tx = calloc(1, sizeof(*tx));
+
+    assert(tx != NULL);
+    tx->version = TX_VERSION;
+    array_new(tx->inputs, 6);
+    array_new(tx->outputs, 6);
+    tx->lockTime = TX_LOCKTIME;
+    tx->blockHeight = TX_UNCONFIRMED;
+    return tx;
+}
+
 // returns a deep copy of tx and that must be freed by calling BRTransactionFree()
 BRTransaction *BRTransactionCopy(const BRTransaction *tx)
 {

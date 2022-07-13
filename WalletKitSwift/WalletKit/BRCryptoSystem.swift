@@ -1519,6 +1519,47 @@ extension System {
             return cryptoClientTransactionBundleCreate (status, bytesAsUInt8, bytesCount, timestamp, height)
         }
     }
+    
+    internal static func makeTransactionBundleRPC (_ model: SystemClient.Transaction) -> BRCryptoClientTransactionBundle {
+        let timestamp = model.timestamp.map { $0.asUnixTimestamp } ?? 0
+        let height    = model.blockHeight ?? BLOCK_HEIGHT_UNBOUND
+        let status    = System.getTransferStatus (model.status)
+        
+        let txHash    = model.hash
+        let version   = model.version!
+        let lockTime  = model.lockTime!
+        let time      = model.time!
+        let inCount   = Int32(model.inCount!)
+        //let inputs    = model.inputs!
+        var inputs : [BRCryptoClientTransactionInput?] = model.inputs!.map { cryptoClientTransactionInputCreate($0.txHash, $0.script, $0.signature, $0.sequence)}
+        /*for item in model.inputs! {
+            inputs.append(wkClientTransactionInputCreateWOC(item.script, item.signature, item.witness, item.sequence!));
+        }*/
+        
+        
+        //let inputs    = UnsafeMutableRawPointer(mutating: model.inputs)
+        //var inputsPtr = model.inputs
+            //.map { OpaquePointer($0) }
+        let outCount  = Int32(model.outCount!)
+        //let outputs   = model.outputs
+        //let outputs   = UnsafeMutableRawPointer(mutating: model.outputs)
+        var outputs : [BRCryptoClientTransactionOutput?] = model.outputs!.map { cryptoClientTransactionOutputCreate($0.script, $0.amount) }
+        /*var outputsPtr = model.outputs
+            .map { OpaquePointer($0) }*/
+        
+        let type = model.type
+
+        var data = model.raw!
+        let bytesCount = data.count
+        return data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) -> BRCryptoClientTransactionBundle in
+            let bytesAsUInt8 = bytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
+            //return wkClientTransactionBundleCreate (status, bytesAsUInt8, bytesCount, timestamp, height)
+            return cryptoClientTransactionBundleCreateTokens (status, bytesAsUInt8, bytesCount, timestamp, height,
+                                                       txHash, version, lockTime, time, inCount, &inputs, outCount, &outputs, type)
+            //return wkClientTransactionBundleCreateWOC (status, bytesAsUInt8, bytesCount, timestamp, height,
+            //                                           txHash, version, lockTime, time, inCount, outCount)
+        }
+    }
 
     internal static func makeTransferBundles (_ transaction: SystemClient.Transaction, addresses:[String]) -> [BRCryptoClientTransferBundle] {
         let blockTimestamp = transaction.timestamp.map { $0.asUnixTimestamp } ?? 0
@@ -1605,8 +1646,16 @@ extension System {
                     defer { cryptoWalletManagerGive (cwm!) }
                     res.resolve(
                         success: {
-                            var bundles: [BRCryptoClientTransactionBundle?] = System.canonicalizeTransactions ($0).map { System.makeTransactionBundle ($0) }
-                            cryptoClientAnnounceTransactions (cwm, sid, CRYPTO_TRUE,  &bundles, bundles.count) },
+                            /*var bundles: [BRCryptoClientTransactionBundle?] = System.canonicalizeTransactions ($0).map { System.makeTransactionBundle ($0) }
+                            cryptoClientAnnounceTransactions (cwm, sid, CRYPTO_TRUE,  &bundles, bundles.count)*/
+                            var bundles: [BRCryptoClientTransactionBundle?]
+                            if(manager.network.name == "BitcoinRPC") {
+                                bundles = System.canonicalizeTransactions ($0).map { System.makeTransactionBundleRPC ($0) }
+                            } else {
+                                bundles = System.canonicalizeTransactions ($0).map { System.makeTransactionBundle ($0) }
+                            }
+                            cryptoClientAnnounceTransactions (cwm, sid, CRYPTO_TRUE,  &bundles, bundles.count)
+                        },
                         failure: { (e) in
                             print ("SYS: GetTransactions: Error: \(e)")
                             cryptoClientAnnounceTransactions (cwm, sid, CRYPTO_FALSE, nil, 0) })

@@ -254,6 +254,7 @@ extern size_t fileServiceSpecificationsCountBTC;
 extern BRFileServiceTypeSpecification *fileServiceSpecificationsBTC;
 
 extern BRArrayOf(BRTransaction*) initialTransactionsLoadBTC (BRCryptoWalletManager manager);
+extern BRArrayOf(BRTransaction*) initialTransactionsLoadRPC (BRCryptoWalletManager manager);
 extern BRArrayOf(BRPeer)         initialPeersLoadBTC        (BRCryptoWalletManager manager);
 extern BRArrayOf(BRMerkleBlock*) initialBlocksLoadBTC       (BRCryptoWalletManager manager);
 
