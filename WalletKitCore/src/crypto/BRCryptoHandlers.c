@@ -66,6 +66,19 @@ static BRCryptoHandlers handlers[NUMBER_OF_NETWORK_TYPES] = {
         &cryptoFeeBasisHandlersETH,
         &cryptoWalletManagerHandlersETH
     },
+    
+    {
+        CRYPTO_NETWORK_TYPE_RPC,
+        &cryptoNetworkHandlersRPC,
+        &cryptoAddressHandlersRPC,
+        &cryptoTransferHandlersBTC,
+        &cryptoWalletHandlersBTC,
+        &cryptoWalletSweeperHandlersBTC,
+        &cryptoExportablePaperWalletHandlersBTC,
+        &cryptoPaymentProtocolHandlersBTC,
+        &cryptoFeeBasisHandlersBTC,
+        &cryptoWalletManagerHandlersBTC
+    },
 
     {
         CRYPTO_NETWORK_TYPE_XRP,

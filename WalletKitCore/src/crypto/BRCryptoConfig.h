@@ -12,6 +12,7 @@
 #define HAS_BCH_TESTNET     1
 #define HAS_BSV_TESTNET     0
 #define HAS_ETH_TESTNET     1
+#define HAS_RPC_TESTNET     1
 #define HAS_XRP_TESTNET     0
 #define HAS_HBAR_TESTNET    0
 #define HAS_XTZ_TESTNET     0
@@ -180,6 +181,31 @@ DEFINE_UNIT ("ethereum-goerli:0x326c977e6efc84e512bb9c30f76e30c160ed06fb",      
 DEFINE_UNIT ("ethereum-goerli:0x326c977e6efc84e512bb9c30f76e30c160ed06fb",      "ChainLink Token",             "link",       18,     "LINK")
 DEFINE_ADDRESS_SCHEMES  ("ethereum-goerli", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("ethereum-goerli", CRYPTO_SYNC_MODE_API_ONLY)
+#endif
+#undef NETWORK_NAME
+
+// MARK: RPC
+
+#define NETWORK_NAME    "BitcoinRPC"
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_RPC,  "bitcoinrpc-mainnet", NETWORK_NAME, "mainnet", true, 668821, 6, 10 * 60)
+DEFINE_NETWORK_FEE_ESTIMATE ("bitcoinrpc-mainnet", "18", "10m", 10 * 60 * 1000)
+DEFINE_CURRENCY ("bitcoinrpc-mainnet",     "bitcoinrpc-mainnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_RPC,  "native",   NULL,   true)
+    DEFINE_UNIT ("bitcoinrpc-mainnet:__native__",      "Satoshi",    "sat",      0,      "SAT")
+    DEFINE_UNIT ("bitcoinrpc-mainnet:__native__",      NETWORK_NAME, "btc",      8,      "₿")
+DEFINE_ADDRESS_SCHEMES  ("bitcoinrpc-mainnet", CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT,   CRYPTO_ADDRESS_SCHEME_BTC_LEGACY)
+DEFINE_MODES            ("bitcoinrpc-mainnet", CRYPTO_SYNC_MODE_API_ONLY,          CRYPTO_SYNC_MODE_P2P_ONLY)
+
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_RPC,  "bitcoinrpc-testnet", NETWORK_NAME, "testnet", false, 100, 6, 10 * 60)
+DEFINE_NETWORK_FEE_ESTIMATE ("bitcoinrpc-testnet", "18", "10m", 10 * 60 * 1000)
+DEFINE_CURRENCY ("bitcoinrpc-testnet",     "bitcoinrpc-testnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_RPC,  "native",   NULL,   true)
+    DEFINE_UNIT ("bitcoinrpc-testnet:__native__",      "Satoshi",    "sat",      0,      "SAT")
+    DEFINE_UNIT ("bitcoinrpc-testnet:__native__",      "sfp", "sfp",      8,      "SFP")
+    DEFINE_UNIT ("bitcoinrpc-testnet:__native__",      "unknown", "unk",      8,      "UNK")
+DEFINE_ADDRESS_SCHEMES  ("bitcoinrpc-testnet", CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT,   CRYPTO_ADDRESS_SCHEME_BTC_LEGACY)
+#if HAS_RPC_TESTNET
+DEFINE_MODES            ("bitcoinrpc-testnet", CRYPTO_SYNC_MODE_API_ONLY,          CRYPTO_SYNC_MODE_P2P_ONLY)
+#else
+DEFINE_MODES            ("bitcoinrpc-testnet", CCRYPTO_SYNC_MODE_P2P_ONLY)
 #endif
 #undef NETWORK_NAME
 
