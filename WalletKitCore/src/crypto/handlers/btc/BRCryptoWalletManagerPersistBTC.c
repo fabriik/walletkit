@@ -101,6 +101,30 @@ initialTransactionsLoadBTC (BRCryptoWalletManager manager) {
     return transactions;
 }
 
+extern BRArrayOf(BRTransaction*)
+initialTransactionsLoadRPC (BRCryptoWalletManager manager) {
+    BRSetOf(BRTransaction*) transactionSet = BRSetNew(BRTransactionHash, BRTransactionEq, 100);
+    /*if (1 != fileServiceLoad (manager->fileService, transactionSet, FILE_SERVICE_TYPE_TRANSACTION, 1)) {
+        BRSetFreeAll(transactionSet, (void (*) (void*)) BRTransactionFree);
+        _peer_log ("BWM: failed to load transactions");
+        return NULL;
+    }*/
+
+    size_t transactionsCount = BRSetCount(transactionSet);
+
+    BRArrayOf(BRTransaction*) transactions;
+    array_new (transactions, transactionsCount);
+    array_set_count(transactions, transactionsCount);
+
+    BRSetAll(transactionSet, (void**) transactions, transactionsCount);
+    BRSetFree(transactionSet);
+
+    _peer_log ("BWM: %4s: loaded %4zu transactions\n",
+               cryptoBlockChainTypeGetCurrencyCode (manager->type),
+               transactionsCount);
+    return transactions;
+}
+
 /// MARK: - Block File Service
 
 #define FILE_SERVICE_TYPE_BLOCK         "blocks"

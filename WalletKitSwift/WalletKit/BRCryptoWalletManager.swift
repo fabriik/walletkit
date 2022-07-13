@@ -248,7 +248,16 @@ public final class WalletManager: Equatable, CustomStringConvertible {
         self.network = Network (core: cryptoWalletManagerGetNetwork (core), take: false)
         self.unit    = self.network.defaultUnitFor (currency: self.network.currency)!
         self.path    = asUTF8String (cryptoWalletManagerGetPath(core))
-        self.client  = system.client
+        if (self.network.name == "BitcoinRPC") {
+            let appBundle = Bundle(for: WalletManager.self)
+            let testConfiguration     = TestConfiguration.loadFrom (bundle: appBundle, resource: "WalletKitTestsConfig")!
+            let blocksetAccess = testConfiguration.blocksetAccess
+            //self.client = WhatsOnChainSystemClient.createForTest (bdbBaseURL: blocksetAccess.baseURL, bdbToken:   blocksetAccess.token)
+            self.client = BitcoinRPCSystemClient.createForTest (bdbBaseURL: "http://bitcoin:local321@127.0.0.1:18332/", bdbToken:   blocksetAccess.token)
+        }
+        else {
+            self.client  = system.client
+        }
 
         self.defaultNetworkFee = self.network.minimumFee
     }

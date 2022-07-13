@@ -49,12 +49,41 @@ typedef void
 
 typedef struct BRCryptoClientTransactionBundleRecord *BRCryptoClientTransactionBundle;
 
+typedef struct BRCryptoClientTransactionInputRecord *BRCryptoClientTransactionInput;
+
+typedef struct BRCryptoClientTransactionOutputRecord *BRCryptoClientTransactionOutput;
+
 extern BRCryptoClientTransactionBundle
 cryptoClientTransactionBundleCreate (BRCryptoTransferStateType status,
                                      OwnershipKept uint8_t *transaction,
                                      size_t transactionLength,
                                      BRCryptoTimestamp timestamp,
                                      BRCryptoBlockNumber blockHeight);
+
+extern BRCryptoClientTransactionBundle
+cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
+                                 OwnershipKept uint8_t *transaction,
+                                 size_t transactionLength,
+                                 BRCryptoTimestamp timestamp,
+                                 BRCryptoBlockNumber blockHeight,
+                                 const char *txHash,
+                                 int64_t version,
+                                 int64_t lockTime,
+                                 int64_t time,
+                                 int inCount,
+                                 BRCryptoClientTransactionInput *inputs,
+                                 int outCount,
+                                 BRCryptoClientTransactionOutput *outputs,
+                                 const char *type);
+
+extern BRCryptoClientTransactionInput
+cryptoClientTransactionInputCreate (const char* txHash,
+                                   const char *script,
+                                   const char* signature,
+                                   int64_t sequence);
+
+extern BRCryptoClientTransactionOutput
+cryptoClientTransactionOutputCreate (const char *script, double amount);
 
 extern void
 cryptoClientTransactionBundleRelease (BRCryptoClientTransactionBundle bundle);

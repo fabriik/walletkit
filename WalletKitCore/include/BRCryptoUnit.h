@@ -20,6 +20,16 @@ extern "C" {
 
     typedef struct BRCryptoUnitRecord *BRCryptoUnit;
 
+    struct BRCryptoUnitRecord {
+        BRCryptoCurrency currency;
+        char *uids;
+        char *name;
+        char *symbol;
+        BRCryptoUnit base;
+        uint8_t decimals;
+        BRCryptoRef ref;
+    };
+
     private_extern BRCryptoUnit
     cryptoUnitCreateAsBase (BRCryptoCurrency currency,
                             const char *code,

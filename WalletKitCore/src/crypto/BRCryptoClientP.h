@@ -29,13 +29,49 @@ extern "C" {
 
 // MARK: - Transaction Bundle
 
+struct BRCryptoClientTransactionInputRecord {
+    char *txHash;
+    char *script;
+    char *signature;
+    int64_t sequence;
+};
+
+struct BRCryptoClientTransactionOutputRecord {
+    char *script;
+    uint64_t amount;
+};
+
+/*struct BRCryptoClientTransactionBundleRecord {
+    BRCryptoTransferStateType status;
+    uint8_t *serialization;
+    size_t   serializationCount;
+    BRCryptoTimestamp timestamp;
+    BRCryptoBlockNumber blockHeight;
+};*/
+
+#define MAX_INPUTS_OUTPUTS 5
+
 struct BRCryptoClientTransactionBundleRecord {
     BRCryptoTransferStateType status;
     uint8_t *serialization;
     size_t   serializationCount;
     BRCryptoTimestamp timestamp;
     BRCryptoBlockNumber blockHeight;
+    uint8_t *txHash;
+    int64_t version;
+    int64_t lockTime;
+    int64_t time;
+    int inCount;
+    //WKClientTransactionInput *inputs;
+    BRCryptoClientTransactionInput inputs[MAX_INPUTS_OUTPUTS];
+    //struct WKClientTransactionInputRecord inputs[MAX_INPUTS_OUTPUTS];
+    int outCount;
+    //WKClientTransactionOutput *outputs;
+    BRCryptoClientTransactionOutput outputs[MAX_INPUTS_OUTPUTS];
+    //struct WKClientTransactionOutputRecord outputs[MAX_INPUTS_OUTPUTS];
+    char *type;
 };
+
 
 private_extern OwnershipKept uint8_t *
 cryptoClientTransactionBundleGetSerialization (BRCryptoClientTransactionBundle bundle,

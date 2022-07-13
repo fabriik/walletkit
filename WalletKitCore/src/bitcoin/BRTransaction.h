@@ -91,10 +91,13 @@ typedef struct {
     uint32_t lockTime;
     uint32_t blockHeight;
     uint32_t timestamp; // time interval since unix epoch
+    uint32_t sendAmount; // Token protocols
 } BRTransaction;
 
 // returns a newly allocated empty transaction that must be freed by calling BRTransactionFree()
 BRTransaction *BRTransactionNew(void);
+
+BRTransaction *BRTransactionNewRPC(void);
 
 // returns a deep copy of tx and that must be freed by calling BRTransactionFree()
 BRTransaction *BRTransactionCopy(const BRTransaction *tx);

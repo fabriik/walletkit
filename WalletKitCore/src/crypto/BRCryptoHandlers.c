@@ -77,7 +77,7 @@ static BRCryptoHandlers handlers[NUMBER_OF_NETWORK_TYPES] = {
         &cryptoExportablePaperWalletHandlersBTC,
         &cryptoPaymentProtocolHandlersBTC,
         &cryptoFeeBasisHandlersBTC,
-        &cryptoWalletManagerHandlersBTC
+        &cryptoWalletManagerHandlersRPC
     },
 
     {

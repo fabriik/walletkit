@@ -1506,6 +1506,104 @@ cryptoClientTransactionBundleCreate (BRCryptoTransferStateType status,
     return bundle;
 }
 
+extern BRCryptoClientTransactionBundle
+cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
+                                 OwnershipKept uint8_t *transaction,
+                                 size_t transactionLength,
+                                 BRCryptoTimestamp timestamp,
+                                 BRCryptoBlockNumber blockHeight,
+                                 const char *txHash,
+                                 int64_t version,
+                                 int64_t lockTime,
+                                 int64_t time,
+                                 int inCount,
+                                 BRCryptoClientTransactionInput *inputs,
+                                 int outCount,
+                                 BRCryptoClientTransactionOutput *outputs,
+                                 const char *type) {
+    BRCryptoClientTransactionBundle bundle = calloc (1, sizeof (struct BRCryptoClientTransactionBundleRecord));
+
+    bundle->status = status;
+
+    bundle->serialization = malloc(transactionLength);
+    memcpy (bundle->serialization, transaction, transactionLength);
+    bundle->serializationCount = transactionLength;
+
+    bundle->timestamp   = timestamp;
+    bundle->blockHeight = (BRCryptoBlockNumber) blockHeight;
+    
+    //bundle->txHash = txHash;
+    bundle->txHash = (uint8_t *) malloc(strlen(txHash));
+    memcpy(bundle->txHash, txHash, strlen(txHash));
+    bundle->version = version;
+    bundle->lockTime = lockTime;
+    bundle->time = time;
+    bundle->inCount = inCount;
+    //bundle->inputs = inputs;
+    //bundle->inputs = calloc ((unsigned long) inCount, sizeof (struct WKClientTransactionInputRecord));
+    for(int i = 0; i < inCount; i++) {
+        bundle->inputs[i] = calloc (1, sizeof (struct BRCryptoClientTransactionInputRecord));
+        
+        bundle->inputs[i]->txHash = (char *) malloc(strlen(inputs[i]->txHash));
+        memcpy(bundle->inputs[i]->txHash, inputs[i]->txHash, strlen(inputs[i]->txHash));
+        bundle->inputs[i]->script = (char *) malloc(strlen(inputs[i]->script));
+        memcpy(bundle->inputs[i]->script, inputs[i]->script, strlen(inputs[i]->script));
+        bundle->inputs[i]->signature = (char *) malloc(strlen(inputs[i]->signature));
+        memcpy(bundle->inputs[i]->signature, inputs[i]->txHash, strlen(inputs[i]->signature));
+        bundle->inputs[i]->sequence = inputs[i]->sequence;
+        
+    }
+    bundle->outCount = outCount;
+    //bundle->outputs = outputs;
+    //bundle->outputs = calloc ((unsigned long) outCount, sizeof (struct WKClientTransactionOutputRecord));
+    for(int i = 0; i < outCount; i++) {
+        bundle->outputs[i] = calloc (1, sizeof (struct BRCryptoClientTransactionOutputRecord));
+        
+        bundle->outputs[i]->script = (char *) malloc(strlen(outputs[i]->script));
+        memcpy(bundle->outputs[i]->script, outputs[i]->script, strlen(outputs[i]->script));
+        
+    }
+    
+    bundle->type = (char *) malloc(strlen(type));
+    memcpy(bundle->type, type, strlen(type));
+
+    return bundle;
+}
+
+extern BRCryptoClientTransactionInput
+cryptoClientTransactionInputCreate (const char* txHash,
+                                   const char *script,
+                                   const char* signature,
+                                    int64_t sequence) {
+    BRCryptoClientTransactionInput input = calloc (1, sizeof (struct BRCryptoClientTransactionInputRecord));
+    
+    //input->txHash = txHash;
+    input->txHash = (char *) malloc(strlen(txHash));
+    memcpy(input->txHash, txHash, strlen(txHash));
+    //input->script = script;
+    input->script = (char *) malloc(strlen(script));
+    memcpy(input->script, script, strlen(script));
+    //input->signature = signature;
+    input->signature = (char *) malloc(strlen(signature));
+    memcpy(input->signature, signature, strlen(signature));
+    input->sequence = sequence;
+    
+    return input;
+}
+
+extern BRCryptoClientTransactionOutput
+cryptoClientTransactionOutputCreate (const char *script, double amount) {
+    BRCryptoClientTransactionOutput output = calloc (1, sizeof (struct BRCryptoClientTransactionOutputRecord));
+    
+    //output->script = script;
+    output->script = (char *) malloc(strlen(script));
+    memcpy(output->script, script, strlen(script));
+    
+    output->amount = (uint64_t) (amount * 100000000);
+    
+    return output;
+}
+
 extern void
 cryptoClientTransactionBundleRelease (BRCryptoClientTransactionBundle bundle) {
     free (bundle->serialization);

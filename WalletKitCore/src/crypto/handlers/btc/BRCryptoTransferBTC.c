@@ -25,7 +25,9 @@ extern BRCryptoTransferBTC
 cryptoTransferCoerceBTC (BRCryptoTransfer transfer) {
     assert (CRYPTO_NETWORK_TYPE_BTC == transfer->type ||
             CRYPTO_NETWORK_TYPE_BCH == transfer->type ||
-            CRYPTO_NETWORK_TYPE_BSV == transfer->type);
+            //CRYPTO_NETWORK_TYPE_BSV == transfer->type);
+            CRYPTO_NETWORK_TYPE_BSV == transfer->type ||
+            CRYPTO_NETWORK_TYPE_RPC == transfer->type);
     return (BRCryptoTransferBTC) transfer;
 }
 
@@ -84,9 +86,22 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
 
     BRCryptoTransferDirection direction = cryptoTransferDirectionFromBTC (send, recv, fee);
     
-    BRCryptoAmount amount = cryptoAmountCreate (unit,
+    /*BRCryptoAmount amount = cryptoAmountCreate (unit,
                                                 CRYPTO_FALSE,
-                                                uint256Create (cryptoTransferComputeAmountBTC (direction, send, recv, fee)));
+                                                uint256Create (cryptoTransferComputeAmountBTC (direction, send, recv, fee)));*/
+    
+    BRCryptoAmount amount;
+    
+    if(strcmp(listener.manager->network->name, "BitcoinRPC") == 0) {
+        amount = cryptoAmountCreate (unit,
+                                     CRYPTO_FALSE,
+                                                    uint256Create (cryptoTransferComputeAmountBTC (direction, send, tid->sendAmount, fee)));
+                                                    //uint256Create (wkTransferComputeAmountBTC (direction, send, 100000000, fee)));
+    } else {
+        amount = cryptoAmountCreate (unit,
+                                     CRYPTO_FALSE,
+                                                    uint256Create (cryptoTransferComputeAmountBTC (direction, send, recv, fee)));
+    }
 
     BRCryptoAddress sourceAddress = NULL;
     {
