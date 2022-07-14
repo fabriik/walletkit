@@ -38,6 +38,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2C08C77F287F77E100173257 /* BitcoinCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = BitcoinCore; path = ../../BitcoinCore; sourceTree = "<group>"; };
 		3C13F33724C759A0008410C8 /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
 		3C486DDE25ED576700FAE817 /* ExportablePaperWalletController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportablePaperWalletController.swift; sourceTree = "<group>"; };
 		3C5C8DF02566F457002ED2D2 /* WalletKitTestsConfig.env */ = {isa = PBXFileReference; lastKnownFileType = text; path = WalletKitTestsConfig.env; sourceTree = "<group>"; };
@@ -100,6 +101,7 @@
 		3CD5B21A23EB79D600CC8A56 = {
 			isa = PBXGroup;
 			children = (
+				2C08C77F287F77E100173257 /* BitcoinCore */,
 				3CCCFC0A24C0CDD90045FA37 /* CONTRIBUTORS */,
 				3CCCFC0B24C0CDD90045FA37 /* LICENSE */,
 				3CCCFC0C24C0CDD90045FA37 /* README.md */,
@@ -431,7 +433,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4R7S6N88W9;
 				INFOPLIST_FILE = "$(SRCROOT)/Source/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -450,7 +452,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4R7S6N88W9;
 				INFOPLIST_FILE = "$(SRCROOT)/Source/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

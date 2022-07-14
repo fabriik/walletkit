@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import BitcoinCore
 
 #if os(Linux)
 import FoundationNetworking
@@ -595,8 +596,8 @@ public class BitcoinRPCSystemClient: SystemClient {
                 print("Stop")
             }
             
-            //var type : String? = "unknown" //Change back to "unknown"
-            var type : String? = "sfp" //Change back to "unknown"
+            var type : String? = "unknown" //Change back to "unknown"
+            //var type : String? = "sfp" //Change back to "unknown"
             
             var outputs : [SystemClient.Outputs] = []
             for anItem in vout {
@@ -610,9 +611,9 @@ public class BitcoinRPCSystemClient: SystemClient {
                 //let script = scriptPubKey!["hex"] as! String
                 let script = scriptPubKey["hex"] as! String
                 
-                /*if(isTokenSFP(script: script)) {
+                if(isTokenSFP(script: script)) {
                     type = "sfp"
-                }*/
+                }
                 
                 //let output : SystemClient.Outputs = (script: script, amount: value!)
                 let output : SystemClient.Outputs = (script: script, amount: value ?? 0)
@@ -1212,6 +1213,41 @@ public class BitcoinRPCSystemClient: SystemClient {
             })
         }
     }
+    
+    static internal func isAddressInVout (address: String, json: JSON.Dict) -> Bool {
+        let result = json["result"] as! NSDictionary
+        
+        let vout       = result["vout"] as! [NSDictionary]
+        
+        for anItem in vout {
+           
+            let scriptPubKey = anItem["scriptPubKey"] as! NSDictionary
+            //let scriptSig = anItem["scriptSig"] as! JSON.Dict
+            //let script = scriptPubKey!["hex"] as! String
+            let script = scriptPubKey["hex"] as! String
+            
+            //let ret : Bool = wkClientCheckAddress(address, script);
+            let ret : Bool = authorizerCheckAddress(address, script);
+            
+            if(ret) {
+                print("Address in VOUT!")
+                return true
+            }
+        }
+        return false;
+    }
+    
+    static internal func isTokenSFP (script: String) -> Bool {
+       
+        let ret : Bool = authorizerCheckSFP(script);
+        
+        if(ret) {
+            print("SFP Token!")
+            return true
+        }
+       
+        return false;
+    }
 
     // Transactions
 
@@ -1284,6 +1320,8 @@ public class BitcoinRPCSystemClient: SystemClient {
                         {
                             data_array.append(data_!)
                         }*/
+                        
+                        
                         data_array.append(data_!)
                         print("Debugging")
                         
