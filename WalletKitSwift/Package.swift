@@ -6,7 +6,8 @@ let package = Package(
     name: "WalletKit",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.v11)
+        .iOS(.v13)
+        //.iOS(.v11)
     ],
     products: [
         .library(
@@ -16,14 +17,16 @@ let package = Package(
     ],
 
     dependencies: [
-        .package(path: "../WalletKitCore")
+        .package(path: "../WalletKitCore"),
+        .package(path: "../BitcoinCore"),
     ],
 
     targets: [
         .target(
             name: "WalletKit",
             dependencies: [
-                "WalletKitCore"
+                "WalletKitCore",
+                "BitcoinCore"
             ],
             path: "WalletKit"
         ),
