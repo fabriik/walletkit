@@ -121,7 +121,7 @@ public:
      */
     bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, bool grind = true, uint32_t test_case = 0) const;
 
-    bool Sign_(const uint256& hash, std::vector<unsigned char>& vchSig, std::vector<unsigned char>& kinvmN, bool grind = true, uint32_t test_case = 0) const;
+    bool Sign_(const uint256& hash, std::vector<unsigned char>& vchSig, std::vector<unsigned char>& kinvmN, unsigned long *kinvNLen, bool grind = true, uint32_t test_case = 0) const;
     /**
      * Create a compact signature (65 bytes), which allows reconstructing the used public key.
      * The format is one header byte, followed by two times 32 bytes for the serialized r and s values.
