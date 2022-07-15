@@ -242,7 +242,7 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool gr
     return true;
 }
 
-bool CKey::Sign_(const uint256 &hash, std::vector<unsigned char>& vchSig, std::vector<unsigned char>& kinvmN, bool grind, uint32_t test_case) const { //CLP ADDED
+bool CKey::Sign_(const uint256 &hash, std::vector<unsigned char>& vchSig, std::vector<unsigned char>& kinvmN, unsigned long *kinvNLen, bool grind, uint32_t test_case) const { //CLP ADDED
     printf("CKEY SIGN\n");
     if (!fValid)
         return false;
@@ -253,7 +253,7 @@ bool CKey::Sign_(const uint256 &hash, std::vector<unsigned char>& vchSig, std::v
     WriteLE32(extra_entropy, test_case);
     secp256k1_ecdsa_signature sig;
     uint32_t counter = 0;
-    int ret = secp256k1_ecdsa_sign_(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, (!grind && test_case) ? extra_entropy : nullptr, kinvmN.data());
+    int ret = secp256k1_ecdsa_sign_(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, (!grind && test_case) ? extra_entropy : nullptr, kinvmN.data(), kinvNLen);
 
     // Grind for low R
     while (ret && !SigHasLowR(&sig) && grind) {

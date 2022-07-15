@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include <bitcoin/src/script/script.h>
 #include <bitcoin/src/primitives/transaction.h>
@@ -1163,7 +1164,7 @@ static std::vector<unsigned char> getLittleEndian2(CKey privKey, std::vector<uns
     return hexToUchBuffer(newSigStr);
 }
 
-static std::vector<unsigned char> getLittleEndian3(CKey privKey, std::vector<unsigned char> sig, std::vector<unsigned char> hashBuf, std::vector<unsigned char> kinvmNBuf) {
+static std::vector<unsigned char> getLittleEndian3(CKey privKey, std::vector<unsigned char> sig, std::vector<unsigned char> hashBuf, std::vector<unsigned char> kinvmNBuf, unsigned long kinvNLen) {
 
     std::string wif = EncodeSecret(privKey);
     //printf("wif: %s\n", wif.c_str());
@@ -1195,11 +1196,22 @@ static std::vector<unsigned char> getLittleEndian3(CKey privKey, std::vector<uns
     std::string r = hex2dec.Convert(rStr.c_str()); //"1c9b0e71d32fcedb7c5a644c6dcf30a52691c67abc18de3508689b2748bc2edf"
 
     std::string e = hex2dec.Convert(hashBufStr.c_str()); //"502d9839d55f6c5acd0daf920186e93f8a606c42d92e698be81b6d275eb1e23a"
+    
+    while(kinvmNBuf.size() > kinvNLen) {
+        kinvmNBuf.pop_back();
+      }
+
+      printf("kinvmNBuf: \n");
+      for(size_t i = 0; i < kinvmNBuf.size(); i++) {
+        printf("%02x", kinvmNBuf[i]);
+      }
+      printf("\n");
 
   std::string kinvmNStr = uchbufToString(kinvmNBuf);
 
   //std::string kinvmNHex = kinvmNStr.substr(79, 63);
-  std::string kinvmNHex = kinvmNStr.substr(kinvmNStr.size() - 2 - 64, 64);
+  //std::string kinvmNHex = kinvmNStr.substr(kinvmNStr.size() - 2 - 64, 64);
+  std::string kinvmNHex = kinvmNStr.substr(kinvmNStr.size() - 64, 64);
 
   printf("kinvmNHex = %s\n", kinvmNHex.c_str());
 
@@ -1242,6 +1254,9 @@ static std::vector<unsigned char> getLittleEndian3(CKey privKey, std::vector<uns
     kinvmN_mul_e_add_d_mul_r_mod_N_hex = dec2hex.Convert(kinvmN_mul_e_add_d_mul_r_mod_N.c_str());
       printf("s hex = %s\n", kinvmN_mul_e_add_d_mul_r_mod_N_hex.c_str());
   }
+    while(kinvmN_mul_e_add_d_mul_r_mod_N_hex.size() < 64) {
+        kinvmN_mul_e_add_d_mul_r_mod_N_hex = std::string("0") + kinvmN_mul_e_add_d_mul_r_mod_N_hex;
+      }
     //std::string test1("9999999");
     //std::string test2("1000");
     //std::string result4 = mod(test1, test2);
@@ -2292,14 +2307,15 @@ std::vector<unsigned char> TxBuilder::sign (KeyPair keyPair, unsigned long nHash
 
     //bool res_message = keyPair.PrivKey.Sign(hashBuf_, vchSig, false, 0);
   std::vector<unsigned char> kinvmN;
-  bool res_message = keyPair.PrivKey.Sign_(hashBuf_, vchSig, kinvmN, false, 0);
+  unsigned long kinvNLen = CPubKey::SIGNATURE_SIZE;
+  bool res_message = keyPair.PrivKey.Sign_(hashBuf_, vchSig, kinvmN, &kinvNLen, false, 0);
 
   //bool res_message = keyPair.PrivKey.Sign(hashBufReverse_, vchSig, false, 0);
     //bool res_message = keyPair.PrivKey.Sign(hashBuf_, vchSig, true, 0);
     //bool res_message = keyPair.PrivKey.Sign(hashBuf_, vchSig, false);
 
   //vchSig = getLittleEndian2(keyPair.PrivKey, vchSig, hashBuf, kinvmN);
-  vchSig = getLittleEndian3(keyPair.PrivKey, vchSig, hashBuf, kinvmN);
+  vchSig = getLittleEndian3(keyPair.PrivKey, vchSig, hashBuf, kinvmN, kinvNLen);
     printf("TXBUILDER SIGN: vchSig:\n");
     for(int i = 0; i < vchSig.size(); i++) {
         printf("%02x", vchSig[i]);
@@ -7098,7 +7114,8 @@ extern void authorizerCreateSerialization(const char *path_) {
     CDataStream ssTx2(SER_NETWORK, PROTOCOL_VERSION | 0);
     tokenData.bsvTxBuilder->tx.Serialize(ssTx2);
     std::string hex2 = HexStr(ssTx2);
-    printf("AUTHORIZE ACTION HEX: %s\n", hex2.c_str());
+    std::cout << "AUTHORIZE ACTION HEX: " << hex2 << "\n";
+    //printf("AUTHORIZE ACTION HEX: %s\n", hex2.c_str());
     
 }
     

@@ -505,7 +505,7 @@ static int secp256k1_ecdsa_sign_inner(const secp256k1_context* ctx, secp256k1_sc
     return ret;
 }*/
 
-static int secp256k1_ecdsa_sign_inner_(const secp256k1_context* ctx, secp256k1_scalar* r, secp256k1_scalar* s, int* recid, const unsigned char *msg32, const unsigned char *seckey, secp256k1_nonce_function noncefp, const void* noncedata, unsigned char *kinvmN) {
+static int secp256k1_ecdsa_sign_inner_(const secp256k1_context* ctx, secp256k1_scalar* r, secp256k1_scalar* s, int* recid, const unsigned char *msg32, const unsigned char *seckey, secp256k1_nonce_function noncefp, const void* noncedata, unsigned char *kinvmN, unsigned long *kinvNLen) {
     secp256k1_scalar sec, non, msg;
     int ret = 0;
     int is_sec_valid;
@@ -535,7 +535,7 @@ static int secp256k1_ecdsa_sign_inner_(const secp256k1_context* ctx, secp256k1_s
         /* The nonce is still secret here, but it being invalid is is less likely than 1:2^255. */
         secp256k1_declassify(ctx, &is_nonce_valid, sizeof(is_nonce_valid));
         if (is_nonce_valid) {
-            ret = secp256k1_ecdsa_sig_sign_(&ctx->ecmult_gen_ctx, r, s, &sec, &msg, &non, recid, kinvmN);
+            ret = secp256k1_ecdsa_sig_sign_(&ctx->ecmult_gen_ctx, r, s, &sec, &msg, &non, recid, kinvmN, kinvNLen);
             /*unsigned long nSigLen = 72;
             unsigned char vchSig[72];
             secp256k1_ecdsa_signature sig;
@@ -572,7 +572,7 @@ static int secp256k1_ecdsa_sign_inner_(const secp256k1_context* ctx, secp256k1_s
     return ret;
 }
 
-int secp256k1_ecdsa_sign_(const secp256k1_context* ctx, secp256k1_ecdsa_signature *signature, const unsigned char *msghash32, const unsigned char *seckey, secp256k1_nonce_function noncefp, const void* noncedata, unsigned char *kinvmN) {
+int secp256k1_ecdsa_sign_(const secp256k1_context* ctx, secp256k1_ecdsa_signature *signature, const unsigned char *msghash32, const unsigned char *seckey, secp256k1_nonce_function noncefp, const void* noncedata, unsigned char *kinvmN, unsigned long *kinvNLen) {
     secp256k1_scalar r, s;
     int ret;
     VERIFY_CHECK(ctx != NULL);
@@ -581,7 +581,7 @@ int secp256k1_ecdsa_sign_(const secp256k1_context* ctx, secp256k1_ecdsa_signatur
     ARG_CHECK(signature != NULL);
     ARG_CHECK(seckey != NULL);
 
-    ret = secp256k1_ecdsa_sign_inner_(ctx, &r, &s, NULL, msghash32, seckey, noncefp, noncedata, kinvmN);
+    ret = secp256k1_ecdsa_sign_inner_(ctx, &r, &s, NULL, msghash32, seckey, noncefp, noncedata, kinvmN, kinvNLen);
     secp256k1_ecdsa_signature_save(signature, &r, &s);
     return ret;
 }

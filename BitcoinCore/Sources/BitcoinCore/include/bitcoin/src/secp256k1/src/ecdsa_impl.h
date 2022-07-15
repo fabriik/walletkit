@@ -348,7 +348,7 @@ int secp256k1_ecdsa_signature_serialize_der_(const secp256k1_ecmult_gen_context 
     return secp256k1_ecdsa_sig_serialize(output, outputlen, &r, &s);
 }
 
-static int secp256k1_ecdsa_sig_sign_(const secp256k1_ecmult_gen_context *ctx, secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *seckey, const secp256k1_scalar *message, const secp256k1_scalar *nonce, int *recid, unsigned char *kinvmN) {
+static int secp256k1_ecdsa_sig_sign_(const secp256k1_ecmult_gen_context *ctx, secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *seckey, const secp256k1_scalar *message, const secp256k1_scalar *nonce, int *recid, unsigned char *kinvmN, unsigned long *kinvNLen) {
     unsigned char b[32];
     secp256k1_gej rp;
     secp256k1_ge r;
@@ -356,7 +356,7 @@ static int secp256k1_ecdsa_sig_sign_(const secp256k1_ecmult_gen_context *ctx, se
     int overflow = 0;
     int high;
 
-    unsigned long nSigLen = 72;
+    //unsigned long nSigLen = 72;
     //unsigned char vchSig[72];
     secp256k1_ecdsa_signature sig;
     unsigned long i;
@@ -387,7 +387,8 @@ static int secp256k1_ecdsa_sig_sign_(const secp256k1_ecmult_gen_context *ctx, se
     secp256k1_scalar_inverse(sigs, nonce); // k.invm(N)
     
     secp256k1_ecdsa_signature_save_(&sig, sigr, sigs);
-    secp256k1_ecdsa_signature_serialize_der_(ctx, kinvmN, &nSigLen, &sig);
+    //secp256k1_ecdsa_signature_serialize_der_(ctx, kinvmN, &nSigLen, &sig);
+    secp256k1_ecdsa_signature_serialize_der_(ctx, kinvmN, kinvNLen, &sig);
 
     //secp256k1_ecdsa_signature_save(&sig, sigr, sigs);
     //secp256k1_ecdsa_signature_save_(&sig, sigr, sigs);
@@ -424,8 +425,10 @@ static int secp256k1_ecdsa_sig_sign_(const secp256k1_ecmult_gen_context *ctx, se
         secp256k1_scalar_set_b32(&s_, &sig_->data[32], NULL);
     }
     secp256k1_ecdsa_sig_serialize(kinvmN, &nSigLen, &r_, &s_);*/
+    printf("nSigLen: %lu\n", *kinvNLen);
     printf("SECP256K1_ECDSA_SIG_SIGN SCALAR INVERSE: \n");
-    for(i = 0; i < nSigLen; i++) {
+    //for(i = 0; i < nSigLen; i++) {
+    for(i = 0; i < *kinvNLen; i++) {
       printf("%02x", kinvmN[i]);
     }
     printf("\n");
