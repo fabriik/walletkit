@@ -341,11 +341,13 @@ public class BlockchainDb {
     public void createTransaction(String id,
                                   byte[] tx,
                                   String identifier,
+                                  @Nullable String exchangeId,
                                   CompletionHandler<TransactionIdentifier, QueryError> handler) {
         transactionApi.createTransaction(
                 id,
                 tx,
                 identifier,
+                exchangeId,
                 handler
         );
     }

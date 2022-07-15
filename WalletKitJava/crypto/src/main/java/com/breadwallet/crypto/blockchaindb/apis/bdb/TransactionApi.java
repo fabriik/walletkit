@@ -26,6 +26,7 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.UnsignedLong;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -98,14 +99,20 @@ public class TransactionApi {
     public void createTransaction(String id,
                                   byte[] tx,
                                   String identifier,
+                                  @Nullable String exchangeId,
                                   CompletionHandler<TransactionIdentifier, QueryError> handler) {
         String data = BaseEncoding.base64().encode(tx);
-        Map    json = ImmutableMap.of(
-                "blockchain_id", id,
-                "submit_context", String.format ("WalletKit:%s:%s", id, (null != identifier ? identifier : ("Data:" + data.substring(0,20)))),
-                "data", data);
 
-        jsonClient.sendPost("transactions", ImmutableMultimap.of(), json, TransactionIdentifier.class, handler);
+        Map<String, String> params = new HashMap<>();
+        params.put("blockchain_id", id);
+        params.put("data", data);
+        params.put("submit_context", String.format("WalletKit:%s:%s", id, (null != identifier ? identifier : ("Data:" + data.substring(0,20)))));
+
+        if (exchangeId != null) {
+            params.put("exchange_id", exchangeId);
+        }
+
+        jsonClient.sendPost("transactions", ImmutableMultimap.of(), ImmutableMap.copyOf(params), TransactionIdentifier.class, handler);
     }
 
     public void estimateTransactionFee(String id,

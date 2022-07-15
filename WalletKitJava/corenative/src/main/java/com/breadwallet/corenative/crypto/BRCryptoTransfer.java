@@ -64,6 +64,14 @@ public class BRCryptoTransfer extends PointerType {
         ).transform((s) -> s.getString(0, "UTF-8"));
     }
 
+    public Optional<String> getExchangeId() {
+        return Optional.fromNullable(
+                CryptoLibraryDirect.cryptoTransferGetExchangeId (
+                        this.getPointer()
+                )
+        ).transform((s) -> s.getString(0, "UTF-8"));
+    }
+
     public Optional<BRCryptoHash> getHash() {
         Pointer thisPtr = this.getPointer();
 
