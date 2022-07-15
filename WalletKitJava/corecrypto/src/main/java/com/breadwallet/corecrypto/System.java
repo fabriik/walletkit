@@ -2041,8 +2041,8 @@ final class System implements com.breadwallet.crypto.System {
                     Optional<WalletManager> optWalletManager = system.getWalletManager(coreWalletManager);
                     if (optWalletManager.isPresent()) {
                         WalletManager walletManager = optWalletManager.get();
-                        Log.info("Exchange id: " + exchangeId);
-                        /*system.query.createTransaction(walletManager.getNetwork().getUids(), transaction, identifier, exchangeId,
+
+                        system.query.createTransaction(walletManager.getNetwork().getUids(), transaction, identifier, exchangeId,
                                 new CompletionHandler<TransactionIdentifier, QueryError>() {
                                     @Override
                                     public void handleData(TransactionIdentifier tid) {
@@ -2055,7 +2055,7 @@ final class System implements com.breadwallet.crypto.System {
                                         Log.log(Level.SEVERE, "BRCryptoCWMSubmitTransactionCallback: failed", error);
                                         walletManager.getCoreBRCryptoWalletManager().announceSubmitTransfer(callbackState, null, null, false);
                                     }
-                                });*/
+                                });
 
                     } else {
                         throw new IllegalStateException("BRCryptoCWMSubmitTransactionCallback: missing manager");
