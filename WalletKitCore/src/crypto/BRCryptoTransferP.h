@@ -116,6 +116,7 @@ struct BRCryptoTransferRecord {
     BRCryptoTransferListener listener;
 
     char *identifier;
+    char *exchangeId;
     BRCryptoAddress sourceAddress;
     BRCryptoAddress targetAddress;
 
@@ -183,6 +184,9 @@ private_extern void
 cryptoTransferSetAttributes (BRCryptoTransfer transfer,
                              size_t attributesCount,
                              OwnershipKept BRCryptoTransferAttribute *attributes);
+
+private_extern void
+cryptoTransferSetExchangeId (BRCryptoTransfer transfer, const char* exchangeId);
 
 private_extern void
 cryptoTransferAttributeArrayRelease (BRArrayOf(BRCryptoTransferAttribute) attributes);

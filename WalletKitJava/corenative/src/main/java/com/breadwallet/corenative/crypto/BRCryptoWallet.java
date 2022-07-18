@@ -201,7 +201,8 @@ public class BRCryptoWallet extends PointerType {
                         amount.getPointer(),
                         estimatedFeeBasis.getPointer(),
                         new SizeT(attributesCount),
-                        attributeRefs
+                        attributeRefs,
+                        exchangeId
                 )
         ).transform(BRCryptoTransfer::new);
     }

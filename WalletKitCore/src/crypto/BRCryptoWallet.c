@@ -897,7 +897,8 @@ cryptoWalletCreateTransfer (BRCryptoWallet  wallet,
                             BRCryptoAmount  amount,
                             BRCryptoFeeBasis estimatedFeeBasis,
                             size_t attributesCount,
-                            OwnershipKept BRCryptoTransferAttribute *attributes) {
+                            OwnershipKept BRCryptoTransferAttribute *attributes,
+                            const char* exchangeId) {
     assert (cryptoWalletGetType(wallet) == cryptoAddressGetType(target));
     //    assert (cryptoWalletGetType(wallet) == cryptoFeeBasisGetType(estimatedFeeBasis));
 
@@ -920,6 +921,9 @@ cryptoWalletCreateTransfer (BRCryptoWallet  wallet,
 
     if (NULL != transfer && attributesCount > 0)
         cryptoTransferSetAttributes (transfer, attributesCount, attributes);
+
+    if (NULL != transfer && NULL != exchangeId)
+        cryptoTransferSetExchangeId (transfer, exchangeId);
 
     cryptoCurrencyGive(currency);
     cryptoUnitGive (unitForFee);

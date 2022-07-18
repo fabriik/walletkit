@@ -269,7 +269,7 @@ cryptoTransferGetAmountAsSign (BRCryptoTransfer transfer, BRCryptoBoolean isNega
 
 extern const char *
 cryptoTransferGetExchangeId (BRCryptoTransfer transfer) {
-    return "test_id";
+    return transfer->exchangeId;
 }
 
 extern BRCryptoAmount
@@ -781,10 +781,16 @@ extern const char * // nullable
 cryptoTransferAttributeGetValue (BRCryptoTransferAttribute attribute) {
     return attribute->value;
 }
+
 extern void
 cryptoTransferAttributeSetValue (BRCryptoTransferAttribute attribute, const char *value) {
     if (NULL != attribute->value) free (attribute->value);
     attribute->value = (NULL == value ? NULL : strdup (value));
+}
+
+extern void
+cryptoTransferSetExchangeId (BRCryptoTransfer transfer, const char *exchangeId) {
+    transfer->exchangeId = exchangeId;
 }
 
 extern BRCryptoBoolean
