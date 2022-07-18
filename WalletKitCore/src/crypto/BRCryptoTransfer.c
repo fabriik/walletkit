@@ -267,6 +267,11 @@ cryptoTransferGetAmountAsSign (BRCryptoTransfer transfer, BRCryptoBoolean isNega
                                                                  cryptoAmountGetValue(transfer->amount));
 }
 
+extern const char *
+cryptoTransferGetExchangeId (BRCryptoTransfer transfer) {
+    return "test_id";
+}
+
 extern BRCryptoAmount
 cryptoTransferGetAmount (BRCryptoTransfer transfer) {
     return cryptoAmountTake (transfer->amount);
