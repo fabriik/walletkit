@@ -90,7 +90,8 @@ final class Wallet implements com.breadwallet.crypto.Wallet {
     public Optional<Transfer> createTransfer(com.breadwallet.crypto.Address target,
                                              com.breadwallet.crypto.Amount amount,
                                              com.breadwallet.crypto.TransferFeeBasis estimatedFeeBasis,
-                                             @Nullable Set<com.breadwallet.crypto.TransferAttribute> attributes) {
+                                             @Nullable Set<com.breadwallet.crypto.TransferAttribute> attributes,
+                                             @Nullable String exchangeId) {
         BRCryptoAddress coreAddress = Address.from(target).getCoreBRCryptoAddress();
         BRCryptoFeeBasis coreFeeBasis = TransferFeeBasis.from(estimatedFeeBasis).getCoreBRFeeBasis();
         BRCryptoAmount coreAmount = Amount.from(amount).getCoreBRCryptoAmount();
@@ -101,7 +102,7 @@ final class Wallet implements com.breadwallet.crypto.Wallet {
                 coreAttributes.add (TransferAttribute.from(attribute).getCoreBRCryptoTransferAttribute());
             }
 
-        return core.createTransfer(coreAddress, coreAmount, coreFeeBasis, coreAttributes).transform(t -> Transfer.create(t, this));
+        return core.createTransfer(coreAddress, coreAmount, coreFeeBasis, coreAttributes, exchangeId).transform(t -> Transfer.create(t, this));
     }
 
     /* package */

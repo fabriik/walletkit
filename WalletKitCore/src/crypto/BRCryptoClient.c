@@ -1080,6 +1080,7 @@ cryptoClientQRYSubmitTransfer (BRCryptoClientQRYManager qry,
                                        manager,
                                        callbackState,
                                        cryptoTransferGetIdentifier(transfer),
+                                       cryptoTransferGetExchangeId(transfer),
                                        serialization,
                                        serializationCount);
 

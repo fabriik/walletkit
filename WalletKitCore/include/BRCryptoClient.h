@@ -128,6 +128,7 @@ typedef void
                                             OwnershipGiven BRCryptoWalletManager manager,
                                             OwnershipGiven BRCryptoClientCallbackState callbackState,
                                             OwnershipKept const char    *identifier,
+                                            OwnershipKept const char    *exchangeId,
                                             OwnershipKept const uint8_t *transaction,
                                             size_t transactionLength);
 

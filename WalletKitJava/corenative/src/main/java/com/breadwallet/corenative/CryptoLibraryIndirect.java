@@ -24,6 +24,8 @@ import com.sun.jna.Pointer;
 import com.sun.jna.PointerType;
 import com.sun.jna.ptr.IntByReference;
 
+import javax.annotation.Nullable;
+
 public final class CryptoLibraryIndirect {
 
     // JNA does NOT support passing zero length arrays using the indirect interface method; as a result, check
@@ -39,9 +41,9 @@ public final class CryptoLibraryIndirect {
         INSTANCE.cryptoNetworkSetNetworkFees(network, fees, count);
     }
 
-    public static Pointer cryptoWalletCreateTransfer(Pointer wallet, Pointer target, Pointer amount, Pointer feeBasis, SizeT attributesCount, BRCryptoTransferAttribute[] attributes) {
+    public static Pointer cryptoWalletCreateTransfer(Pointer wallet, Pointer target, Pointer amount, Pointer feeBasis, SizeT attributesCount, BRCryptoTransferAttribute[] attributes, @Nullable String exchangeId) {
         attributes = attributesCount.intValue() == 0 ? null : attributes;
-        return INSTANCE.cryptoWalletCreateTransfer(wallet, target, amount, feeBasis, attributesCount, attributes);
+        return INSTANCE.cryptoWalletCreateTransfer(wallet, target, amount, feeBasis, attributesCount, attributes, exchangeId);
     }
 
     public static int cryptoWalletValidateTransferAttributes(Pointer wallet, SizeT attributesCount, BRCryptoTransferAttribute[] attributes, IntByReference validates) {
@@ -172,7 +174,7 @@ public final class CryptoLibraryIndirect {
         void cryptoNetworkSetNetworkFees(Pointer network, BRCryptoNetworkFee[] fees, SizeT count);
 
         // crypto/BRCryptoWallet.h
-        Pointer cryptoWalletCreateTransfer(Pointer wallet, Pointer target, Pointer amount, Pointer feeBasis, SizeT attributesCount, BRCryptoTransferAttribute[] attributes);
+        Pointer cryptoWalletCreateTransfer(Pointer wallet, Pointer target, Pointer amount, Pointer feeBasis, SizeT attributesCount, BRCryptoTransferAttribute[] attributes, @Nullable String exchangeId);
 
         int cryptoWalletValidateTransferAttributes(Pointer wallet, SizeT countOfAttributes, BRCryptoTransferAttribute[] attributes, IntByReference validates);
 

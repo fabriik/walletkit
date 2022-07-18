@@ -155,7 +155,11 @@ extern "C" {
     extern const char *
     cryptoTransferGetIdentifier (BRCryptoTransfer transfer);
 
-    /**
+    extern const char *
+    cryptoTransferGetExchangeId (BRCryptoTransfer transfer);
+
+
+/**
      * Returns the transfer's hash.  The hash is determined by applying a blockchain-specific hash
      * function to a blockchain-specific byte-serialized representation of a Transfer.  A hash is
      * generally a unique identifier of Transfers in a wallet and also, but not always, on a

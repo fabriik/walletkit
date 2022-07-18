@@ -29,7 +29,11 @@ public interface Wallet {
      */
     //Optional<? extends TransferFeeBasis> createTransferFeeBasis(Amount pricePerCostFactor, double costFactor);
 
-    Optional<? extends Transfer> createTransfer(Address target, Amount amount, TransferFeeBasis estimatedFeeBasis, @Nullable Set<TransferAttribute> attributes);
+    default Optional<? extends Transfer> createTransfer(Address target, Amount amount, TransferFeeBasis estimatedFeeBasis, @Nullable Set<TransferAttribute> attributes) {
+        return createTransfer(target, amount, estimatedFeeBasis, attributes, null);
+    }
+
+    Optional<? extends Transfer> createTransfer(Address target, Amount amount, TransferFeeBasis estimatedFeeBasis, @Nullable Set<TransferAttribute> attributes, @Nullable String exchangeId);
 
     /**
      * Estimate the fee for a transfer with `amount` from `wallet`.  If provided use the `feeBasis`

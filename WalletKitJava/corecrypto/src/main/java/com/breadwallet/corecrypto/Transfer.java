@@ -141,6 +141,11 @@ final class Transfer implements com.breadwallet.crypto.Transfer {
     }
 
     @Override
+    public Optional<String> getExchangeId() {
+        return core.getExchangeId();
+    }
+
+    @Override
     public Optional<TransferHash> getHash() {
         return core.getHash().transform(TransferHash::create);
     }

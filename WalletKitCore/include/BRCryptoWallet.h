@@ -169,7 +169,8 @@ extern "C" {
                                 BRCryptoAmount amount,
                                 BRCryptoFeeBasis estimatedFeeBasis,
                                 size_t attributesCount,
-                                OwnershipKept BRCryptoTransferAttribute *attributes);
+                                OwnershipKept BRCryptoTransferAttribute *attributes,
+                                const char* exchangeId);
 
     extern BRCryptoTransfer
     cryptoWalletCreateTransferForPaymentProtocolRequest (BRCryptoWallet wallet,

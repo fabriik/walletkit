@@ -186,7 +186,8 @@ public class BRCryptoWallet extends PointerType {
 
     public Optional<BRCryptoTransfer> createTransfer(BRCryptoAddress target, BRCryptoAmount amount,
                                                      BRCryptoFeeBasis estimatedFeeBasis,
-                                                     List<BRCryptoTransferAttribute> attributes) {
+                                                     List<BRCryptoTransferAttribute> attributes,
+                                                     @Nullable String exchangeId) {
         Pointer thisPtr = this.getPointer();
 
         int attributesCount  = attributes.size();
@@ -200,7 +201,8 @@ public class BRCryptoWallet extends PointerType {
                         amount.getPointer(),
                         estimatedFeeBasis.getPointer(),
                         new SizeT(attributesCount),
-                        attributeRefs
+                        attributeRefs,
+                        exchangeId
                 )
         ).transform(BRCryptoTransfer::new);
     }

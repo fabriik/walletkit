@@ -55,6 +55,7 @@ public class BRCryptoClient extends Structure {
                       Pointer manager,
                       Pointer callbackState,
                       String  identifier,
+                      String exchangeId,
                       Pointer tx,
                       SizeT txLength);
     }
@@ -155,6 +156,7 @@ public class BRCryptoClient extends Structure {
                     BRCryptoWalletManager manager,
                     BRCryptoClientCallbackState callbackState,
                     String identifier,
+                    String exchangeId,
                     byte[] transaction);
 
         @Override
@@ -162,6 +164,7 @@ public class BRCryptoClient extends Structure {
                               Pointer manager,
                               Pointer callbackState,
                               String identifier,
+                              String exchangeId,
                               Pointer tx,
                               SizeT txLength) {
             handle(
@@ -169,6 +172,7 @@ public class BRCryptoClient extends Structure {
                     new BRCryptoWalletManager(manager),
                     new BRCryptoClientCallbackState(callbackState),
                     identifier,
+                    exchangeId,
                     tx.getByteArray(0, UnsignedInts.checkedCast(txLength.longValue()))
             );
         }
