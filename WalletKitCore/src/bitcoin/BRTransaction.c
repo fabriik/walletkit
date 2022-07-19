@@ -507,6 +507,108 @@ BRTransaction *BRTransactionParse(const uint8_t *buf, size_t bufLen)
     return tx;
 }
 
+// buf must contain a serialized tx
+// retruns a transaction that must be freed by calling BRTransactionFree()
+BRTransaction *BRTransactionParseToken(const uint8_t *buf, size_t bufLen)
+{
+    assert(buf != NULL || bufLen == 0);
+    if (! buf) return NULL;
+    
+    int isSigned = 1, witnessFlag = 0;
+    uint8_t *sBuf;
+    size_t i, j, off = 0, witnessOff = 0, sLen = 0, len = 0, count;
+    BRTransaction *tx = BRTransactionNew();
+    BRTxInput *input;
+    BRTxOutput *output;
+    
+    tx->version = (off + sizeof(uint32_t) <= bufLen) ? UInt32GetLE(&buf[off]) : 0;
+    off += sizeof(uint32_t);
+    tx->inCount = (size_t)BRVarInt(&buf[off], (off <= bufLen ? bufLen - off : 0), &len);
+    off += len;
+    if (tx->inCount == 0 && off + 1 <= bufLen) witnessFlag = buf[off++];
+    
+    if (witnessFlag) {
+        tx->inCount = (size_t)BRVarInt(&buf[off], (off <= bufLen ? bufLen - off : 0), &len);
+        off += len;
+    }
+
+    array_set_count(tx->inputs, tx->inCount);
+    
+    for (i = 0; off <= bufLen && i < tx->inCount; i++) {
+        input = &tx->inputs[i];
+        input->txHash = (off + sizeof(UInt256) <= bufLen) ? UInt256Get(&buf[off]) : UINT256_ZERO;
+        off += sizeof(UInt256);
+        input->index = (off + sizeof(uint32_t) <= bufLen) ? UInt32GetLE(&buf[off]) : 0;
+        off += sizeof(uint32_t);
+        sLen = (size_t)BRVarInt(&buf[off], (off <= bufLen ? bufLen - off : 0), &len);
+        off += len;
+        
+        if (off + sLen <= bufLen && BRScriptPubKeyIsValid(&buf[off], sLen)) {
+            BRTxInputSetScript(input, &buf[off], sLen);
+            input->amount = (off + sLen + sizeof(uint64_t) <= bufLen) ? UInt64GetLE(&buf[off + sLen]) : 0;
+            off += sizeof(uint64_t);
+            isSigned = 0;
+        }
+        else if (off + sLen <= bufLen) BRTxInputSetSignature(input, &buf[off], sLen);
+        
+        off += sLen;
+        if (! witnessFlag) BRTxInputSetWitness(input, &buf[off], 0); // set witness to empty byte array
+        input->sequence = (off + sizeof(uint32_t) <= bufLen) ? UInt32GetLE(&buf[off]) : 0;
+        off += sizeof(uint32_t);
+    }
+    
+    tx->outCount = (size_t)BRVarInt(&buf[off], (off <= bufLen ? bufLen - off : 0), &len);
+    off += len;
+    array_set_count(tx->outputs, tx->outCount);
+    
+    for (i = 0; off <= bufLen && i < tx->outCount; i++) {
+        output = &tx->outputs[i];
+        output->amount = (off + sizeof(uint64_t) <= bufLen) ? UInt64GetLE(&buf[off]) : 0;
+        off += sizeof(uint64_t);
+        sLen = (size_t)BRVarInt(&buf[off], (off <= bufLen ? bufLen - off : 0), &len);
+        off += len;
+        if (off + sLen <= bufLen) BRTxOutputSetScript(output, &buf[off], sLen);
+        off += sLen;
+    }
+    
+    for (i = 0, witnessOff = off; witnessFlag && off <= bufLen && i < tx->inCount; i++) {
+        input = &tx->inputs[i];
+        count = (size_t)BRVarInt(&buf[off], (off <= bufLen ? bufLen - off : 0), &len);
+        off += len;
+        
+        for (j = 0, sLen = 0; j < count; j++) {
+            sLen += (size_t)BRVarInt(&buf[off + sLen], (off + sLen <= bufLen ? bufLen - (off + sLen) : 0), &len);
+            sLen += len;
+        }
+        
+        if (off + sLen <= bufLen) BRTxInputSetWitness(input, &buf[off], sLen);
+        off += sLen;
+    }
+    
+    tx->lockTime = (off + sizeof(uint32_t) <= bufLen) ? UInt32GetLE(&buf[off]) : 0;
+    off += sizeof(uint32_t);
+    
+    /*if (tx->inCount == 0 || off > bufLen) {
+        BRTransactionFree(tx);
+        tx = NULL;
+    }
+    else if (isSigned && witnessFlag) {
+        BRSHA256_2(&tx->wtxHash, buf, off);
+        sBuf = malloc((witnessOff - 2) + sizeof(uint32_t));
+        UInt32SetLE(sBuf, tx->version);
+        memcpy(&sBuf[sizeof(uint32_t)], &buf[sizeof(uint32_t) + 2], witnessOff - (sizeof(uint32_t) + 2));
+        UInt32SetLE(&sBuf[witnessOff - 2], tx->lockTime);
+        BRSHA256_2(&tx->txHash, sBuf, (witnessOff - 2) + sizeof(uint32_t));
+        free(sBuf);
+    }
+    else if (isSigned) {
+        BRSHA256_2(&tx->txHash, buf, off);
+        tx->wtxHash = tx->txHash;
+    }*/
+    
+    return tx;
+}
+
 // returns number of bytes written to buf, or total bufLen needed if buf is NULL
 // (tx->blockHeight and tx->timestamp are not serialized)
 size_t BRTransactionSerialize(const BRTransaction *tx, uint8_t *buf, size_t bufLen)

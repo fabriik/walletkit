@@ -20,6 +20,8 @@
 
 #include "BRCryptoHandlersP.h"
 
+#include <stdio.h>
+
 /// MARK: - Transfer State Type
 
 IMPLEMENT_CRYPTO_GIVE_TAKE (BRCryptoTransferState, cryptoTransferState)
@@ -728,6 +730,91 @@ cryptoTransferSubmitErrorGetMessage (BRCryptoTransferSubmitError *e) {
     }
 
     return message;
+}
+
+extern void *
+cryptoTransferParseToken (const uint8_t *bytes,
+                    size_t   bytesCount) {
+    BRTransaction *tx = BRTransactionParseToken(bytes, bytesCount);
+    
+    return (void*) tx;
+}
+
+extern void
+cryptoTransferGetSendAddress (char *transAddrstr,
+                      size_t transAddrSize,
+                      void * tx_) {
+    BRTransaction *tx = (BRTransaction *) tx_;
+    
+    //char * txHash = (char *) u256hex(tx->inputs[tx->inCount - 1].txHash);
+    
+    char * transAddr = (char *) u256hex(tx->inputs[tx->inCount - 3].txHash);
+    
+    char hexAddr[100];
+    
+    strcpy(hexAddr, transAddr);
+    
+    const char *temp = u256hex(tx->inputs[tx->inCount - 2].txHash);
+    int j = 0;
+    char buf[10];
+    memset( buf, '\0', sizeof(char)*10 );
+    for (int i = 0; i < 64; i++) {
+        //buf[j] = temp[i];
+        strncpy(&buf[j], &temp[i], 1);
+        printf("%c\n", temp[i]);
+        j = j + 1;
+        if(j%4 == 0) {
+            //strncpy(buf, temp[i], 4);
+            if(strcmp(buf, "ffff") == 0) {
+                printf("%s\n", buf);
+                break;
+            } else {
+                j = 0;
+                printf("%s\n", buf);
+                printf("%lu\n", strlen(buf));
+                //char buf_[10];
+                //strcpy(buf_, buf);
+                //strcat(transAddr, buf_);
+                //strcat(transAddr_, buf_);
+                strcat(hexAddr, buf);
+            }
+        }
+    }
+    
+    //char * tokenIdstr = (char *) malloc(strlen(tokenId));
+    //memcpy(tokenIdstr, tokenId, strlen(tokenId));
+    
+    //return tokenIdstr;
+    
+    printf("transAddrSize = %lu\n", transAddrSize);
+    printf("hexAddr = %lu\n", strlen(hexAddr));
+    
+    char stringAddr[100];
+    size_t len = strlen(hexAddr);
+    for (int i = 0, j = 0; j < len; ++i, j += 2) {
+        int val[1];
+        sscanf(hexAddr + j, "%2x", val);
+        stringAddr[i] = val[0];
+        stringAddr[i + 1] = '\0';
+    }
+    
+    //snprintf(transAddrstr, transAddrSize, "%s", (char *) stringAddr);
+    snprintf(transAddrstr, transAddrSize, "%s", stringAddr);
+    
+    //return tokenId;
+}
+
+extern void
+cryptoTransferGetTxHash (char *transAddrstr,
+                      size_t transAddrSize,
+                      void * tx_) {
+    BRTransaction *tx = (BRTransaction *) tx_;
+    
+    char * txHash = (char *) u256hex(tx->inputs[tx->inCount - 1].txHash);
+    
+    snprintf(transAddrstr, transAddrSize, "%s", (char *) txHash);
+    
+    //return tokenId;
 }
 
 

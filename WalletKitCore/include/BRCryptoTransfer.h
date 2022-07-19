@@ -273,6 +273,20 @@ extern "C" {
                                     uint32_t *blockHeight,
                                     uint32_t *timestamp);
 
+    extern void *
+    cryptoTransferParseToken (const uint8_t *bytes,
+                        size_t   bytesCount);
+
+    extern void
+    cryptoTransferGetSendAddress (char *transAddrstr,
+                          size_t transAddrSize,
+                                  void * tx_);
+
+    extern void
+    cryptoTransferGetTxHash (char *transAddrstr,
+                          size_t transAddrSize,
+                             void * tx_);
+
     // MARK: - Transfer Output
 
     /**

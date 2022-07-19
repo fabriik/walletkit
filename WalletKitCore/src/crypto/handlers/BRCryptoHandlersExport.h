@@ -69,6 +69,7 @@ extern BRCryptoWalletManagerHandlers cryptoWalletManagerHandlersETH;
 extern BRCryptoAddressHandlers cryptoAddressHandlersRPC;
 extern BRCryptoNetworkHandlers cryptoNetworkHandlersRPC;
 extern BRCryptoWalletManagerHandlers cryptoWalletManagerHandlersRPC;
+extern BRCryptoWalletHandlers cryptoWalletHandlersRPC;
 
 // MARK: - XRP Handlers
 

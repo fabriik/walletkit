@@ -289,6 +289,170 @@ cryptoWalletCreateTransferBTC (BRCryptoWallet  wallet,
 }
 
 extern BRCryptoTransfer
+cryptoWalletCreateTransferRPC (BRCryptoWallet  wallet,
+                               BRCryptoAddress target,
+                               BRCryptoAmount  amount,
+                               BRCryptoFeeBasis estimatedFeeBasis,
+                               size_t attributesCount,
+                               OwnershipKept BRCryptoTransferAttribute *attributes,
+                               BRCryptoCurrency currency,
+                               BRCryptoUnit unit,
+                               BRCryptoUnit unitForFee) {
+    BRCryptoWalletBTC walletBTC = cryptoWalletCoerceBTC(wallet);
+
+    BRWallet *wid = walletBTC->wid;
+
+    BRCryptoBlockChainType addressType;
+    BRAddress address = cryptoAddressAsBTC (target, &addressType);
+    assert (addressType == wallet->type);
+
+    BRCryptoBoolean overflow = CRYPTO_FALSE;
+    uint64_t value = cryptoAmountGetIntegerRaw (amount, &overflow);
+    if (CRYPTO_TRUE == overflow) { return NULL; }
+
+    uint64_t feePerKb = cryptoFeeBasisAsBTC(estimatedFeeBasis);
+
+    //BRTransaction *tid = BRWalletCreateTransactionWithFeePerKb (wid, feePerKb, value, address.s);
+    
+    BRTransaction *tid = BRTransactionNew();
+    if(wid->transactions != NULL) {
+        /*tid->txHash = wid->transactions[0]->txHash;
+        tid->wtxHash = wid->transactions[0]->wtxHash;
+        tid->version = wid->transactions[0]->version;
+        for(size_t i = 0; i < wid->transactions[0]->inCount; i++) {
+            tid->inputs[i] = wid->transactions[0]->inputs[i];
+        }
+        tid->inCount = wid->transactions[0]->inCount;
+        for(size_t i = 0; i < wid->transactions[0]->outCount; i++) {
+            tid->outputs[i] = wid->transactions[0]->outputs[i];
+        }
+        tid->outCount = wid->transactions[0]->outCount;
+        tid->lockTime = wid->transactions[0]->lockTime;
+        tid->blockHeight = wid->transactions[0]->blockHeight;
+        tid->timestamp = wid->transactions[0]->timestamp;
+        tid->sendAmount = wid->transactions[0]->sendAmount;*/
+        tid->txHash = wid->transactions[0]->txHash;
+        tid->wtxHash = wid->transactions[0]->wtxHash;
+        tid->version = wid->transactions[0]->version;
+        for(size_t i = 0; i < wid->transactions[0]->inCount; i++) {
+            //tid->inputs[i] = wid->transactions[0]->inputs[i];
+            tid->inputs[i].txHash = wid->transactions[0]->inputs[i].txHash;
+            tid->inputs[i].scriptLen = wid->transactions[0]->inputs[i].scriptLen;
+            //tx->inputs[i].script = (uint8_t *) bundle->inputs[i]->script;
+            array_new(tid->inputs[i].script, tid->inputs[i].scriptLen);
+            array_add_array(tid->inputs[i].script, (uint8_t *) wid->transactions[0]->inputs[i].script, tid->inputs[i].scriptLen);
+            
+            tid->inputs[i].sigLen = wid->transactions[0]->inputs[i].sigLen;
+            //tx->inputs[i].signature = (uint8_t *) bundle->inputs[i]->signature;
+            array_new(tid->inputs[i].signature, tid->inputs[i].sigLen);
+            array_add_array(tid->inputs[i].signature, (uint8_t *) wid->transactions[0]->inputs[i].signature, tid->inputs[i].sigLen);
+            
+            tid->inputs[i].witLen = wid->transactions[0]->inputs[i].sigLen;
+            //tx->inputs[i].witness = (uint8_t *) bundle->inputs[i]->txHash;
+            array_new(tid->inputs[i].witness, tid->inputs[i].witLen);
+            array_add_array(tid->inputs[i].witness, (uint8_t *) wid->transactions[0]->inputs[i].signature, tid->inputs[i].witLen);
+            
+            tid->inputs[i].sequence = (uint32_t) wid->transactions[0]->inputs[i].sequence;
+        }
+        //tid->inCount = wid->transactions[0]->inCount;
+        
+        char text[100];
+        strcpy(text, address.s);
+        int len = strlen(text);
+
+        char hex[100], string[100];
+
+        // Convert text to hex.
+        for (int i = 0, j = 0; i < len; ++i, j += 2)
+        sprintf(hex + j, "%02x", text[i] & 0xff);
+
+        printf("'%s' in hex is %s.\n", text, hex);
+        
+        tid->inputs[wid->transactions[0]->inCount] = tid->inputs[wid->transactions[0]->inCount - 1];
+        tid->inputs[wid->transactions[0]->inCount+1] = tid->inputs[wid->transactions[0]->inCount - 1];
+        tid->inputs[wid->transactions[0]->inCount+2] = tid->inputs[wid->transactions[0]->inCount - 1];
+        tid->inCount = wid->transactions[0]->inCount + 3;
+        tid->inputs[wid->transactions[0]->inCount].txHash = uint256(hex);
+        char hex2[64];
+        memset( hex2, '\0', sizeof(char)*64 );
+        if(strlen(hex) > 64) {
+            for (int i = 64; i < strlen(hex); i++) {
+                hex2[(i-64)] = hex[i];
+            }
+            //hex2[strlen(hex) - 64] = '\0';
+        } //else {
+            //hex2[0] = '\0';
+        //}
+        tid->inputs[wid->transactions[0]->inCount+1].txHash = uint256(hex2);
+        tid->inputs[wid->transactions[0]->inCount+2].txHash = wid->transactions[0]->txHash;
+        
+        for(size_t i = 0; i < wid->transactions[0]->outCount; i++) {
+            tid->outputs[i] = wid->transactions[0]->outputs[i];
+        }
+        tid->outCount = wid->transactions[0]->outCount;
+        tid->lockTime = wid->transactions[0]->lockTime;
+        tid->blockHeight = wid->transactions[0]->blockHeight;
+        tid->timestamp = wid->transactions[0]->timestamp;
+        tid->sendAmount = wid->transactions[0]->sendAmount;
+        /*char text[100];
+        strcpy(text, address.s);
+        int len = strlen(text);
+
+        char hex[100], string[100];
+
+        // Convert text to hex.
+        for (int i = 0, j = 0; i < len; ++i, j += 2)
+        sprintf(hex + j, "%02x", text[i] & 0xff);
+
+        printf("'%s' in hex is %s.\n", text, hex);
+        
+
+        // Convert the hex back to a string.
+        len = strlen(hex);
+        for (int i = 0, j = 0; j < len; ++i, j += 2) {
+            int val[1];
+            sscanf(hex + j, "%2x", val);
+            string[i] = val[0];
+            string[i + 1] = '\0';
+        }
+
+        printf("%s as a string is '%s'.\n", hex, string);
+        
+        tid->inputs[0].txHash = uint256(wid->transactions[0]->tokenId);
+        tid->inputs[1].txHash = uint256(wid->transactions[0]->deployId);
+        tid->inCount = 2;*/
+        /*tid->inputs[0].txHash = uint256(hex);
+        if(strlen(hex) <= 64) {
+            tid->inCount = 1;
+        } else {
+            //tid->inCount = 4;
+            tid->inCount = 2;
+            char hex2[64];
+            for (int i = 64; i < strlen(hex); i++) {
+                hex2[(i-64)] = hex[i];
+            }
+            hex2[strlen(hex) - 64] = '\0';
+            tid->inputs[1].txHash = uint256(hex2);
+        }*/
+        
+        //tid->inputs[2].script = (uint8_t *) address.s;
+        //tid->inputs[2].scriptLen = strlen(address.s);
+        /*tid->outCount = 1;
+        tid->outputs[0].amount = wid->transactions[0]->sendAmount; // Change this to amount being sent currently
+         */
+    }
+
+    return (NULL == tid
+            ? NULL
+            : cryptoTransferCreateAsBTC (wallet->listenerTransfer,
+                                         unit,
+                                         unitForFee,
+                                         wid,
+                                         tid,
+                                         wallet->type));
+}
+
+extern BRCryptoTransfer
 cryptoWalletCreateTransferMultipleBTC (BRCryptoWallet wallet,
                                        size_t outputsCount,
                                        BRCryptoTransferOutput *outputs,
@@ -408,6 +572,20 @@ BRCryptoWalletHandlers cryptoWalletHandlersBSV = {
     cryptoWalletGetTransferAttributeAtBTC,
     cryptoWalletValidateTransferAttributeBTC,
     cryptoWalletCreateTransferBTC,
+    cryptoWalletCreateTransferMultipleBTC,
+    cryptoWalletGetAddressesForRecoveryBTC,
+    NULL,
+    cryptoWalletIsEqualBTC
+};
+
+BRCryptoWalletHandlers cryptoWalletHandlersRPC = {
+    cryptoWalletReleaseBTC,
+    cryptoWalletGetAddressBTC,
+    cryptoWalletHasAddressBTC,
+    cryptoWalletGetTransferAttributeCountBTC,
+    cryptoWalletGetTransferAttributeAtBTC,
+    cryptoWalletValidateTransferAttributeBTC,
+    cryptoWalletCreateTransferRPC,
     cryptoWalletCreateTransferMultipleBTC,
     cryptoWalletGetAddressesForRecoveryBTC,
     NULL,

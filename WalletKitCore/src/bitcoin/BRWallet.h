@@ -31,6 +31,8 @@
 #include "support/BRInt.h"
 #include <string.h>
 
+#include "support/BRSet.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,6 +57,23 @@ inline static int BRUTXOEq(const void *utxo, const void *otherUtxo)
     return (utxo == otherUtxo || (UInt256Eq(((const BRUTXO *)utxo)->hash, ((const BRUTXO *)otherUtxo)->hash) &&
                                   ((const BRUTXO *)utxo)->n == ((const BRUTXO *)otherUtxo)->n));
 }
+
+struct BRWalletStruct {
+    uint64_t balance, totalSent, totalReceived, feePerKb, *balanceHist;
+    uint32_t blockHeight;
+    BRUTXO *utxos;
+    BRTransaction **transactions;
+    BRMasterPubKey masterPubKey;
+    BRAddressParams addrParams;
+    UInt160 *internalChain, *externalChain;
+    BRSet *allTx, *invalidTx, *pendingTx, *spentOutputs, *usedPKH, *allPKH;
+    void *callbackInfo;
+    void (*balanceChanged)(void *info, uint64_t balance);
+    void (*txAdded)(void *info, BRTransaction *tx);
+    void (*txUpdated)(void *info, const UInt256 txHashes[], size_t txCount, uint32_t blockHeight, uint32_t timestamp);
+    void (*txDeleted)(void *info, UInt256 txHash, int notifyUser, int recommendRescan);
+    pthread_mutex_t lock;
+};
 
 typedef struct BRWalletStruct BRWallet;
 

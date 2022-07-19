@@ -66,7 +66,7 @@ inline static size_t _txChainIndex(const BRTransaction *tx, const UInt160 *chain
     return (size_t) -1;
 }
 
-struct BRWalletStruct {
+/*struct BRWalletStruct {
     uint64_t balance, totalSent, totalReceived, feePerKb, *balanceHist;
     uint32_t blockHeight;
     BRUTXO *utxos;
@@ -81,7 +81,7 @@ struct BRWalletStruct {
     void (*txUpdated)(void *info, const UInt256 txHashes[], size_t txCount, uint32_t blockHeight, uint32_t timestamp);
     void (*txDeleted)(void *info, UInt256 txHash, int notifyUser, int recommendRescan);
     pthread_mutex_t lock;
-};
+};*/
 
 inline static int _BRWalletTxIsAscending(BRWallet *wallet, const BRTransaction *tx1, const BRTransaction *tx2)
 {
