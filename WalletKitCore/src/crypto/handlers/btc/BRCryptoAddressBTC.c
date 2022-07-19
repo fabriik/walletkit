@@ -97,6 +97,16 @@ cryptoAddressCreateFromStringAsBSV (BRAddressParams params, const char *bsvAddre
             : NULL);
 }
 
+extern BRCryptoAddress
+cryptoAddressCreateFromStringAsRPC (BRAddressParams params, const char *bsvAddress) {
+    assert (bsvAddress);
+
+    return (BRAddressIsValid (params, bsvAddress)
+            ? cryptoAddressCreateAsBTC (CRYPTO_NETWORK_TYPE_RPC,
+                                        BRAddressFill(params, bsvAddress))
+            : NULL);
+}
+
 static void
 cryptoAddressReleaseBTC (BRCryptoAddress address) {
     BRCryptoAddressBTC addressANY = cryptoAddressCoerceANY (address);

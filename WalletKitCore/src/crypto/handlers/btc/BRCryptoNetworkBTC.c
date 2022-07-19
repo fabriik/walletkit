@@ -207,8 +207,9 @@ static BRCryptoAddress
 cryptoNetworkCreateAddressRPC (BRCryptoNetwork network,
                                 const char *addressAsString) {
     BRCryptoNetworkBTC networkBTC = cryptoNetworkCoerce (network, CRYPTO_NETWORK_TYPE_RPC);
-    assert (BRChainParamsIsBSV (networkBTC->params));
-    return cryptoAddressCreateFromStringAsBSV (networkBTC->params->addrParams, addressAsString);
+    //assert (BRChainParamsIsBSV (networkBTC->params));
+    assert (BRChainParamsIsRPC (networkBTC->params));
+    return cryptoAddressCreateFromStringAsRPC (networkBTC->params->addrParams, addressAsString);
 }
 
 static BRCryptoBlockNumber

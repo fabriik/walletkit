@@ -7,6 +7,7 @@
 
 import Foundation
 import BitcoinCore
+import WalletKitCore
 
 #if os(Linux)
 import FoundationNetworking
@@ -746,6 +747,46 @@ public class BitcoinRPCSystemClient: SystemClient {
 
             return (id: id, blockchainId: bid, hash: hash, identifier: identifier)
         }
+        
+        static internal func asTransactionIdentifierRPC (json: JSON) -> SystemClient.TransactionIdentifier? {
+            let result : [String : Any] = json.dict["result"] as! [String : Any]
+            
+            /*guard let id         = json.asString(name: "transaction_id"),
+                  let bid        = json.asString (name: "blockchain_id"),
+                  let identifier = json.asString (name: "identifier")
+            else { return nil }*/
+            
+            guard let hash = result["hash"] as! String?,
+                  //let hash = json.asString(name: "hash"),
+                  //let blockHeight = json.asUInt64 (name: "blockheight"),
+                  //let blockHash = json.asString (name: "blockhash"),
+                  //let identifier = json.asString (name: "txid"),
+                  let identifier = result["txid"] as! String?,
+                  //let confirmations     = json.asUInt64 (name: "confirmations"),
+                  //let size       = json.asInt64 (name: "size"),
+                  let size       = result["size"] as! UInt64?,
+                  //let version    = json.asInt64 (name: "version"),
+                  let version    = result["version"] as! Int64?,
+                  //let lockTime   = json.asInt64 (name: "locktime"),
+                  let lockTime   = result["locktime"] as! Int64?,
+                  //let time       = json.asInt64 (name: "time"),
+                  //let vin        = json.asJSONArray (name: "vin"),
+                  let vin        = result["vin"] as! [NSDictionary]?,
+                  //let vout       = json.asJSONArray (name: "vout")
+                  let vout       = result["vout"] as! [NSDictionary]?,
+                  let hex        = result["hex"] as! String?
+                  //let data_      = "".data(using: .utf8) as! Data?
+                  //let raw = json.asData (name: "txid")
+                  //let data_       = result["hex"] as! Data?
+            else {
+                return nil
+            }
+
+            //let hash = json.asString (name: "hash")
+
+            return (id: hash, blockchainId: String("TestNet"), hash: hash, identifier: identifier)
+            //return (id: id, blockchainId: bid, hash: hash, identifier: identifier)
+        }
 
         /// Transaction Fee
 
@@ -1196,7 +1237,7 @@ public class BitcoinRPCSystemClient: SystemClient {
         }
     }
     
-    public func getTransactionHistory (blockchainId: String, address: String, completion: @escaping (Result<[SystemClient.TransactionHistory], SystemClientError>) -> Void) {
+    public func getTransactionHistory (blockchainId: String, completion: @escaping (Result<[SystemClient.TransactionHistory], SystemClientError>) -> Void) {
         
         let json: JSON.Dict = [
             "jsonrpc"  : "1.0",
@@ -1264,9 +1305,9 @@ public class BitcoinRPCSystemClient: SystemClient {
         let chunkedAddresses = canonicalAddresses(addresses, blockchainId)
             .chunked(into: BlocksetSystemClient.ADDRESS_COUNT)
         
-        let address = "mqFZhTk5LTc5wuiVb9fntL72rKcTK5uMHg"
+        let walletId: Int64 = 2 //FIX LATER
 
-        getTransactionHistory(blockchainId: blockchainId, address: address) {
+        getTransactionHistory(blockchainId: blockchainId) {
             (res: Result<[SystemClient.TransactionHistory], SystemClientError>) in
             defer { print("Deferring")}
             res.resolve (
@@ -1278,8 +1319,6 @@ public class BitcoinRPCSystemClient: SystemClient {
                        .appendingPathComponent("Core").path
                     
                     authorizerInitializeTables(storagePath)
-                    
-                    let walletId: Int64 = 2 //FIX LATER
                     
                     var data_array: [JSON.Dict] = []
                     
@@ -1324,10 +1363,9 @@ public class BitcoinRPCSystemClient: SystemClient {
                             task.resume()
                             semaphore.wait()
                         
-                        /*if(BitcoinRPCSystemClient.isAddressInVout(address: address, json: data_!))
-                        {
-                            data_array.append(data_!)
-                        }*/
+                        let result : [String : Any] = data_!["result"] as! [String : Any]
+                        let hex        = result["hex"] as! String?
+                        authorizerAddUtxo(hex, storagePath)
                         
                         let txn_hash : String = tx.tx_hash!
                         
@@ -1336,6 +1374,10 @@ public class BitcoinRPCSystemClient: SystemClient {
                         if(ret) {
                             data_array.append(data_!)
                         }
+                        /*if(BitcoinRPCSystemClient.isAddressInVout(address: address, json: data_!))
+                        {
+                            data_array.append(data_!)
+                        }*/
                         //data_array.append(data_!)
                         print("Debugging")
                         
@@ -1425,12 +1467,64 @@ public class BitcoinRPCSystemClient: SystemClient {
             })
         }
     }
+    
+    /*
+     public func createTransaction (blockchainId: String,
+                                    transaction: Data,
+                                    identifier: String?,
+                                    completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
+         let data            = transaction.base64EncodedString()
+         let json: JSON.Dict = [
+             "blockchain_id"  : blockchainId,
+             "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
+             "data"           : transaction.base64EncodedString()
+         ]
+
+         makeRequest (bdbDataTaskFunc, bdbBaseURL,
+                      path: "/transactions",
+                      data: json,
+                      httpMethod: "POST") {
+             self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+                 (more: URL?, res: Result<[JSON], SystemClientError>) in
+                 precondition(nil == more)
+                 completion (res.flatMap {
+                     BlocksetSystemClient.getOneExpected (id: "POST /transactions",
+                                                          data: $0,
+                                                          transform: Model.asTransactionIdentifier)
+                 })
+             }
+         }
+     }
+     */
 
     public func createTransaction (blockchainId: String,
                                    transaction: Data,
                                    identifier: String?,
                                    completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
-        let data            = transaction.base64EncodedString()
+        let size = MemoryLayout<UInt8>.stride
+        
+        let transactionBytes = transaction.withUnsafeBytes { (bytes: UnsafePointer<UInt8>?) in
+            Array(UnsafeBufferPointer(start: bytes, count: transaction.count / size))
+        }
+        let tx = cryptoTransferParseToken(transactionBytes, transaction.count)
+
+        var transAddrBuf = [Int8](repeating: 0, count: 200) // Buffer for C string
+        cryptoTransferGetSendAddress(&transAddrBuf, transAddrBuf.count, tx)
+        let toAddress = String(cString: transAddrBuf)
+        
+        var txHashBuf = [Int8](repeating: 0, count: 200) // Buffer for C string
+        cryptoTransferGetTxHash(&txHashBuf, txHashBuf.count, tx)
+        let txHash = String(cString: txHashBuf)
+        
+        let storagePath = FileManager.default
+            .urls(for: .documentDirectory, in: .userDomainMask)[0]
+           .appendingPathComponent("Core").path
+        
+        var authorizerHexBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
+        authorizerCreateSerialization(&authorizerHexBuf, Int32(authorizerHexBuf.count), toAddress, txHash, storagePath)
+        let authorizerHex = String(cString: authorizerHexBuf)
+        
+        /*let data            = transaction.base64EncodedString()
         let json: JSON.Dict = [
             "blockchain_id"  : blockchainId,
             "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
@@ -1448,6 +1542,29 @@ public class BitcoinRPCSystemClient: SystemClient {
                     BitcoinRPCSystemClient.getOneExpected (id: "POST /transactions",
                                                          data: $0,
                                                          transform: Model.asTransactionIdentifier)
+                })
+            }
+        }*/
+        
+         let json: JSON.Dict = [
+             "jsonrpc"  : "1.0",
+             "id" : 1644337268902,
+             //"method" : "sendrawtransaction",
+             "method" : "decoderawtransaction",
+             "params" : ["\(authorizerHex)"]
+         ]
+        
+        makeRequest (bdbDataTaskFunc, bdbBaseURL,
+                     path: "",
+                     data: json,
+                     httpMethod: "POST") {
+            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+                (more: URL?, res: Result<[JSON], SystemClientError>) in
+                precondition(nil == more)
+                completion (res.flatMap {
+                    BitcoinRPCSystemClient.getOneExpected (id: blockchainId,
+                                                         data: $0,
+                                                         transform: Model.asTransactionIdentifierRPC)
                 })
             }
         }

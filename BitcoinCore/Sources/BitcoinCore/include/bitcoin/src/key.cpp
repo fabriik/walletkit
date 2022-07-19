@@ -237,6 +237,7 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool gr
     secp256k1_pubkey pk;
     ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, begin());
     assert(ret);
+    //ret = secp256k1_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
     ret = secp256k1_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
     assert(ret);
     return true;
