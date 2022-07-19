@@ -1273,6 +1273,14 @@ public class BitcoinRPCSystemClient: SystemClient {
                 success: {
                     print("SYS: GetTransactionHistory: Success \($0[0].tx_hash)")
                     
+                    let storagePath = FileManager.default
+                        .urls(for: .documentDirectory, in: .userDomainMask)[0]
+                       .appendingPathComponent("Core").path
+                    
+                    authorizerInitializeTables(storagePath)
+                    
+                    let walletId: Int64 = 2 //FIX LATER
+                    
                     var data_array: [JSON.Dict] = []
                     
                     //var assetDict: [String: Int] = [:]
@@ -1321,8 +1329,14 @@ public class BitcoinRPCSystemClient: SystemClient {
                             data_array.append(data_!)
                         }*/
                         
+                        let txn_hash : String = tx.tx_hash!
                         
-                        data_array.append(data_!)
+                        let ret : Bool = isTxidUnspentSFPToken (walletId, txn_hash, storagePath);
+                        
+                        if(ret) {
+                            data_array.append(data_!)
+                        }
+                        //data_array.append(data_!)
                         print("Debugging")
                         
                     }
