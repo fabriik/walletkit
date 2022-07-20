@@ -171,6 +171,12 @@ extern "C" {
                                 size_t attributesCount,
                                 OwnershipKept BRCryptoTransferAttribute *attributes);
 
+    extern void
+    cryptoWalletSaveTransferRPC (BRCryptoWallet  wallet,
+                                BRCryptoAddress target,
+                                BRCryptoAmount  amount,
+                                 const char* path_);
+
     extern BRCryptoTransfer
     cryptoWalletCreateTransferForPaymentProtocolRequest (BRCryptoWallet wallet,
                                                          BRCryptoPaymentProtocolRequest request,

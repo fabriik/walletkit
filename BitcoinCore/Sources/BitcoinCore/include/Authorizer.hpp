@@ -24,6 +24,8 @@ extern void authorizerAddUtxo(const char *hex_, const char* path_);
 
 //extern void authorizerCreateSerialization(const char *toAddress, const char *fromAddress, const char *txid, long long vout, long long satoshis, const char *script_);
 //extern void authorizerCreateSerialization(const char *toAddress, const char *fromAddress, const char *txid, long long vout, long long satoshis, const char *script_, const char *txid0, long long vout0, long long satoshis0, const char *script0, const char *address0, const char *path);
-extern void authorizerCreateSerialization(char *authHexStr, int authHexSize, const char *toAddress_, const char *txid_, const char *path_);
+extern void authorizerCreateSerialization(char *authHexStr, int authHexSize, const char *path_);
+
+extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsigned int amount, const char *path_);
 
 #endif /* Header_h */

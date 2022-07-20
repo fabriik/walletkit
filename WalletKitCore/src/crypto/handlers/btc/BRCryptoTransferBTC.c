@@ -214,6 +214,12 @@ cryptoTransferReleaseBTC (BRCryptoTransfer transfer) {
     BRTransactionFree (transferBTC->tid);
 }
 
+static void
+cryptoTransferReleaseRPC (BRCryptoTransfer transfer) {
+    BRCryptoTransferBTC transferBTC = cryptoTransferCoerceBTC(transfer);
+    BRTransactionFreeRPC (transferBTC->tid);
+}
+
 private_extern BRCryptoBoolean
 cryptoTransferChangedAmountBTC (BRCryptoTransfer transfer,
                                 BRWallet *wid) {
@@ -354,6 +360,16 @@ BRCryptoTransferHandlers cryptoTransferHandlersBSV = {
     NULL, // setHash
     NULL, // updateIdentifier
    cryptoTransferSerializeBTC,
+    NULL, // getBytesForFeeEstimate
+    cryptoTransferIsEqualBTC
+};
+
+BRCryptoTransferHandlers cryptoTransferHandlersRPC = {
+    cryptoTransferReleaseRPC,
+    cryptoTransferGetHashBTC,
+    NULL, // setHash
+    NULL, // updateIdentifier
+    cryptoTransferSerializeBTC,
     NULL, // getBytesForFeeEstimate
     cryptoTransferIsEqualBTC
 };

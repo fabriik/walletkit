@@ -64,7 +64,9 @@ typedef struct {
 size_t BRTxInputAddress(const BRTxInput *input, char *address, size_t addrLen, BRAddressParams params);
 void BRTxInputSetAddress(BRTxInput *input, BRAddressParams params, const char *address);
 void BRTxInputSetScript(BRTxInput *input, const uint8_t *script, size_t scriptLen);
+void BRTxInputSetScriptRPC(BRTxInput *input, const uint8_t *script, size_t scriptLen);
 void BRTxInputSetSignature(BRTxInput *input, const uint8_t *signature, size_t sigLen);
+void BRTxInputSetSignatureRPC(BRTxInput *input, const uint8_t *signature, size_t sigLen);
 void BRTxInputSetWitness(BRTxInput *input, const uint8_t *witness, size_t witLen);
 
 typedef struct {
@@ -157,6 +159,8 @@ inline static int BRTransactionEq(const void *tx, const void *otherTx)
 
 // frees memory allocated for tx
 void BRTransactionFree(BRTransaction *tx);
+
+void BRTransactionFreeRPC(BRTransaction *tx);
 
 #ifdef __cplusplus
 }

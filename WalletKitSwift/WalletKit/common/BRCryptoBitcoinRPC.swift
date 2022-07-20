@@ -224,16 +224,19 @@ public class BitcoinRPCSystemClient: SystemClient {
     /// so that the Crypto Demo can use it.
     ///
     public static func createForTest (bdbBaseURL: String, bdbToken: String) -> BitcoinRPCSystemClient {
+    //public static func createForTest (bdbBaseURL: String) -> BitcoinRPCSystemClient {
         return BitcoinRPCSystemClient (bdbBaseURL: bdbBaseURL,
                                      bdbDataTaskFunc: { (session, request, completion) -> URLSessionDataTask in
                                          var decoratedReq = request
                                          decoratedReq.setValue ("Bearer \(bdbToken)", forHTTPHeaderField: "Authorization")
+                                         //decoratedReq.setValue ("Bearer", forHTTPHeaderField: "Authorization")
                                          return session.dataTask (with: decoratedReq, completionHandler: completion)
         })
     }
 
     public static func createForTest (blocksetAccess: BlocksetAccess) -> BitcoinRPCSystemClient {
         return createForTest(bdbBaseURL: blocksetAccess.baseURL, bdbToken: blocksetAccess.token)
+        //return createForTest(bdbBaseURL: blocksetAccess.baseURL)
     }
 
     public func cancelAll () {
@@ -1508,20 +1511,24 @@ public class BitcoinRPCSystemClient: SystemClient {
         }
         let tx = cryptoTransferParseToken(transactionBytes, transaction.count)
 
-        var transAddrBuf = [Int8](repeating: 0, count: 200) // Buffer for C string
+        /*var transAddrBuf = [Int8](repeating: 0, count: 200) // Buffer for C string
         cryptoTransferGetSendAddress(&transAddrBuf, transAddrBuf.count, tx)
         let toAddress = String(cString: transAddrBuf)
         
         var txHashBuf = [Int8](repeating: 0, count: 200) // Buffer for C string
         cryptoTransferGetTxHash(&txHashBuf, txHashBuf.count, tx)
-        let txHash = String(cString: txHashBuf)
+        let txHash = String(cString: txHashBuf)*/
+        
+        //let toAddress = String("moyZRWuEXttPgJ84NaUesjHQTR4fC2Q4gQ")
+        
+        //let txHash = String("3d5eb86b889942127b469425327f7753fb7ff3900f2db3e63d9ee8e0d9023239")
         
         let storagePath = FileManager.default
             .urls(for: .documentDirectory, in: .userDomainMask)[0]
            .appendingPathComponent("Core").path
         
         var authorizerHexBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
-        authorizerCreateSerialization(&authorizerHexBuf, Int32(authorizerHexBuf.count), toAddress, txHash, storagePath)
+        authorizerCreateSerialization(&authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
         let authorizerHex = String(cString: authorizerHexBuf)
         
         /*let data            = transaction.base64EncodedString()
