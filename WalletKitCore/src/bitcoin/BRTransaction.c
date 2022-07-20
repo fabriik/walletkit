@@ -76,11 +76,50 @@ void BRTxInputSetScript(BRTxInput *input, const uint8_t *script, size_t scriptLe
     }
 }
 
+void BRTxInputSetScriptRPC(BRTxInput *input, const uint8_t *script, size_t scriptLen)
+{
+    assert(input != NULL);
+    assert(script != NULL || scriptLen == 0);
+    //if (input->script) array_free(input->script);
+    if (input->script) {
+        assert((input->script) != NULL);
+        //free((size_t *)(input->script) - 2);
+        //free((char *) input->script);
+    }
+    input->script = NULL;
+    input->scriptLen = 0;
+    
+    if (script) {
+        input->scriptLen = scriptLen;
+        array_new(input->script, scriptLen);
+        array_add_array(input->script, script, scriptLen);
+    }
+}
+
 void BRTxInputSetSignature(BRTxInput *input, const uint8_t *signature, size_t sigLen)
 {
     assert(input != NULL);
     assert(signature != NULL || sigLen == 0);
     if (input->signature) array_free(input->signature);
+    input->signature = NULL;
+    input->sigLen = 0;
+    
+    if (signature) {
+        input->sigLen = sigLen;
+        array_new(input->signature, sigLen);
+        array_add_array(input->signature, signature, sigLen);
+    }
+}
+
+void BRTxInputSetSignatureRPC(BRTxInput *input, const uint8_t *signature, size_t sigLen)
+{
+    assert(input != NULL);
+    assert(signature != NULL || sigLen == 0);
+    //if (input->signature) array_free(input->signature);
+    if (input->signature) {
+        assert((input->signature) != NULL);
+        free((size_t *)(input->signature) - 2);
+    }
     input->signature = NULL;
     input->sigLen = 0;
     
@@ -850,6 +889,27 @@ void BRTransactionFree(BRTransaction *tx)
         for (size_t i = 0; i < tx->inCount; i++) {
             BRTxInputSetScript(&tx->inputs[i], NULL, 0);
             BRTxInputSetSignature(&tx->inputs[i], NULL, 0);
+            BRTxInputSetWitness(&tx->inputs[i], NULL, 0);
+        }
+
+        for (size_t i = 0; i < tx->outCount; i++) {
+            BRTxOutputSetScript(&tx->outputs[i], NULL, 0);
+        }
+
+        array_free(tx->outputs);
+        array_free(tx->inputs);
+        free(tx);
+    }
+}
+
+void BRTransactionFreeRPC(BRTransaction *tx)
+{
+    assert(tx != NULL);
+    
+    if (tx) {
+        for (size_t i = 0; i < tx->inCount; i++) {
+            BRTxInputSetScriptRPC(&tx->inputs[i], NULL, 0);
+            BRTxInputSetSignatureRPC(&tx->inputs[i], NULL, 0);
             BRTxInputSetWitness(&tx->inputs[i], NULL, 0);
         }
 

@@ -71,6 +71,7 @@ static BRCryptoHandlers handlers[NUMBER_OF_NETWORK_TYPES] = {
         CRYPTO_NETWORK_TYPE_RPC,
         &cryptoNetworkHandlersRPC,
         &cryptoAddressHandlersRPC,
+        //&cryptoTransferHandlersRPC,
         &cryptoTransferHandlersBTC,
         &cryptoWalletHandlersRPC,
         &cryptoWalletSweeperHandlersBTC,

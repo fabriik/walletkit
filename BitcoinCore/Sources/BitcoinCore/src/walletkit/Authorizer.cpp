@@ -4857,6 +4857,7 @@ static void addTxBuilderInputs (TxBuilder *bsvTxBuilder, int64_t walletId, std::
 
             if (unspentOutputs.size() == 0) {
         printf("Insufficient balance\n");
+                sqlite3_close(db);
         return;
       }
 
@@ -6769,38 +6770,15 @@ void initializeDB(std::string path) {
   } else {
      fprintf(stdout, "ASSETS Record created successfully\n");
   }*/
-
-  sqlite3_close(db);
-}
-
-void initializeDB_old(std::string path) {
-    sqlite3 *db;
-    char *zErrMsg = 0;
-    int rc;
-    char *sql;
-    const char* data = "Callback function called";
-
-    //rc = sqlite3_open("test.db", &db);
-    rc = sqlite3_open(path.c_str(), &db);
-
-    if( rc ) {
-      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return(0);
-    } else {
-      fprintf(stderr, "Opened database successfully\n");
-    }
-
-    sql = (char *) "DROP TABLE SFP_UTXOS;";
+    
+    sql = (char *) "DROP TABLE TRANSFERS;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
     /* Create SQL statement */
-    sql = (char *) "CREATE TABLE SFP_UTXOS("  \
+    sql = (char *) "CREATE TABLE TRANSFERS("  \
       "ID INT PRIMARY KEY     NOT NULL," \
-      "ASSET_ID       INT    NOT NULL," \
-      "TXID           CHAR(64) NOT NULL," \
-      "VOUT                INT," \
-      "SCRIPT         TEXT," \
-        "SATOSHIS       BIGINT," \
+      "TXID          CHAR(64) NOT NULL," \
+      "ADDRESS                CHAR(100)," \
         "AMOUNT         BIGINT );";
 
     /* Execute SQL statement */
@@ -6810,203 +6788,10 @@ void initializeDB_old(std::string path) {
       fprintf(stderr, "SQL error: %s\n", zErrMsg);
       sqlite3_free(zErrMsg);
     } else {
-      fprintf(stdout, "SFP_UTXOS Table created successfully\n");
+      fprintf(stdout, "TRANSFERS Table created successfully\n");
     }
 
-
-  //VALUES (13, ...)
-    /* Create SQL statement */
-  //sql = (char *) "INSERT INTO SFP_UTXOS (ID,ASSET_ID,TXID,VOUT,SCRIPT,SATOSHIS,AMOUNT) "  \
-         "VALUES (1, 1, '91935581f5ddda5536071f050ba4eba7fb98441c2370274ce21968434b645a40', 0," \
-                 "'610773667040302e33246164336362313833316165622e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a9149e9e1f959811652b6b6741dfd3758fc2dac4389e142ca3d8061b9c7171c5ae7c4c0bc10781916139a746304402202ab94d63050c7acf3bad3b9fc038f195db57c22ff9045e510cf903fe7631b17d0220594056c20489e61521d11a7057d53ae422a25409d2fca155bf382bb6eb39d719242b3019b9bbdd9ea4af25e0c879a153f5b5c979ca4391835301338160c3c3deae00000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b0100000000000000080000'," \
-                 "'564', '1'); ";
-  sql = (char *) "INSERT INTO SFP_UTXOS (ID,ASSET_ID,TXID,VOUT,SCRIPT,SATOSHIS,AMOUNT) "  \
-        "VALUES (1, 2, 'faf51d1cafec2bc089c271ccc15a74faa03cb0e954485533bd675fb2de66487d', 0," \
-               "'610773667040302e33243866353539383237353266372e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a91412f88c3fa18325a8e42100b1d5ffa16384fa50cf1412f88c3fa18325a8e42100b1d5ffa16384fa50cf4630440220794afb9e88984dda9c298c9857fbbfa5927318aa3eb97bd4b64b3d09b2ea54d60220264ffc692c47004b84cdf3dc6d569172c1e6cb71ccbcad179a78826f37374ac2246de1f73ca6ea14874933713e8478824f7fc0416a0b6c53d3d4412be1d7df2d9401000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0d01000000000000007b7d0a0000'," \
-               "'566', '1'); ";
-
- /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  if( rc != SQLITE_OK ){
-     fprintf(stderr, "SQL error: %s\n", zErrMsg);
-     sqlite3_free(zErrMsg);
-  } else {
-     fprintf(stdout, "SFP_UTXOS Record created successfully\n");
-  }
-
-  sql = (char *) "INSERT INTO SFP_UTXOS (ID,ASSET_ID,TXID,VOUT,SCRIPT,SATOSHIS,AMOUNT) "  \
-        "VALUES (2, 2, '1734e148adbe61b3ea47e87f77f3b684f91f69640096b39ab0488ac67774edd7', 0," \
-               "'610773667040302e33243866353539383237353266372e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a9141d783a74ab3d71e0e3ba79c94e398cafba9effc41412f88c3fa18325a8e42100b1d5ffa16384fa50cf4630440220305fee934d96fa861d52e85801aa794ac2a4f0138da619069f533732a16b25660220181328571869d47b4741497a894a03505f8c4edd763f31caccd56696eb1984d6247d4866deb25f67bd33554854e9b03ca0fa745ac1cc71c289c02becaf1c1df5fa00000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b0100000000000000080000'," \
-               "'564', '1'); ";
-
- /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  if( rc != SQLITE_OK ){
-     fprintf(stderr, "SQL error: %s\n", zErrMsg);
-     sqlite3_free(zErrMsg);
-  } else {
-     fprintf(stdout, "SFP_UTXOS Record created successfully\n");
-  }
-
-  sql = (char *) "INSERT INTO SFP_UTXOS (ID,ASSET_ID,TXID,VOUT,SCRIPT,SATOSHIS,AMOUNT) "  \
-        "VALUES (3, 2, 'dc7e17a734144d7648047f64405fd7956983feb733cb0f33fe12bef29e7165cb', 0," \
-               "'610773667040302e33243866353539383237353266372e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a914024570df2d9092b044eed230f5aac1448919075a1412f88c3fa18325a8e42100b1d5ffa16384fa50cf46304402202f4faabde0430c3f3741be82c3437eedf5a4b9081e06a2729470d13582522c7f02202c778650ccb6c9d71ffeec89275a3025406f9a6fdf096e3c0a827d777a3a4ea924d7ed7477c68a48b09ab3960064691ff984b6f3777fe847eab361bead48e1341700000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b0100000000000000080000'," \
-               "'564', '1'); ";
-
- /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  if( rc != SQLITE_OK ){
-     fprintf(stderr, "SQL error: %s\n", zErrMsg);
-     sqlite3_free(zErrMsg);
-  } else {
-     fprintf(stdout, "SFP_UTXOS Record created successfully\n");
-  }
-
-  sql = (char *) "INSERT INTO SFP_UTXOS (ID,ASSET_ID,TXID,VOUT,SCRIPT,SATOSHIS,AMOUNT) "  \
-        "VALUES (4, 2, '109402280c7a5ae8d4c9e06a466299380a173d91ea4462ee701f37b110691fd3', 0," \
-               "'610773667040302e33243866353539383237353266372e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a914432a14496b68288ec26f3877403ff8782bba0aec1412f88c3fa18325a8e42100b1d5ffa16384fa50cf473045022100e9e58abb4637de284561516b87c29a8e00c019b6f435e9aa6984cdfcde3011ef02202729a27042e13b64690c8a1f4e367264d14689c7c780ef36b8990ed0fdc2117b24cb65719ef2be12fe330fcb33b7fe836995d75f40647f0448764d1434a7177edc00000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b0100000000000000080000'," \
-               "'565', '1'); ";
-
- /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  if( rc != SQLITE_OK ){
-     fprintf(stderr, "SQL error: %s\n", zErrMsg);
-     sqlite3_free(zErrMsg);
-  } else {
-     fprintf(stdout, "SFP_UTXOS Record created successfully\n");
-  }
-
-  sql = (char *) "INSERT INTO SFP_UTXOS (ID,ASSET_ID,TXID,VOUT,SCRIPT,SATOSHIS,AMOUNT) "  \
-        "VALUES (5, 2, '0f8e052c32cf054eba9b03c02464efe738224f254824ba6077203f7dd3062d0b', 0," \
-               "'610773667040302e33243866353539383237353266372e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a914b582f14ebc63fa84aff302ff371d276ceb7f96081412f88c3fa18325a8e42100b1d5ffa16384fa50cf473045022100e48d1445a443e9f5b807deef3413b83077ace44e7bfcb92b3df8be2dd7767a5402206ac96181a11141ffd4e61b05bf11897f3b68746d1094401a439b998bdf6811ce24d31f6910b1371f70ee6244ea913d170a389962466ae0c9d4e85a7a0c2802941000000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b0100000000000000080000'," \
-               "'565', '1'); ";
-
- /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  if( rc != SQLITE_OK ){
-     fprintf(stderr, "SQL error: %s\n", zErrMsg);
-     sqlite3_free(zErrMsg);
-  } else {
-     fprintf(stdout, "SFP_UTXOS Record created successfully\n");
-  }
-
-  sql = (char *) "INSERT INTO SFP_UTXOS (ID,ASSET_ID,TXID,VOUT,SCRIPT,SATOSHIS,AMOUNT) "  \
-        "VALUES (6, 2, 'd70f0f58fadaec3cad56b6d7d605dc1c912dbbac051fa104ec394844d1cd3c4a', 0," \
-               "'610773667040302e33243866353539383237353266372e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a9141d72965e1b5d764b07229af4839e0aa63fb561861412f88c3fa18325a8e42100b1d5ffa16384fa50cf46304402202cd6aff9189019a9784347c97d8bfe9cf4b3eb4940e452eddf0e422654d58c2302201c411d3c92d19d56cfa020498751dd70c3e8565cf1c612c1e624a4ad241ef9e0240b2d06d37d3f207760ba2448254f2238e7ef6424c0039bba4e05cf322c058e0f00000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b0100000000000000080000'," \
-               "'564', '1'); ";
-
- /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  if( rc != SQLITE_OK ){
-     fprintf(stderr, "SQL error: %s\n", zErrMsg);
-     sqlite3_free(zErrMsg);
-  } else {
-     fprintf(stdout, "SFP_UTXOS Record created successfully\n");
-  }
-
-    sql = (char *) "DROP TABLE SFP_ASSETS;";
-    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-    /* Create SQL statement */
-    sql = (char *) "CREATE TABLE SFP_ASSETS("  \
-      "ID INT PRIMARY KEY     NOT NULL," \
-      "ALIAS           CHAR(100) NOT NULL," \
-      "ISSUER_ADDRESS         CHAR(100));";
-
-    /* Execute SQL statement */
-    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-    if( rc != SQLITE_OK ){
-      fprintf(stderr, "SQL error: %s\n", zErrMsg);
-      sqlite3_free(zErrMsg);
-    } else {
-      fprintf(stdout, "SFP_ASSETS Table created successfully\n");
-    }
-
-    /* Create SQL statement */
-  sql = (char *) "INSERT INTO SFP_ASSETS (ID,ALIAS,ISSUER_ADDRESS) "  \
-         "VALUES (1, 'ad3cb1831aeb.asset@buttonofmoney.com', 'mjazJZgmH6guLimtZoqb3kqbbo4VjwMsMd'); ";
-
- /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  if( rc != SQLITE_OK ){
-     fprintf(stderr, "SQL error: %s\n", zErrMsg);
-     sqlite3_free(zErrMsg);
-  } else {
-     fprintf(stdout, "SFP_ASSETS Record created successfully\n");
-  }
-
-  sql = (char *) "INSERT INTO SFP_ASSETS (ID,ALIAS,ISSUER_ADDRESS) "  \
-         "VALUES (2, '8f55982752f7.asset@buttonofmoney.com', 'mhFGCuy98LDwgHpUWyvvVcp3JLrigeFvdw'); ";
-
- /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  if( rc != SQLITE_OK ){
-     fprintf(stderr, "SQL error: %s\n", zErrMsg);
-     sqlite3_free(zErrMsg);
-  } else {
-     fprintf(stdout, "SFP_ASSETS Record created successfully\n");
-  }
-
-    sql = (char *) "DROP TABLE ASSETS;";
-    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-    /* Create SQL statement */
-    sql = (char *) "CREATE TABLE ASSETS("  \
-      "ID INT PRIMARY KEY     NOT NULL," \
-      "NAME                           CHAR(255)," \
-        "USER_ID                     BIGINT," \
-        "INITIAL_SUPPLY         BIGINT," \
-        "PAYMAIL_ALIAS             CHAR(255)," \
-        "MINTING_SCRIPT         TEXT);";
-
-    /* Execute SQL statement */
-    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-    if( rc != SQLITE_OK ){
-      fprintf(stderr, "SQL error: %s\n", zErrMsg);
-      sqlite3_free(zErrMsg);
-    } else {
-      fprintf(stdout, "ASSETS Table created successfully\n");
-    }
-
-    sql = (char *) "INSERT INTO ASSETS (ID,NAME,USER_ID,INITIAL_SUPPLY,PAYMAIL_ALIAS,MINTING_SCRIPT) "  \
-         "VALUES (1, 'Token1', 5, 1, 'ad3cb1831aeb.asset', '610773667040302e33246164336362313833316165622e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a9142ca3d8061b9c7171c5ae7c4c0bc10781916139a7142ca3d8061b9c7171c5ae7c4c0bc10781916139a7463044022029556bfe4aadb8a50fd326ac4f51e8cf4ddebe81823b1c0888ffb8d6bdbd7a29022053d8b1ad41978ee1ba56fee8fd40b71abae2cab8ddbf6cf20bc72820affa2f9b24ae3ea23a10a7af2e8fca307ec7393f8c039f632fe6c11f1e84cfd6f9b0b99b8f00000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0d01000000000000007b7d0a0000'); ";
-
-
- /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  if( rc != SQLITE_OK ){
-     fprintf(stderr, "SQL error: %s\n", zErrMsg);
-     sqlite3_free(zErrMsg);
-  } else {
-     fprintf(stdout, "ASSETS Record created successfully\n");
-  }
-
-  sql = (char *) "INSERT INTO ASSETS (ID,NAME,USER_ID,INITIAL_SUPPLY,PAYMAIL_ALIAS,MINTING_SCRIPT) "  \
-         "VALUES (2, 'Token1', 5, 1, '8f55982752f7.asset', '610773667040302e33243866353539383237353266372e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a91412f88c3fa18325a8e42100b1d5ffa16384fa50cf1412f88c3fa18325a8e42100b1d5ffa16384fa50cf4630440220794afb9e88984dda9c298c9857fbbfa5927318aa3eb97bd4b64b3d09b2ea54d60220264ffc692c47004b84cdf3dc6d569172c1e6cb71ccbcad179a78826f37374ac2246de1f73ca6ea14874933713e8478824f7fc0416a0b6c53d3d4412be1d7df2d9401000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0d01000000000000007b7d0a0000'); ";
-
-
- /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  if( rc != SQLITE_OK ){
-     fprintf(stderr, "SQL error: %s\n", zErrMsg);
-     sqlite3_free(zErrMsg);
-  } else {
-     fprintf(stdout, "ASSETS Record created successfully\n");
-  }
-
-    sqlite3_close(db);
+  sqlite3_close(db);
 }
 
 void createSFPUtxos(std::string path) {
@@ -7250,6 +7035,8 @@ extern bool isTxidUnspentSFPToken (long long walletId, const char *txid, const c
     int rc;
     char *sql;
     //const char* data = "Callback function called";
+    
+    bool res = false;
 
     std::vector<Utxo> utxos;
     
@@ -7284,10 +7071,10 @@ extern bool isTxidUnspentSFPToken (long long walletId, const char *txid, const c
     printf("%lu records returned\n", records.size());
 
     if(records.size() > 0)
-      return true;
+      res = true;
   }
-
-  return false;
+  sqlite3_close(db);
+  return res;
 }
 
 std::string getMnemonic(int64_t walletId, std::string path) {
@@ -7345,13 +7132,11 @@ extern void authorizerInitializeTables(const char *path_) {
     initializeUtxos(path);
 }
 
-static int64_t getWalletIdByTxid(const char * txid_, std::string path) {
+static int64_t getWalletIdByTxid(std::string txid, std::string path) {
     sqlite3 *db;
       char *zErrMsg = 0;
       int rc;
       char *sql;
-    
-    std::string txid(txid_);
 
     int64_t res = 0;
 
@@ -7388,14 +7173,11 @@ static int64_t getWalletIdByTxid(const char * txid_, std::string path) {
     return res;
 }
 
-
-static int64_t getWalletIdByAddress(const char * address_, std::string path) {
+static int64_t getWalletIdByAddress(std::string address, std::string path) {
     sqlite3 *db;
       char *zErrMsg = 0;
       int rc;
       char *sql;
-    
-    std::string address(address_);
 
     int64_t res = 0;
 
@@ -7431,13 +7213,11 @@ static int64_t getWalletIdByAddress(const char * address_, std::string path) {
     return res;
 }
 
-static PaymentOutput getPaymentOutputByTxid(const char * txid_, std::string path) {
+static PaymentOutput getPaymentOutputByTxid(std::string txid, std::string path) {
     sqlite3 *db;
       char *zErrMsg = 0;
       int rc;
       char *sql;
-    
-    std::string txid(txid_);
 
     PaymentOutput output;
 
@@ -7502,7 +7282,118 @@ static PaymentOutput getPaymentOutputByTxid(const char * txid_, std::string path
     return output;
 }
 
-extern void authorizerCreateSerialization(char *authHexStr, int authHexSize, const char *toAddress_, const char *txid_, const char *path_) {
+
+extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsigned int amount_, const char *path_) {
+    printf("txid = %s\n", txid_);
+    printf("address = %s\n", address_);
+    printf("path = %s\n", path_);
+    
+    std::string txid(txid_);
+    std::string address(address_);
+    
+    unsigned int amount = (unsigned int) amount_/100000000;
+    
+    std::string path = std::string(path_) + std::string("/sfp.db");
+    printf("path: %s\n", path.c_str());
+    
+    sqlite3 *db;
+      char *zErrMsg = 0;
+      int rc;
+      char *sql;
+
+      rc = sqlite3_open(path.c_str(), &db);
+
+      if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return;
+      } else {
+        fprintf(stderr, "Opened database successfully\n");
+      }
+
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM TRANSFERS;");
+
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+      size_t id = records.size() + 1;
+
+          std::string sql_query0 = std::string("INSERT INTO TRANSFERS (ID,TXID,ADDRESS,AMOUNT) VALUES (") + std::to_string(id) + std::string(", '") + txid + std::string("', '") + address + std::string("', ") + std::to_string(amount) + std::string("); ");
+          
+          sql = (char *) sql_query0.c_str();
+          printf("sql_query0 = %s\n", sql_query0.c_str());
+
+          rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+          if( rc != SQLITE_OK ) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+          } else {
+            fprintf(stdout, "TRANSFER Record Operation done successfully\n");
+          }
+      
+    }
+    sqlite3_close(db);
+}
+
+typedef struct TransferRecord {
+    std::string txid;
+    std::string address;
+    int64_t amount;
+}TransferRecord;
+
+static TransferRecord getTransfer(std::string path) {
+    sqlite3 *db;
+      char *zErrMsg = 0;
+      int rc;
+      char *sql;
+    
+    TransferRecord rec;
+
+      rc = sqlite3_open(path.c_str(), &db);
+
+      if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return rec;
+      } else {
+        fprintf(stderr, "Opened database successfully\n");
+      }
+
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM TRANSFERS ORDER BY ID DESC;");
+
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+        if(records.size() > 0) {
+            rec.txid = records[0][1];
+            rec.address = records[0][2];
+            rec.amount = std::stoll(records[0][3]);
+        }
+    }
+    return rec;
+    sqlite3_close(db);
+}
+
+extern void authorizerCreateSerialization(char *authHexStr, int authHexSize, const char *path_) {
 //extern void authorizerCreateSerialization(const char *toAddress, const char *fromAddress, const char *txid, long long vout, long long satoshis, const char *script_) {
     
     std::string path = std::string(path_) + std::string("/sfp.db");
@@ -7511,6 +7402,11 @@ extern void authorizerCreateSerialization(char *authHexStr, int authHexSize, con
     createSFPUtxos(path);
 
     createSFPAssets(path);
+    
+    TransferRecord rec = getTransfer(path);
+    
+    std::string txid_(rec.txid);
+    std::string toAddress_(rec.address);
     
     printf("Building\n");
     

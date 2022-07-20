@@ -315,6 +315,50 @@ cryptoWalletCreateTransferRPC (BRCryptoWallet  wallet,
     //BRTransaction *tid = BRWalletCreateTransactionWithFeePerKb (wid, feePerKb, value, address.s);
     
     BRTransaction *tid = BRTransactionNew();
+    
+    if(wid->transactions != NULL) {
+        tid->txHash = wid->transactions[0]->txHash;
+        //tid->wtxHash = wid->transactions[0]->wtxHash;
+        //tid->version = wid->transactions[0]->version;
+    }
+
+    return (NULL == tid
+            ? NULL
+            : cryptoTransferCreateAsBTC (wallet->listenerTransfer,
+                                         unit,
+                                         unitForFee,
+                                         wid,
+                                         tid,
+                                         wallet->type));
+}
+
+extern BRCryptoTransfer
+cryptoWalletCreateTransferRPC_ (BRCryptoWallet  wallet,
+                               BRCryptoAddress target,
+                               BRCryptoAmount  amount,
+                               BRCryptoFeeBasis estimatedFeeBasis,
+                               size_t attributesCount,
+                               OwnershipKept BRCryptoTransferAttribute *attributes,
+                               BRCryptoCurrency currency,
+                               BRCryptoUnit unit,
+                               BRCryptoUnit unitForFee) {
+    BRCryptoWalletBTC walletBTC = cryptoWalletCoerceBTC(wallet);
+
+    BRWallet *wid = walletBTC->wid;
+
+    BRCryptoBlockChainType addressType;
+    BRAddress address = cryptoAddressAsBTC (target, &addressType);
+    assert (addressType == wallet->type);
+
+    BRCryptoBoolean overflow = CRYPTO_FALSE;
+    uint64_t value = cryptoAmountGetIntegerRaw (amount, &overflow);
+    if (CRYPTO_TRUE == overflow) { return NULL; }
+
+    uint64_t feePerKb = cryptoFeeBasisAsBTC(estimatedFeeBasis);
+
+    //BRTransaction *tid = BRWalletCreateTransactionWithFeePerKb (wid, feePerKb, value, address.s);
+    
+    BRTransaction *tid = BRTransactionNew();
     if(wid->transactions != NULL) {
         /*tid->txHash = wid->transactions[0]->txHash;
         tid->wtxHash = wid->transactions[0]->wtxHash;
@@ -386,9 +430,13 @@ cryptoWalletCreateTransferRPC (BRCryptoWallet  wallet,
         tid->inputs[wid->transactions[0]->inCount+1].txHash = uint256(hex2);
         tid->inputs[wid->transactions[0]->inCount+2].txHash = wid->transactions[0]->txHash;
         
-        for(size_t i = 0; i < wid->transactions[0]->outCount; i++) {
+        /*for(size_t i = 0; i < wid->transactions[0]->outCount; i++) {
             tid->outputs[i] = wid->transactions[0]->outputs[i];
-        }
+            //tid->outputs[i].amount = wid->transactions[0]->outputs[i].amount;
+            //array_new(tid->outputs[i].script, tid->outputs[i].scriptLen);
+            //array_add_array(tid->outputs[i].script, (uint8_t *) wid->transactions[0]->outputs[i].script, tid->outputs[i].scriptLen);
+            
+        }*/
         tid->outCount = wid->transactions[0]->outCount;
         tid->lockTime = wid->transactions[0]->lockTime;
         tid->blockHeight = wid->transactions[0]->blockHeight;
@@ -586,6 +634,7 @@ BRCryptoWalletHandlers cryptoWalletHandlersRPC = {
     cryptoWalletGetTransferAttributeAtBTC,
     cryptoWalletValidateTransferAttributeBTC,
     cryptoWalletCreateTransferRPC,
+    //cryptoWalletCreateTransferBTC,
     cryptoWalletCreateTransferMultipleBTC,
     cryptoWalletGetAddressesForRecoveryBTC,
     NULL,

@@ -10,6 +10,7 @@
 //
 import WalletKitCore
 
+import Foundation
 
 ///
 /// A Wallet holds the transfers and a balance for a single currency.
@@ -212,6 +213,18 @@ public final class Wallet: Equatable {
 
         let coreAttributesCount = attributes?.count ?? 0
         var coreAttributes: [BRCryptoTransferAttribute?] = attributes?.map { $0.core } ?? []
+        
+        if(self.manager.network.name == "BitcoinRPC") {
+            let storagePath = FileManager.default
+                .urls(for: .documentDirectory, in: .userDomainMask)[0]
+               .appendingPathComponent("Core").path
+            
+            cryptoWalletSaveTransferRPC (core,
+                                         target.core,
+                                         amount.core,
+                                         storagePath)
+            
+        }
         
         return cryptoWalletCreateTransfer (core,
                                            target.core,

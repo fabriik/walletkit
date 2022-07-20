@@ -20,6 +20,12 @@
 
 #include "BRCryptoHandlersP.h"
 
+#include "bitcoin/BRWallet.h"
+
+#include "../../BitcoinCore/Sources/BitcoinCore/include/Authorizer.hpp"
+
+#include "crypto/handlers/btc/BRCryptoBTC.h"
+
 static void
 cryptoWalletUpdTransfer (BRCryptoWallet wallet,
                                   BRCryptoTransfer transfer,
@@ -930,6 +936,23 @@ cryptoWalletCreateTransfer (BRCryptoWallet  wallet,
     cryptoUnitGive (unit);
 
     return transfer;
+}
+
+extern void
+cryptoWalletSaveTransferRPC (BRCryptoWallet  wallet,
+                            BRCryptoAddress target,
+                            BRCryptoAmount  amount,
+                            const char* path_) {
+    BRCryptoWalletBTC walletBTC = cryptoWalletCoerceBTC(wallet);
+
+    BRWallet *wid = walletBTC->wid;
+
+    BRCryptoBlockChainType addressType;
+    BRAddress address = cryptoAddressAsBTC (target, &addressType);
+    assert (addressType == wallet->type);
+    
+    authorizerSaveTransfer((const char *) u256hex(wid->transactions[0]->txHash), address.s, wid->transactions[0]->sendAmount, path_);
+    
 }
 
 extern BRCryptoTransfer
