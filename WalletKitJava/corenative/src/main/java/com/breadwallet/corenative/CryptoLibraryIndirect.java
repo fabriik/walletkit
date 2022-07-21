@@ -68,6 +68,19 @@ public final class CryptoLibraryIndirect {
                 attributeVals);
     }
 
+
+    // crypto/BRCryptoClient.h
+    public static Pointer cryptoClientTransactionBundleCreate (int status,
+                                                                      byte[] transaction,
+                                                                      SizeT transactionLength,
+                                                                      long timestamp,
+                                                                      long blockHeight) {
+        return INSTANCE.cryptoClientTransactionBundleCreate(status,
+                transaction, transactionLength, timestamp, blockHeight
+        );
+    }
+
+
     public static Pointer cryptoClientTransferBundleCreate(int status,
                                                            String uids,
                                                            String hash,
@@ -177,6 +190,13 @@ public final class CryptoLibraryIndirect {
         Pointer cryptoWalletCreateTransfer(Pointer wallet, Pointer target, Pointer amount, Pointer feeBasis, SizeT attributesCount, BRCryptoTransferAttribute[] attributes, @Nullable String exchangeId);
 
         int cryptoWalletValidateTransferAttributes(Pointer wallet, SizeT countOfAttributes, BRCryptoTransferAttribute[] attributes, IntByReference validates);
+
+        // crypto/BRCryptoClient.h
+        Pointer cryptoClientTransactionBundleCreate (int status,
+                                                     byte[] transaction,
+                                                     SizeT transactionLength,
+                                                     long timestamp,
+                                                     long blockHeight);
 
         Pointer cryptoClientTransferBundleCreate(int status,
                                                  String uids,

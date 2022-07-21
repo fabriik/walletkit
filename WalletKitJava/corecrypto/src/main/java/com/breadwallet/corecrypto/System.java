@@ -1887,6 +1887,9 @@ final class System implements com.breadwallet.crypto.System {
 
                                         List<BRCryptoClientTransactionBundle> bundles = new ArrayList<>();
                                         for (Transaction transaction : transactions) {
+                                            transaction.getMeta().put("status", "PENDING");
+                                            transaction.getMeta().put("exchange_id", "11790");
+
                                             Optional<BRCryptoClientTransactionBundle> bundle = makeTransactionBundle(transaction);
                                             if (bundle.isPresent()) {
                                                 bundles.add(bundle.get());

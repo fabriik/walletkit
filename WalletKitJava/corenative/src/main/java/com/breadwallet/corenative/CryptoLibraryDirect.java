@@ -378,12 +378,7 @@ public final class CryptoLibraryDirect {
     public static native Pointer cryptoWalletSweeperCreateTransferForWalletSweep(Pointer sweeper, Pointer walletManager, Pointer wallet, Pointer feeBasis);
 
 
-    // crypto/BRCryptoClient.h
-    public static native Pointer cryptoClientTransactionBundleCreate (int status,
-                                                                      byte[] transaction,
-                                                                      SizeT transactionLength,
-                                                                      long timestamp,
-                                                                      long blockHeight);
+
     public static native void cryptoClientTransactionBundleRelease (Pointer bundle);
 
     // See 'Indirect': void cryptoClientTransferBundleCreate (int status, ...)

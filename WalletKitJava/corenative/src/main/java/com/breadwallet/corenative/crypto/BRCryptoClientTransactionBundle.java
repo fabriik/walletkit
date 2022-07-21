@@ -1,6 +1,7 @@
 package com.breadwallet.corenative.crypto;
 
 import com.breadwallet.corenative.CryptoLibraryDirect;
+import com.breadwallet.corenative.CryptoLibraryIndirect;
 import com.breadwallet.corenative.utility.SizeT;
 import com.google.common.primitives.UnsignedLong;
 import com.sun.jna.Pointer;
@@ -12,7 +13,7 @@ public class BRCryptoClientTransactionBundle extends PointerType {
             byte[] transaction,
             UnsignedLong blockTimestamp,
             UnsignedLong blockHeight) {
-        Pointer pointer = CryptoLibraryDirect.cryptoClientTransactionBundleCreate(
+        Pointer pointer = CryptoLibraryIndirect.cryptoClientTransactionBundleCreate(
                 status.toCore(),
                 transaction,
                 new SizeT(transaction.length),
