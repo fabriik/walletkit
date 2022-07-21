@@ -1491,7 +1491,10 @@ cryptoClientTransactionBundleCreate (BRCryptoTransferStateType status,
                                      OwnershipKept uint8_t *transaction,
                                      size_t transactionLength,
                                      BRCryptoTimestamp timestamp,
-                                     BRCryptoBlockNumber blockHeight) {
+                                     BRCryptoBlockNumber blockHeight,
+                                     size_t attributesCount,
+                                     OwnershipKept const char **attributeKeys,
+                                     OwnershipKept const char **attributeVals) {
     BRCryptoClientTransactionBundle bundle = calloc (1, sizeof (struct BRCryptoClientTransactionBundleRecord));
 
     bundle->status = status;
@@ -1503,12 +1506,35 @@ cryptoClientTransactionBundleCreate (BRCryptoTransferStateType status,
     bundle->timestamp   = timestamp;
     bundle->blockHeight = (BRCryptoBlockNumber) blockHeight;
 
+    // attributes
+    bundle->attributesCount = attributesCount;
+    bundle->attributeKeys = bundle->attributeVals = NULL;
+
+    if (bundle->attributesCount > 0) {
+        bundle->attributeKeys = calloc (bundle->attributesCount, sizeof (char*));
+        bundle->attributeVals = calloc (bundle->attributesCount, sizeof (char*));
+
+        for (size_t index = 0; index < bundle->attributesCount; index++) {
+            bundle->attributeKeys[index] = strdup (attributeKeys[index]);
+            bundle->attributeVals[index] = strdup (attributeVals[index]);
+        }
+    }
     return bundle;
 }
 
 extern void
 cryptoClientTransactionBundleRelease (BRCryptoClientTransactionBundle bundle) {
     free (bundle->serialization);
+
+    if (bundle->attributesCount > 0) {
+        for (size_t index = 0; index < bundle->attributesCount; index++) {
+            free (bundle->attributeKeys[index]);
+            free (bundle->attributeVals[index]);
+        }
+        free (bundle->attributeKeys);
+        free (bundle->attributeVals);
+    }
+
     memset (bundle, 0, sizeof (struct BRCryptoClientTransactionBundleRecord));
     free (bundle);
 }
@@ -1533,11 +1559,15 @@ cryptoClientTransactionBundleGetSerialization (BRCryptoClientTransactionBundle b
 private_extern BRRlpItem
 cryptoClientTransactionBundleRlpEncode (BRCryptoClientTransactionBundle bundle,
                                         BRRlpCoder coder) {
-    return rlpEncodeList (coder, 4,
+    return rlpEncodeList (coder, 5,
                           rlpEncodeUInt64 (coder, bundle->status,      0),
                           rlpEncodeBytes  (coder, bundle->serialization, bundle->serializationCount),
                           rlpEncodeUInt64 (coder, bundle->timestamp,   0),
-                          rlpEncodeUInt64 (coder, bundle->blockHeight, 0));
+                          rlpEncodeUInt64 (coder, bundle->blockHeight, 0),
+                          cryptoClientTransferBundleRlpEncodeAttributes (bundle->attributesCount,
+                            (const char **) bundle->attributeKeys,
+                            (const char **) bundle->attributeVals,
+                            coder));
 }
 
 private_extern BRCryptoClientTransactionBundle
@@ -1545,15 +1575,22 @@ cryptoClientTransactionBundleRlpDecode (BRRlpItem item,
                                         BRRlpCoder coder) {
     size_t itemsCount;
     const BRRlpItem *items = rlpDecodeList (coder, item, &itemsCount);
-    assert (4 == itemsCount);
+    assert (5 == itemsCount);
 
     BRRlpData serializationData = rlpDecodeBytesSharedDontRelease (coder, items[1]);
+
+    BRCryptoTransferBundleRlpDecodeAttributesResult attributesResult =
+            cryptoClientTransferBundleRlpDecodeAttributes (items[4], coder);
+
 
     return cryptoClientTransactionBundleCreate ((BRCryptoTransferStateType) rlpDecodeUInt64 (coder, items[0], 0),
                                                 serializationData.bytes,
                                                 serializationData.bytesCount,
                                                 rlpDecodeUInt64(coder, items[2], 0),
-                                                rlpDecodeUInt64(coder, items[3], 0));
+                                                rlpDecodeUInt64(coder, items[3], 0),
+                                                array_count(attributesResult.keys),
+                                                (const char **) attributesResult.keys,
+                                                (const char **) attributesResult.vals);
 }
 
 private_extern size_t

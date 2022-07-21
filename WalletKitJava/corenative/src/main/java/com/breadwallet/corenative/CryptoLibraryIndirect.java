@@ -74,9 +74,13 @@ public final class CryptoLibraryIndirect {
                                                                       byte[] transaction,
                                                                       SizeT transactionLength,
                                                                       long timestamp,
-                                                                      long blockHeight) {
+                                                                      long blockHeight,
+                                                               SizeT attributesCount,
+                                                               String[] attributeKeys,
+                                                               String[] attributeVals) {
         return INSTANCE.cryptoClientTransactionBundleCreate(status,
-                transaction, transactionLength, timestamp, blockHeight
+                transaction, transactionLength, timestamp, blockHeight,
+                attributesCount, attributeKeys, attributeVals
         );
     }
 
@@ -196,7 +200,10 @@ public final class CryptoLibraryIndirect {
                                                      byte[] transaction,
                                                      SizeT transactionLength,
                                                      long timestamp,
-                                                     long blockHeight);
+                                                     long blockHeight,
+                                                     SizeT attributesCount,
+                                                     String[] attributeKeys,
+                                                     String[] attributeVals);
 
         Pointer cryptoClientTransferBundleCreate(int status,
                                                  String uids,

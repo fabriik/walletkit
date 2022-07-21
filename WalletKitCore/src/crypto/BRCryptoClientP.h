@@ -35,6 +35,10 @@ struct BRCryptoClientTransactionBundleRecord {
     size_t   serializationCount;
     BRCryptoTimestamp timestamp;
     BRCryptoBlockNumber blockHeight;
+
+    size_t attributesCount;
+    char **attributeKeys;
+    char **attributeVals;
 };
 
 private_extern OwnershipKept uint8_t *

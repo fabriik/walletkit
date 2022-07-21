@@ -54,7 +54,10 @@ cryptoClientTransactionBundleCreate (BRCryptoTransferStateType status,
                                      OwnershipKept uint8_t *transaction,
                                      size_t transactionLength,
                                      BRCryptoTimestamp timestamp,
-                                     BRCryptoBlockNumber blockHeight);
+                                     BRCryptoBlockNumber blockHeight,
+                                     size_t attributesCount,
+                                     OwnershipKept const char **attributeKeys,
+                                     OwnershipKept const char **attributeVals);
 
 extern void
 cryptoClientTransactionBundleRelease (BRCryptoClientTransactionBundle bundle);

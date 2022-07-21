@@ -1850,7 +1850,8 @@ final class System implements com.breadwallet.crypto.System {
                 status,
                 optRaw.get(),
                 timestamp,
-                blockHeight));
+                blockHeight,
+                transaction.getMeta()));
     }
 
      private static void getTransactions(Cookie context, BRCryptoWalletManager coreWalletManager, BRCryptoClientCallbackState callbackState,
