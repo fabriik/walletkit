@@ -11,6 +11,7 @@
 
 import UIKit
 import WalletKit
+import BitcoinCore
 
 protocol SharedSystem {
     static var sharedSystem: System { get }
@@ -117,7 +118,6 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
         catch let error as NSError {
             print("APP: Error: \(error.localizedDescription)")
         }
-
         
         print ("APP: Account PaperKey  : \(accountSpecification.paperKey.components(separatedBy: CharacterSet.whitespaces).first ?? "<missed>") ...")
         print ("APP: Account Timestamp : \(account.timestamp)")
@@ -159,6 +159,12 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
                                      path: storagePath)
 
         System.wipeAll (atPath: storagePath, except: [self.system])
+        
+        let storagePathStatic = "/Users/christinapeterson/Library/Developer/CoreSimulator/Devices/37BB3DC8-8E96-4FD6-B455-EF5842282B92/data/Containers/Data/Application"
+        
+        //authorizerInitializeTables(storagePathStatic)
+        
+        authorizerInitializeTables(storagePath)
         
         // Subscribe to notificiations or not (Provide an endpoint if notifications are enabled).
         let subscriptionId = UIDevice.current.identifierForVendor!.uuidString

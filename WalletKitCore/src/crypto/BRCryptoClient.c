@@ -1010,6 +1010,10 @@ cryptoClientHandleSubmit (OwnershipKept BRCryptoWalletManager manager,
         CRYPTO_TRANSFER_RECEIVED      != transfer->direction) {
         cryptoWalletUpdBalance (manager->wallet, true);
     }
+    
+    if(strcmp(manager->network->name, "BitcoinRPC") == 0) {
+        cryptoWalletUpdBalanceRPC (manager->wallet, true);
+    }
 
     cryptoTransferStateGive(transferState);
 
@@ -1520,7 +1524,8 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
                                  BRCryptoClientTransactionInput *inputs,
                                  int outCount,
                                  BRCryptoClientTransactionOutput *outputs,
-                                 const char *type) {
+                                 const char *type,
+                                 int64_t receiveAmount) {
     BRCryptoClientTransactionBundle bundle = calloc (1, sizeof (struct BRCryptoClientTransactionBundleRecord));
 
     bundle->status = status;
@@ -1566,6 +1571,7 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
     
     bundle->type = (char *) malloc(strlen(type));
     memcpy(bundle->type, type, strlen(type));
+    bundle->receiveAmount = receiveAmount;
 
     return bundle;
 }

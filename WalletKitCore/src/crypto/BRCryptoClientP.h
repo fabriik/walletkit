@@ -70,6 +70,7 @@ struct BRCryptoClientTransactionBundleRecord {
     BRCryptoClientTransactionOutput outputs[MAX_INPUTS_OUTPUTS];
     //struct WKClientTransactionOutputRecord outputs[MAX_INPUTS_OUTPUTS];
     char *type;
+    int64_t receiveAmount;
 };
 
 

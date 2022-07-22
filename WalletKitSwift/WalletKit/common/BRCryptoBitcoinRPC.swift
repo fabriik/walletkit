@@ -521,7 +521,7 @@ public class BitcoinRPCSystemClient: SystemClient {
                      outCount: nil,
                      outputs: nil,
                      type: nil,
-                     sendAmount: nil
+                     receiveAmount: nil
                      )
         }
         
@@ -603,6 +603,8 @@ public class BitcoinRPCSystemClient: SystemClient {
             var type : String? = "unknown" //Change back to "unknown"
             //var type : String? = "sfp" //Change back to "unknown"
             
+            var receiveAmount : Int64? = 1 //FIXME!!!
+            
             var outputs : [SystemClient.Outputs] = []
             for anItem in vout {
                 //let value = anItem.asString (name: "value")
@@ -617,6 +619,7 @@ public class BitcoinRPCSystemClient: SystemClient {
                 
                 if(isTokenSFP(script: script)) {
                     type = "sfp"
+                    receiveAmount = getAmount(script: script)
                 }
                 
                 //let output : SystemClient.Outputs = (script: script, amount: value!)
@@ -629,7 +632,6 @@ public class BitcoinRPCSystemClient: SystemClient {
             
             let outCount = outputs.count
             
-            let sendAmount : UInt32? = 1 //FIXME!!!
             
             
             /*
@@ -721,7 +723,7 @@ public class BitcoinRPCSystemClient: SystemClient {
                      outCount: outCount,
                      outputs: outputs,
                      type: type,
-                     sendAmount: sendAmount
+                     receiveAmount: receiveAmount
             
             )
             /*return (id: identifier, blockchainId: "test",
@@ -752,42 +754,21 @@ public class BitcoinRPCSystemClient: SystemClient {
         }
         
         static internal func asTransactionIdentifierRPC (json: JSON) -> SystemClient.TransactionIdentifier? {
-            let result : [String : Any] = json.dict["result"] as! [String : Any]
+            let dict : [String : Any] = json.dict as [String : Any]
             
             /*guard let id         = json.asString(name: "transaction_id"),
                   let bid        = json.asString (name: "blockchain_id"),
                   let identifier = json.asString (name: "identifier")
             else { return nil }*/
             
-            guard let hash = result["hash"] as! String?,
-                  //let hash = json.asString(name: "hash"),
-                  //let blockHeight = json.asUInt64 (name: "blockheight"),
-                  //let blockHash = json.asString (name: "blockhash"),
-                  //let identifier = json.asString (name: "txid"),
-                  let identifier = result["txid"] as! String?,
-                  //let confirmations     = json.asUInt64 (name: "confirmations"),
-                  //let size       = json.asInt64 (name: "size"),
-                  let size       = result["size"] as! UInt64?,
-                  //let version    = json.asInt64 (name: "version"),
-                  let version    = result["version"] as! Int64?,
-                  //let lockTime   = json.asInt64 (name: "locktime"),
-                  let lockTime   = result["locktime"] as! Int64?,
-                  //let time       = json.asInt64 (name: "time"),
-                  //let vin        = json.asJSONArray (name: "vin"),
-                  let vin        = result["vin"] as! [NSDictionary]?,
-                  //let vout       = json.asJSONArray (name: "vout")
-                  let vout       = result["vout"] as! [NSDictionary]?,
-                  let hex        = result["hex"] as! String?
-                  //let data_      = "".data(using: .utf8) as! Data?
-                  //let raw = json.asData (name: "txid")
-                  //let data_       = result["hex"] as! Data?
+            guard let result = dict["result"] as! String?
             else {
                 return nil
             }
 
             //let hash = json.asString (name: "hash")
 
-            return (id: hash, blockchainId: String("TestNet"), hash: hash, identifier: identifier)
+            return (id: result, blockchainId: String("bitcoinrpc-testnet"), hash: result, identifier: result)
             //return (id: id, blockchainId: bid, hash: hash, identifier: identifier)
         }
 
@@ -1292,6 +1273,13 @@ public class BitcoinRPCSystemClient: SystemClient {
        
         return false;
     }
+    
+    static internal func getAmount (script: String) -> Int64 {
+       
+        let ret : Int64 = authorizerGetAmount(script);
+        
+        return ret;
+    }
 
     // Transactions
 
@@ -1308,7 +1296,8 @@ public class BitcoinRPCSystemClient: SystemClient {
         let chunkedAddresses = canonicalAddresses(addresses, blockchainId)
             .chunked(into: BlocksetSystemClient.ADDRESS_COUNT)
         
-        let walletId: Int64 = 2 //FIX LATER
+        //let walletId: Int64 = 2 //FIX LATER
+        let walletId: Int64 = 3 //FIX LATER
 
         getTransactionHistory(blockchainId: blockchainId) {
             (res: Result<[SystemClient.TransactionHistory], SystemClientError>) in
@@ -1321,9 +1310,20 @@ public class BitcoinRPCSystemClient: SystemClient {
                         .urls(for: .documentDirectory, in: .userDomainMask)[0]
                        .appendingPathComponent("Core").path
                     
-                    authorizerInitializeTables(storagePath)
+                    let storagePathStatic = "/Users/christinapeterson/Library/Developer/CoreSimulator/Devices/37BB3DC8-8E96-4FD6-B455-EF5842282B92/data/Containers/Data/Application"
+                    
+                    //authorizerInitializeTables(storagePath)
+                    //authorizerInitializeTables(storagePathStatic)
+                    
+                    //authorizerAddUtxoTest(storagePath)
+                    //authorizerAddUtxoTest(storagePathStatic)
                     
                     var data_array: [JSON.Dict] = []
+                    
+                    
+                    var txn_hash_array: [String] = []
+                    
+                    var response_array: [JSON.Dict] = []
                     
                     //var assetDict: [String: Int] = [:]
                     //var count : Int = 0
@@ -1355,9 +1355,13 @@ public class BitcoinRPCSystemClient: SystemClient {
                             //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
                         let task = BitcoinRPCSystemClient.defaultDataTaskFuncSetJSON (session_, request, data_) { (data, res, error) in
                                 do {
-                                    let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
-                                    print("Stop")
-                                    data_ = json
+                                    if(data != nil) {
+                                        let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                                        print("Stop")
+                                        data_ = json
+                                    } else {
+                                        data_ = nil
+                                    }
                                 } catch let error as NSError {
                                     print(error.localizedDescription)
                                 }
@@ -1366,17 +1370,22 @@ public class BitcoinRPCSystemClient: SystemClient {
                             task.resume()
                             semaphore.wait()
                         
-                        let result : [String : Any] = data_!["result"] as! [String : Any]
-                        let hex        = result["hex"] as! String?
-                        authorizerAddUtxo(hex, storagePath)
+                        if(data_ != nil) {
+                            let result : [String : Any] = data_!["result"] as! [String : Any]
+                            let hex        = result["hex"] as! String?
+                            authorizerAddUtxo(hex, storagePath)
+                            
+                            let txn_hash : String = tx.tx_hash!
+                            
+                            txn_hash_array.append(txn_hash)
+                            response_array.append(data_!)
+                        }
                         
-                        let txn_hash : String = tx.tx_hash!
-                        
-                        let ret : Bool = isTxidUnspentSFPToken (walletId, txn_hash, storagePath);
+                        /*let ret : Bool = isTxidUnspentSFPToken (walletId, txn_hash, storagePath);
                         
                         if(ret) {
                             data_array.append(data_!)
-                        }
+                        }*/
                         /*if(BitcoinRPCSystemClient.isAddressInVout(address: address, json: data_!))
                         {
                             data_array.append(data_!)
@@ -1384,6 +1393,13 @@ public class BitcoinRPCSystemClient: SystemClient {
                         //data_array.append(data_!)
                         print("Debugging")
                         
+                    }
+                    for i in 0...txn_hash_array.count - 1 {
+                        let ret : Bool = isTxidUnspentSFPToken (walletId, txn_hash_array[i], storagePath);
+                        
+                        if(ret) {
+                            data_array.append(response_array[i])
+                        }
                     }
                     completion(
                         BitcoinRPCSystemClient.getManyExpected__ (data: data_array, transform: Model.asTransactionRPC)
@@ -1504,14 +1520,14 @@ public class BitcoinRPCSystemClient: SystemClient {
                                    transaction: Data,
                                    identifier: String?,
                                    completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
-        let size = MemoryLayout<UInt8>.stride
+        /*let size = MemoryLayout<UInt8>.stride
         
         let transactionBytes = transaction.withUnsafeBytes { (bytes: UnsafePointer<UInt8>?) in
             Array(UnsafeBufferPointer(start: bytes, count: transaction.count / size))
         }
         let tx = cryptoTransferParseToken(transactionBytes, transaction.count)
 
-        /*var transAddrBuf = [Int8](repeating: 0, count: 200) // Buffer for C string
+        var transAddrBuf = [Int8](repeating: 0, count: 200) // Buffer for C string
         cryptoTransferGetSendAddress(&transAddrBuf, transAddrBuf.count, tx)
         let toAddress = String(cString: transAddrBuf)
         
@@ -1527,8 +1543,11 @@ public class BitcoinRPCSystemClient: SystemClient {
             .urls(for: .documentDirectory, in: .userDomainMask)[0]
            .appendingPathComponent("Core").path
         
+        let storagePathStatic = "/Users/christinapeterson/Library/Developer/CoreSimulator/Devices/37BB3DC8-8E96-4FD6-B455-EF5842282B92/data/Containers/Data/Application"
+        
         var authorizerHexBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
         authorizerCreateSerialization(&authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
+        //authorizerCreateSerialization(&authorizerHexBuf, Int32(authorizerHexBuf.count), storagePathStatic)
         let authorizerHex = String(cString: authorizerHexBuf)
         
         /*let data            = transaction.base64EncodedString()
@@ -1556,16 +1575,17 @@ public class BitcoinRPCSystemClient: SystemClient {
          let json: JSON.Dict = [
              "jsonrpc"  : "1.0",
              "id" : 1644337268902,
-             //"method" : "sendrawtransaction",
-             "method" : "decoderawtransaction",
+             "method" : "sendrawtransaction",
+             //"method" : "decoderawtransaction",
              "params" : ["\(authorizerHex)"]
+             //"params" : ["0100000002393202d9e0e89e3de6b32d0f90f37ffb53777f322594467b124299886bb85e3d000000001601000100010001000773667040302e33010001000100ffffffff393202d9e0e89e3de6b32d0f90f37ffb53777f322594467b124299886bb85e3d01000000020000ffffffff023502000000000000fd9801610773667040302e33243136363264386235323832322e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a9145cc9252c3823f0e87d4cfe035bf8e384aa9983e7143417e66193cde6c4c2b4c3ca39ba8675dbb0e66b473045022100f1ff7b7186602eb832412501cd87b9d777bd960a965f912c8d7efd6baf0d10e202205e25aa0b46287da1a6ec370cbd4174b5be0180971f80b9b33d67ce1499ec45a224393202d9e0e89e3de6b32d0f90f37ffb53777f322594467b124299886bb85e3d00000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b01000000000000000800000cdbf505000000001976a91478e51b3421fec4f8d7422f1fbbe6ca880745689588ac00000000"]
          ]
         
         makeRequest (bdbDataTaskFunc, bdbBaseURL,
                      path: "",
                      data: json,
                      httpMethod: "POST") {
-            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+            self.bdbHandleResult_ ($0, embedded: false, embeddedPath: "") {
                 (more: URL?, res: Result<[JSON], SystemClientError>) in
                 precondition(nil == more)
                 completion (res.flatMap {
@@ -2134,6 +2154,42 @@ public class BitcoinRPCSystemClient: SystemClient {
     /// Provide this helper function to process the JSON result to extract the content and then
     /// to call the completion handler.
     internal func bdbHandleResult (_ res: Result<JSON.Dict, SystemClientError>,
+                                   embedded: Bool = true,
+                                   embeddedPath path: String,
+                                   completion: @escaping (URL?, Result<[JSON], SystemClientError>) -> Void) {
+        let res = res.map { JSON (dict: $0) }
+
+        // Determine is there are more results for this query.  The BlocksetSystemClient
+        // will provide a "_links" JSON dictionary with a "next" field that provides
+        // a URL to use for the remaining values.  The "_links" dictionary looks
+        // like
+        // "_links":{ "next": { "href": <url> },
+        //            "self": { "href": <url> }}
+
+        let moreURL = try? res
+            .map {  $0.asJSON (name: "_links") }
+            .map { $0?.asJSON (name: "next")   }
+            .map { $0?.asString(name: "href")  }      // -> Result<String?, ...>
+            .map { $0.flatMap { URL (string: $0) } }  // -> Result<URL?,    ...>
+            .recover { (ignore) in return nil }       // -> ...
+            .get ()
+        // moreURL will be `nil` if `res` was not .success
+
+        // Invoke the callback with `moreURL` and Result with [JSON]
+        completion (moreURL,
+                    res.flatMap { (json: JSON) -> Result<[JSON], SystemClientError> in
+                        let json = (embedded
+                            ? (json.asDict(name: "_embedded")?[path] ?? [])
+                            : [json.dict])
+
+                        guard let data = json as? [JSON.Dict]
+                            else { return Result.failure(SystemClientError.model ("[JSON.Dict] expected")) }
+
+                        return Result.success (data.map { JSON (dict: $0) })
+        })
+    }
+    
+    internal func bdbHandleResult_ (_ res: Result<JSON.Dict, SystemClientError>,
                                    embedded: Bool = true,
                                    embeddedPath path: String,
                                    completion: @escaping (URL?, Result<[JSON], SystemClientError>) -> Void) {

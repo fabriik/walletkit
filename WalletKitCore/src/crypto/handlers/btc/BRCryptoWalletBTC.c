@@ -180,7 +180,9 @@ cryptoWalletGetAddressBTC (BRCryptoWallet wallet,
             CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT == addressScheme);
 
     assert (CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT != addressScheme ||
-            CRYPTO_NETWORK_TYPE_BTC == wallet->type);
+            //CRYPTO_NETWORK_TYPE_BTC == wallet->type);
+            CRYPTO_NETWORK_TYPE_BTC == wallet->type ||
+            CRYPTO_NETWORK_TYPE_RPC == wallet->type);
 
     BRCryptoWalletBTC walletBTC = cryptoWalletCoerceBTC(wallet);
 
@@ -441,7 +443,7 @@ cryptoWalletCreateTransferRPC_ (BRCryptoWallet  wallet,
         tid->lockTime = wid->transactions[0]->lockTime;
         tid->blockHeight = wid->transactions[0]->blockHeight;
         tid->timestamp = wid->transactions[0]->timestamp;
-        tid->sendAmount = wid->transactions[0]->sendAmount;
+        tid->receiveAmount = wid->transactions[0]->receiveAmount;
         /*char text[100];
         strcpy(text, address.s);
         int len = strlen(text);

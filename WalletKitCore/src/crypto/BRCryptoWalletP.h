@@ -205,6 +205,9 @@ cryptoWalletGetAddressesForRecovery (BRCryptoWallet wallet);
 private_extern void
 cryptoWalletUpdBalance (BRCryptoWallet wallet, bool needLock);
 
+private_extern void
+cryptoWalletUpdBalanceRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer, bool needLock);
+
 static inline void
 cryptoWalletGenerateEvent (BRCryptoWallet wallet,
                            OwnershipGiven BRCryptoWalletEvent event) {

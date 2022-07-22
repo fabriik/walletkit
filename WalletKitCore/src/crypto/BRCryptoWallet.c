@@ -26,6 +26,12 @@
 
 #include "crypto/handlers/btc/BRCryptoBTC.h"
 
+#include "BRCryptoTransferP.h"
+
+//#include "BRCryptoAmount.h"
+
+//#include "support/BRInt.h"
+
 static void
 cryptoWalletUpdTransfer (BRCryptoWallet wallet,
                                   BRCryptoTransfer transfer,
@@ -544,6 +550,21 @@ cryptoWalletUpdBalance (BRCryptoWallet wallet, bool needLock) {
     if (needLock) pthread_mutex_unlock (&wallet->lock);
 }
 
+private_extern void
+cryptoWalletUpdBalanceRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer, bool needLock) {
+    if (needLock) pthread_mutex_lock (&wallet->lock);
+    BRCryptoAmount prevAmount = cryptoWalletComputeBalance (wallet, false);
+    BRCryptoAmount newBalance;
+    //direction = CRYPTO_TRANSFER_RECEIVED;
+    if(transfer->direction == CRYPTO_TRANSFER_SENT)
+        newBalance = cryptoAmountSub (prevAmount, transfer->amount);
+    else {
+        newBalance = cryptoAmountAdd (prevAmount, transfer->amount);
+    }
+    cryptoWalletSetBalance (wallet, newBalance);
+    if (needLock) pthread_mutex_unlock (&wallet->lock);
+}
+
 //
 // When a transfer is confirmed, the fee can change.  A typical example is that for ETH a transfer
 // has an estimated fee based on `gasLimit` but an actual, included fee based on `gasUsed`.  The
@@ -951,7 +972,9 @@ cryptoWalletSaveTransferRPC (BRCryptoWallet  wallet,
     BRAddress address = cryptoAddressAsBTC (target, &addressType);
     assert (addressType == wallet->type);
     
-    authorizerSaveTransfer((const char *) u256hex(wid->transactions[0]->txHash), address.s, wid->transactions[0]->sendAmount, path_);
+    uint64_t val = amount->value.u64[0];
+    
+    authorizerSaveTransfer((const char *) u256hex(wid->transactions[0]->txHash), address.s, val, path_);
     
 }
 
