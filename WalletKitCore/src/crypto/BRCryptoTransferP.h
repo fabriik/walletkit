@@ -117,6 +117,7 @@ struct BRCryptoTransferRecord {
 
     char *identifier;
     char *exchangeId;
+    char *exchangeStatus;
     BRCryptoAddress sourceAddress;
     BRCryptoAddress targetAddress;
 

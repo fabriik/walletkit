@@ -272,6 +272,11 @@ cryptoTransferGetExchangeId (BRCryptoTransfer transfer) {
     return transfer->exchangeId;
 }
 
+extern const char *
+cryptoTransferGetExchangeStatus (BRCryptoTransfer transfer) {
+    return transfer->exchangeStatus;
+}
+
 extern BRCryptoAmount
 cryptoTransferGetAmount (BRCryptoTransfer transfer) {
     return cryptoAmountTake (transfer->amount);

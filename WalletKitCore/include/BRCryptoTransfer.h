@@ -158,6 +158,9 @@ extern "C" {
     extern const char *
     cryptoTransferGetExchangeId (BRCryptoTransfer transfer);
 
+    extern const char *
+    cryptoTransferGetExchangeStatus (BRCryptoTransfer transfer);
+
 
 /**
      * Returns the transfer's hash.  The hash is determined by applying a blockchain-specific hash

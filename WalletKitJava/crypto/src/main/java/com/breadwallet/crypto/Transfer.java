@@ -49,6 +49,8 @@ public interface Transfer {
 
     Optional<String> getExchangeId();
 
+    Optional<String> getExchangeStatus();
+
     Optional<? extends TransferHash> getHash();
 
     Unit getUnit();

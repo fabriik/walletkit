@@ -598,6 +598,8 @@ cwmExtractAttributes (OwnershipKept BRCryptoClientTransferBundle bundle,
                       uint64_t *gasUsed,
                       UInt256  *gasPrice,
                       uint64_t *nonce,
+                      char* *exchangeId,
+                      char* *exchangeStatus,
                       bool     *error) {
     *amount = cwmParseUInt256 (bundle->amount, error);
 
@@ -605,10 +607,12 @@ cwmExtractAttributes (OwnershipKept BRCryptoClientTransferBundle bundle,
     const char **attributeKeys   = (const char **) bundle->attributeKeys;
     const char **attributeVals   = (const char **) bundle->attributeVals;
 
-    *gasLimit = cwmParseUInt64 (cwmLookupAttributeValueForKey ("gasLimit", attributesCount, attributeKeys, attributeVals), error);
-    *gasUsed  = cwmParseUInt64 (cwmLookupAttributeValueForKey ("gasUsed",  attributesCount, attributeKeys, attributeVals), error);
-    *gasPrice = cwmParseUInt256(cwmLookupAttributeValueForKey ("gasPrice", attributesCount, attributeKeys, attributeVals), error);
-    *nonce    = cwmParseUInt64 (cwmLookupAttributeValueForKey ("nonce",    attributesCount, attributeKeys, attributeVals), error);
+    *gasLimit   = cwmParseUInt64 (cwmLookupAttributeValueForKey ("gasLimit", attributesCount, attributeKeys, attributeVals), error);
+    *gasUsed    = cwmParseUInt64 (cwmLookupAttributeValueForKey ("gasUsed",  attributesCount, attributeKeys, attributeVals), error);
+    *gasPrice   = cwmParseUInt256(cwmLookupAttributeValueForKey ("gasPrice", attributesCount, attributeKeys, attributeVals), error);
+    *nonce      = cwmParseUInt64 (cwmLookupAttributeValueForKey ("nonce",    attributesCount, attributeKeys, attributeVals), error);
+    *exchangeId = strdup(cwmLookupAttributeValueForKey("exchange_id", attributesCount, attributeKeys, attributeVals));
+    *exchangeStatus = strdup(cwmLookupAttributeValueForKey("status", attributesCount, attributeKeys, attributeVals));
 
     if (*gasLimit == 21000 && *gasUsed == 0x21000) *gasUsed = 21000;
 }
@@ -869,9 +873,11 @@ cryptoWalletManagerRecoverTransferFromTransferBundleETH (BRCryptoWalletManager m
     uint64_t gasUsed;
     UInt256  gasPrice;
     uint64_t nonce;
+    char* exchangeId;
+    char* exchangeStatus;
 
     bool error = false;
-    cwmExtractAttributes (bundle, &amountETH, &gasLimit, &gasUsed, &gasPrice, &nonce, &error);
+    cwmExtractAttributes (bundle, &amountETH, &gasLimit, &gasUsed, &gasPrice, &nonce, &exchangeId, &exchangeStatus, &error);
 
     if (error) {
         printf ("SYS: ETH: Bundle Attribute Error - Want to FATAL: %s\n", bundle->uids);
@@ -991,6 +997,12 @@ cryptoWalletManagerRecoverTransferFromTransferBundleETH (BRCryptoWalletManager m
         cryptoAddressGive (target);
         cryptoAddressGive (source);
     }
+
+    if (NULL != exchangeId)
+        transfer->exchangeId = exchangeId;
+
+    if (NULL != exchangeStatus)
+        transfer->exchangeStatus = exchangeStatus;
 
     cryptoTransferGive (transfer);
     cryptoHashGive (hash);
