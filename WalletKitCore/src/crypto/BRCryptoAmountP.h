@@ -18,6 +18,13 @@
 extern "C" {
 #endif
 
+struct BRCryptoAmountRecord {
+    BRCryptoUnit unit;
+    BRCryptoBoolean isNegative;
+    UInt256 value;
+    BRCryptoRef ref;
+};
+
 private_extern BRCryptoAmount
 cryptoAmountCreate (BRCryptoUnit unit,
                     BRCryptoBoolean isNegative,

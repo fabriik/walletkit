@@ -93,9 +93,17 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
     BRCryptoAmount amount;
     
     if(strcmp(listener.manager->network->name, "BitcoinRPC") == 0) {
+        //direction = CRYPTO_TRANSFER_SENT; //FIX LATER
+        //direction = CRYPTO_TRANSFER_RECEIVED; //FIX LATER
+        BRTransaction *temp = tid;
+        if(tid->receiveAmount == 0) {
+            direction = CRYPTO_TRANSFER_SENT;
+        } else {
+            direction = CRYPTO_TRANSFER_RECEIVED;
+        }
         amount = cryptoAmountCreate (unit,
                                      CRYPTO_FALSE,
-                                                    uint256Create (cryptoTransferComputeAmountBTC (direction, send, tid->sendAmount, fee)));
+                                                    uint256Create (cryptoTransferComputeAmountBTC (direction, send, tid->receiveAmount, fee)));
                                                     //uint256Create (wkTransferComputeAmountBTC (direction, send, 100000000, fee)));
     } else {
         amount = cryptoAmountCreate (unit,

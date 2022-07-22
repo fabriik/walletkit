@@ -20,12 +20,14 @@
 #include "support/BRInt.h"
 #include "ethereum/util/BRUtilMath.h"
 
-struct BRCryptoAmountRecord {
+#include "BRCryptoAmountP.h"
+
+/*struct BRCryptoAmountRecord {
     BRCryptoUnit unit;
     BRCryptoBoolean isNegative;
     UInt256 value;
     BRCryptoRef ref;
-};
+};*/
 
 IMPLEMENT_CRYPTO_GIVE_TAKE (BRCryptoAmount, cryptoAmount);
 

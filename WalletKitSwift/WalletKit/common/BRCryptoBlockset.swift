@@ -435,7 +435,7 @@ public class BlocksetSystemClient: SystemClient {
                      outCount: nil,
                      outputs: nil,
                      type: nil,
-                     sendAmount: nil
+                     receiveAmount: nil
                      )
         }
 

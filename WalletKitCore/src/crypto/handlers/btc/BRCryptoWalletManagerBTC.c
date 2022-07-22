@@ -471,8 +471,7 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
     tx->timestamp = (uint32_t) bundle->time;
     tx->inCount = (size_t) bundle->inCount;
     tx->outCount = (size_t) bundle->outCount;
-    tx->sendAmount = 100000000; //FIXME!!!
-
+    tx->receiveAmount = 100000000 * bundle->receiveAmount;
 
     for(size_t i = 0; i < tx->inCount; i++) {
         tx->inputs[i].txHash = uint256(bundle->inputs[i]->txHash);
