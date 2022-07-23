@@ -561,6 +561,8 @@ cryptoWalletUpdBalanceRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer, boo
     else {
         newBalance = cryptoAmountAdd (prevAmount, transfer->amount);
     }
+    //BRCryptoAmount balance = cryptoAmountCreateInteger (0, wallet->unit);
+    //cryptoWalletSetBalance (wallet, balance);
     cryptoWalletSetBalance (wallet, newBalance);
     if (needLock) pthread_mutex_unlock (&wallet->lock);
 }

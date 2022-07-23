@@ -1012,7 +1012,7 @@ cryptoClientHandleSubmit (OwnershipKept BRCryptoWalletManager manager,
     }
     
     if(strcmp(manager->network->name, "BitcoinRPC") == 0) {
-        cryptoWalletUpdBalanceRPC (manager->wallet, true);
+        cryptoWalletUpdBalanceRPC (manager->wallet, transfer, true);
     }
 
     cryptoTransferStateGive(transferState);

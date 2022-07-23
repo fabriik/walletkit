@@ -31,6 +31,8 @@
 #include <stddef.h>
 #include <inttypes.h>
 
+#include "BRCryptoTransfer.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -94,6 +96,7 @@ typedef struct {
     uint32_t blockHeight;
     uint32_t timestamp; // time interval since unix epoch
     int64_t receiveAmount; // Token protocols
+    BRCryptoTransferDirection direction;
 } BRTransaction;
 
 // returns a newly allocated empty transaction that must be freed by calling BRTransactionFree()
