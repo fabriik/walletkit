@@ -1,0 +1,7 @@
+jobs:
+  build:
+    macos:
+      xcode: 12.5.1
+
+    steps:
+      - run: swift build
