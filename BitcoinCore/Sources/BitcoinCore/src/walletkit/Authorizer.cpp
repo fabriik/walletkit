@@ -6552,7 +6552,7 @@ extern bool authorizerCheckSFP(const char *script) {
     return false;
 }
 
-extern long long authorizerGetAmount(const char *script) {
+extern unsigned long long authorizerGetAmount(const char *script) {
     
     unsigned int QUANTITY_LENGTH = 8;
     
@@ -6568,7 +6568,7 @@ extern long long authorizerGetAmount(const char *script) {
     std::vector<std::string> buffer = stringToBuffer(state);
     std::vector<std::string> sliced_buffer = sliceBuffer(buffer, 0, QUANTITY_LENGTH);
     std::vector<std::string> reverse_buffer = toLittleEndian(sliced_buffer);
-    val = (long long) bufferToNumber(reverse_buffer);
+    val = (unsigned long long) bufferToNumber(reverse_buffer);
     
     return val;
 }

@@ -1525,7 +1525,7 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
                                  int outCount,
                                  BRCryptoClientTransactionOutput *outputs,
                                  const char *type,
-                                 int64_t receiveAmount) {
+                                 uint64_t receiveAmount) {
     BRCryptoClientTransactionBundle bundle = calloc (1, sizeof (struct BRCryptoClientTransactionBundleRecord));
 
     bundle->status = status;

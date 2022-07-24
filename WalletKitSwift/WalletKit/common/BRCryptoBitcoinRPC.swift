@@ -603,7 +603,7 @@ public class BitcoinRPCSystemClient: SystemClient {
             var type : String? = "unknown" //Change back to "unknown"
             //var type : String? = "sfp" //Change back to "unknown"
             
-            var receiveAmount : Int64? = 1 //FIXME!!!
+            var receiveAmount : UInt64? = 1 //FIXME!!!
             
             var outputs : [SystemClient.Outputs] = []
             for anItem in vout {
@@ -1274,9 +1274,9 @@ public class BitcoinRPCSystemClient: SystemClient {
         return false;
     }
     
-    static internal func getAmount (script: String) -> Int64 {
+    static internal func getAmount (script: String) -> UInt64 {
        
-        let ret : Int64 = authorizerGetAmount(script);
+        let ret : UInt64 = authorizerGetAmount(script);
         
         return ret;
     }
@@ -1585,7 +1585,7 @@ public class BitcoinRPCSystemClient: SystemClient {
                      path: "",
                      data: json,
                      httpMethod: "POST") {
-            self.bdbHandleResult_ ($0, embedded: false, embeddedPath: "") {
+            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
                 (more: URL?, res: Result<[JSON], SystemClientError>) in
                 precondition(nil == more)
                 completion (res.flatMap {
@@ -2154,42 +2154,6 @@ public class BitcoinRPCSystemClient: SystemClient {
     /// Provide this helper function to process the JSON result to extract the content and then
     /// to call the completion handler.
     internal func bdbHandleResult (_ res: Result<JSON.Dict, SystemClientError>,
-                                   embedded: Bool = true,
-                                   embeddedPath path: String,
-                                   completion: @escaping (URL?, Result<[JSON], SystemClientError>) -> Void) {
-        let res = res.map { JSON (dict: $0) }
-
-        // Determine is there are more results for this query.  The BlocksetSystemClient
-        // will provide a "_links" JSON dictionary with a "next" field that provides
-        // a URL to use for the remaining values.  The "_links" dictionary looks
-        // like
-        // "_links":{ "next": { "href": <url> },
-        //            "self": { "href": <url> }}
-
-        let moreURL = try? res
-            .map {  $0.asJSON (name: "_links") }
-            .map { $0?.asJSON (name: "next")   }
-            .map { $0?.asString(name: "href")  }      // -> Result<String?, ...>
-            .map { $0.flatMap { URL (string: $0) } }  // -> Result<URL?,    ...>
-            .recover { (ignore) in return nil }       // -> ...
-            .get ()
-        // moreURL will be `nil` if `res` was not .success
-
-        // Invoke the callback with `moreURL` and Result with [JSON]
-        completion (moreURL,
-                    res.flatMap { (json: JSON) -> Result<[JSON], SystemClientError> in
-                        let json = (embedded
-                            ? (json.asDict(name: "_embedded")?[path] ?? [])
-                            : [json.dict])
-
-                        guard let data = json as? [JSON.Dict]
-                            else { return Result.failure(SystemClientError.model ("[JSON.Dict] expected")) }
-
-                        return Result.success (data.map { JSON (dict: $0) })
-        })
-    }
-    
-    internal func bdbHandleResult_ (_ res: Result<JSON.Dict, SystemClientError>,
                                    embedded: Bool = true,
                                    embeddedPath path: String,
                                    completion: @escaping (URL?, Result<[JSON], SystemClientError>) -> Void) {

@@ -99,12 +99,12 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
         if(direction == CRYPTO_TRANSFER_RECEIVED) {
             amount = cryptoAmountCreate (unit,
                                          CRYPTO_FALSE,
-                                                        uint256Create (cryptoTransferComputeAmountBTC (direction, 0, (uint64_t) tid->receiveAmount, 0)));
+                                                        uint256Create (cryptoTransferComputeAmountBTC (direction, 0, tid->receiveAmount, 0)));
             //uint256Create (wkTransferComputeAmountBTC (direction, send, 100000000, fee)));
         } else {
             amount = cryptoAmountCreate (unit,  
                                      CRYPTO_FALSE,
-                                                    uint256Create (cryptoTransferComputeAmountBTC (direction, (uint64_t) tid->receiveAmount, 0, 0)));
+                                                    uint256Create (cryptoTransferComputeAmountBTC (direction, tid->receiveAmount, 0, 0)));
         }
                                                     
     } else {

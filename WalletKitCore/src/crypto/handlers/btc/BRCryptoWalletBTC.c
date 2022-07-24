@@ -12,8 +12,6 @@
 
 #include "bitcoin/BRWallet.h"
 
-#include "crypto/BRCryptoAmountP.h"
-
 #define DEFAULT_FEE_BASIS_SIZE_IN_BYTES     (200)
 #define DEFAULT_TIDS_UNRESOLVED_COUNT         (2)
 
@@ -306,15 +304,9 @@ cryptoWalletCreateTransferRPC (BRCryptoWallet  wallet,
 
     BRWallet *wid = walletBTC->wid;
 
-    BRCryptoBlockChainType addressType;
-    BRAddress address = cryptoAddressAsBTC (target, &addressType);
-    assert (addressType == wallet->type);
-
     BRCryptoBoolean overflow = CRYPTO_FALSE;
     uint64_t value = cryptoAmountGetIntegerRaw (amount, &overflow);
     if (CRYPTO_TRUE == overflow) { return NULL; }
-
-    uint64_t feePerKb = cryptoFeeBasisAsBTC(estimatedFeeBasis);
 
     //BRTransaction *tid = BRWalletCreateTransactionWithFeePerKb (wid, feePerKb, value, address.s);
     
@@ -325,10 +317,10 @@ cryptoWalletCreateTransferRPC (BRCryptoWallet  wallet,
         //tid->wtxHash = wid->transactions[0]->wtxHash;
         //tid->version = wid->transactions[0]->version;
         
-        if(amount->value.u64[0]%100000000 != 0) {
-            tid->receiveAmount = (int64_t) ((uint64_t) value/100000000) * 100000000 + 100000000;
+        if(value%100000000 != 0) {
+            tid->receiveAmount = ((uint64_t) value/100000000) * 100000000 + 100000000;
         } else {
-            tid->receiveAmount = (int64_t) value;
+            tid->receiveAmount = value;
         }
         tid->direction = CRYPTO_TRANSFER_SENT;
     }

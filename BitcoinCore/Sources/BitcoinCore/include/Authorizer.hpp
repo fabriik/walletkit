@@ -16,7 +16,7 @@ extern bool authorizerCheckAddress(const char *address, const char *script);
 
 extern bool authorizerCheckSFP(const char *script);
 
-extern long long authorizerGetAmount(const char *script);
+extern unsigned long long authorizerGetAmount(const char *script);
 
 extern bool isTxidUnspentSFPToken (long long walletId, const char *txid, const char *path);
 

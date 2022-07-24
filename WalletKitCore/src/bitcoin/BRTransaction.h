@@ -95,7 +95,7 @@ typedef struct {
     uint32_t lockTime;
     uint32_t blockHeight;
     uint32_t timestamp; // time interval since unix epoch
-    int64_t receiveAmount; // Token protocols
+    uint64_t receiveAmount; // Token protocols
     BRCryptoTransferDirection direction;
 } BRTransaction;
 

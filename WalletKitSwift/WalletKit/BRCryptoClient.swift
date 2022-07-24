@@ -170,7 +170,7 @@ public protocol SystemClient {
         outCount: Int?,
         outputs: [Outputs]?,
         type: String?,
-        receiveAmount: Int64?
+        receiveAmount: UInt64?
     )
 
 
