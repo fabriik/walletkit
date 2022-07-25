@@ -1,7 +1,26 @@
+version: 2.1
+
+workflows:
+  buildapp:
+    jobs:
+      - build-walletkit-swift
+
 jobs:
-  build:
+  build-walletkit-swift:
     macos:
-      xcode: 12.5.1
+      xcode: 13.4.1 # Specify the Xcode version to use
 
     steps:
-      - run: swift build
+      - checkout
+
+      - run:
+          name: Build WalletKitCore
+          command : |
+            cd WalletKitCore
+            swift build
+
+      - run:
+          name: Build WalletKitSwift
+          command: |
+            cd WalletKitSwift
+            swift build
