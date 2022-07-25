@@ -14,6 +14,11 @@ jobs:
       - checkout
 
       - run:
+          name: Pull Submodules
+          command: |
+            git submodule update --init --recursive
+    
+      - run:
           name: Build WalletKitCore
           command : |
             cd WalletKitCore
