@@ -21,6 +21,11 @@ jobs:
             git submodule update --init --recursive
 
       - run:
+          name: Install CLang
+          command: |
+            sudo apt install clang
+
+      - run:
           name: Build WalletKit Java
           command: |
             cd WalletKitJava
