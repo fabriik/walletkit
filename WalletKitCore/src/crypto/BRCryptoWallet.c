@@ -922,7 +922,8 @@ cryptoWalletCreateTransfer (BRCryptoWallet  wallet,
     if (NULL != transfer && attributesCount > 0)
         cryptoTransferSetAttributes (transfer, attributesCount, attributes);
 
-    cryptoTransferSetExchangeId (transfer, exchangeId);
+    if (NULL != transfer && NULL != exchangeId)
+        cryptoTransferSetExchangeId (transfer, exchangeId);
 
     cryptoCurrencyGive(currency);
     cryptoUnitGive (unitForFee);
