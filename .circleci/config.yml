@@ -24,7 +24,7 @@ jobs:
           name: Build WalletKit Java
           command: |
             cd WalletKitJava
-            ./gradle assemble
+            ./gradlew assemble
 
   build-walletkit-ios:
     macos:
