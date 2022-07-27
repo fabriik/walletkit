@@ -2,11 +2,11 @@
 ![WalletKit](../gh-pages/public/img/logo-tight.png)
 
 WalletKit provides a uniform wallet interface to access numerous crypto-currencies including
-Bitcoin and Ethereum.  WalletKit is implemented in the C progamming language and includes
+Bitcoin and Ethereum.  WalletKit is implemented in the C programming language and includes
 a number of bindings for other languages, notably Swift and Java.
 
 WalletKit supports the following crypto-currencies: Bitcoin, Bitcoin Cash, Bitcoin SV, Ethereum,
-Ethereum ERC20 'tokens', Ripple, Hedera and Tezos.  Other crypto-currencies are added
+Ethereum ERC20 'tokens', Ripple, Hedera, and Tezos.  Other crypto-currencies are added
 regularly.  Adding another blockchain is accomplished by satisfying a WalletKit-defined API.
 
 WalletKit is the basis for the BRD iOS and Android mobile applications.
@@ -25,9 +25,9 @@ WalletKit is the basis for the BRD iOS and Android mobile applications.
 
 ### C
 
-WalletKit defines a C interface, with associated C implementation, that runs on both MacOS
-and on Linux platforms.  The C interface can be accessed through the 'foriegn function interface'
-offered by other languages, such as by Swift and Java.
+WalletKit defines a C interface, with associated C implementation, that runs on both macOS
+and on Linux platforms.  The C interface can be accessed through the 'foreign function interface'
+offered by other languages, such as Swift and Java.
 
 The C interface is located in `.../WalletKit/WalletKitCore/include`.
 
@@ -51,7 +51,7 @@ using Android Studio.
 # Concepts
 
 WalletKit is crypto-currency agnostic; as such, WalletKit defines a number of concepts that
-apply across disparte blockchains but also can be extended with blockchain specific data and
+apply across disparate blockchains but also can be extended with blockchain-specific data and
 behaviors.
 
 ## Network
@@ -100,7 +100,7 @@ If you've cloned WalletKit but without the `--recursive-submodules` flag then pe
 ### Swift Package Manager
 
 The WalletKit Swift framework can be built with `swift build`; the unit tests can be run with
-`swift test`.  This will work on MacOS and on Linux operating systems.  The
+`swift test`.  This will work on macOS and on Linux operating systems.  The
 `swift-tools-version` must be 5.3 or greater (see
 `.../WalletKit/WalletKitSwift/Package.swift`)
 
