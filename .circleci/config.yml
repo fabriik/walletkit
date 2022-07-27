@@ -23,7 +23,7 @@ jobs:
       - run:
           name: Install CLang
           command: |
-            sudo apt install clang
+            sudo apt install clang libbsd-dev
 
       - run:
           name: Build WalletKit Java
