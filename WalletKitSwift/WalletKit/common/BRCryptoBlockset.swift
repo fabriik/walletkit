@@ -789,7 +789,7 @@ public class BlocksetSystemClient: SystemClient {
                      data: nil,
                      httpMethod: "DELETE",
                      deserializer: { (data: Data?) in
-                        return (nil == data || 0 == data!.count 
+                        return (nil == data || 0 == data!.count
                             ? Result.success (())
                             : Result.failure (SystemClientError.model ("Unexpected Data on DELETE"))) },
                      completion: completion)
@@ -964,13 +964,18 @@ public class BlocksetSystemClient: SystemClient {
     public func createTransaction (blockchainId: String,
                                    transaction: Data,
                                    identifier: String?,
+                                   exchangeId: String?,
                                    completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
         let data            = transaction.base64EncodedString()
-        let json: JSON.Dict = [
+        var json: JSON.Dict = [
             "blockchain_id"  : blockchainId,
             "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
-            "data"           : transaction.base64EncodedString()
+            "data"           : transaction.base64EncodedString(),
         ]
+        
+        if let exchangeId = exchangeId {
+            json["exchange_id"] = exchangeId
+        }
 
         makeRequest (bdbDataTaskFunc, bdbBaseURL,
                      path: "/transactions",

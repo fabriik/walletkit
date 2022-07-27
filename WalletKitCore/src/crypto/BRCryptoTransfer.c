@@ -790,7 +790,7 @@ cryptoTransferAttributeSetValue (BRCryptoTransferAttribute attribute, const char
 
 extern void
 cryptoTransferSetExchangeId (BRCryptoTransfer transfer, const char *exchangeId) {
-    transfer->exchangeId = exchangeId;
+    transfer->exchangeId = strdup (exchangeId);
 }
 
 extern BRCryptoBoolean
