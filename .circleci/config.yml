@@ -1,48 +1,51 @@
 version: 2.1
 
-jobs:
-  build-walletkit-android:
-    docker:
-      - image: cimg/android:2022.06-ndk
-    steps:
-      - checkout
-      - run:
-          name: Pull Submodules
-          command: |
-            git submodule update --init --recursive
-      - run:
-          name: Build WalletKitCore
-          command : |
-            cd WalletKitCore
-            swift build
-      - run:
-          name: Build WalletKitSwift
-          command: |
-            cd WalletKitJava
-            ./gradle assemble   
-
-  build-walletkit-ios:
-    macos:
-      xcode: 13.4.1 # Specify the Xcode version to use
-    steps:
-      - checkout
-      - run:
-          name: Pull Submodules
-          command: |
-            git submodule update --init --recursive
-      - run:
-          name: Build WalletKitCore
-          command : |
-            cd WalletKitCore
-            swift build
-      - run:
-          name: Build WalletKitSwift
-          command: |
-            cd WalletKitSwift
-            swift build
-
 workflows:
   build-app:
     jobs:
       - build-walletkit-ios
       - build-walletkit-android
+
+jobs:
+
+  build-walletkit-android:
+    docker:
+      - image: cimg/android:2022.06-ndk
+
+    steps:
+      - checkout
+
+      - run:
+          name: Pull Submodules
+          command: |
+            git submodule update --init --recursive
+
+      - run:
+          name: Build WalletKit Java
+          command: |
+            cd WalletKitJava
+            ./gradle assemble
+
+  build-walletkit-ios:
+    macos:
+      xcode: 13.4.1 # Specify the Xcode version to use
+
+    steps:
+      - checkout
+
+      - run:
+          name: Pull Submodules
+          command: |
+            git submodule update --init --recursive
+
+      - run:
+          name: Build WalletKitCore
+          command : |
+            cd WalletKitCore
+            swift build
+
+      - run:
+          name: Build WalletKitSwift
+          command: |
+            cd WalletKitSwift
+            swift build
