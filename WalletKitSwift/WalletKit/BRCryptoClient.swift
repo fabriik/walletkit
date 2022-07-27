@@ -1,6 +1,6 @@
 //
 //  SystemClien.swift
-//  
+//
 //
 //  Created by Ed Gamble on 8/19/20.
 //
@@ -157,6 +157,7 @@ public protocol SystemClient {
     func createTransaction (blockchainId: String,
                             transaction: Data,
                             identifier: String?,
+                            exchangeId: String?,
                             completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void)
 
     // Transaction Fee

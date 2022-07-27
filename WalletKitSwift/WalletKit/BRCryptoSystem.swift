@@ -1647,9 +1647,12 @@ extension System {
 
                 let data = Data (bytes: transactionBytes!, count: transactionBytesLength)
 
+                let exchangeIdString = exchangeId.map { asUTF8String($0) }
+                
                 manager.client.createTransaction (blockchainId: manager.network.uids,
                                                   transaction: data,
-                                                  identifier: identifier.map { asUTF8String($0) }) {
+                                                  identifier: identifier.map { asUTF8String($0) },
+                                                  exchangeId: exchangeIdString) {
                     (res: Result<SystemClient.TransactionIdentifier, SystemClientError>) in
                     defer { cryptoWalletManagerGive (cwm!) }
                     res.resolve(
