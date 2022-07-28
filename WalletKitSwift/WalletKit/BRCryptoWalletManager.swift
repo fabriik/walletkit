@@ -255,6 +255,11 @@ public final class WalletManager: Equatable, CustomStringConvertible {
             self.client = BitcoinRPCSystemClient.createForTest (bdbBaseURL: "http://bitcoin:local321@127.0.0.1:18332/", bdbToken:   blocksetAccess.token)
             //self.client = BitcoinRPCSystemClient.createForTest (bdbBaseURL: "http://bitcoin:local321@127.0.0.1:18332/", bdbToken: String("<blockset client access token>"))
             //self.client = BitcoinRPCSystemClient.createForTest (bdbBaseURL: "http://bitcoin:local321@127.0.0.1:18332/")
+        } else if (self.network.name == "WhatsOnChain") {
+            let appBundle = Bundle(for: WalletManager.self)
+            let testConfiguration     = TestConfiguration.loadFrom (bundle: appBundle, resource: "WalletKitTestsConfig")!
+            let blocksetAccess = testConfiguration.blocksetAccess
+            self.client = WhatsOnChainSystemClient.createForTest (bdbBaseURL: "http://api.whatsonchain.com", bdbToken:   blocksetAccess.token)
         }
         else {
             self.client  = system.client

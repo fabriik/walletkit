@@ -1,14 +1,12 @@
 //
-//  BRBlockset.swift
-//  WalletKit
+//  File.swift
+//  
 //
-//  Created by Ed Gamble on 3/27/19.
-//  Copyright © 2019 Breadwinner AG. All rights reserved.
+//  Created by Christina Peterson on 7/25/22.
 //
-//  See the LICENSE file at the project root for license information.
-//  See the CONTRIBUTORS file at the project root for a list of contributors.
-//
-import Foundation // DispatchQueue
+
+import Foundation
+import BitcoinCore
 
 #if os(Linux)
 import FoundationNetworking
@@ -53,7 +51,7 @@ private struct BlocksetCapabilities: OptionSet, CustomStringConvertible {
     static let current = v2020_03_21
 }
 
-public class BlocksetSystemClient: SystemClient {
+public class WhatsOnChainSystemClient: SystemClient {
     static fileprivate let capabilities =  BlocksetCapabilities.current
 
     /// Base URL (String) for the BRD BlockChain DB
@@ -84,6 +82,26 @@ public class BlocksetSystemClient: SystemClient {
     static let defaultDataTaskFunc: DataTaskFunc = {
         (_ session: URLSession,
         _ request: URLRequest,
+        _ completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask in
+        session.dataTask (with: request, completionHandler: completionHandler)
+    }
+    
+    public typealias DataTaskFuncSet = (URLSession, URLRequest, Data?, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask
+    
+    static let defaultDataTaskFuncSet: DataTaskFuncSet = {
+        (_ session: URLSession,
+        _ request: URLRequest,
+         _ data: Data?,
+        _ completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask in
+        session.dataTask (with: request, completionHandler: completionHandler)
+    }
+    
+    typealias DataTaskFuncSetJSON = (URLSession, URLRequest, JSON.Dict?, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask
+    
+    static let defaultDataTaskFuncSetJSON: DataTaskFuncSetJSON = {
+        (_ session: URLSession,
+        _ request: URLRequest,
+         _ data: JSON.Dict?,
         _ completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask in
         session.dataTask (with: request, completionHandler: completionHandler)
     }
@@ -197,24 +215,28 @@ public class BlocksetSystemClient: SystemClient {
     ///       uncompressing response data.  This defaults to `session.dataTask (with: request, ...)`
     ///       which suffices for DEBUG builds.
     ///
-    public init (bdbBaseURL: String = "https://api.blockset.com",
+    //public init (bdbBaseURL: String = "https://api.blockset.com",
+    public init (bdbBaseURL: String = "http://api.whatsonchain.com",
                  bdbDataTaskFunc: DataTaskFunc? = nil,
-                 apiBaseURL: String = "https://api.breadwallet.com",
+                 //apiBaseURL: String = "https://api.breadwallet.com",
+                 apiBaseURL: String = "http://api.whatsonchain.com",
                  apiDataTaskFunc: DataTaskFunc? = nil) {
 
         self.bdbBaseURL = bdbBaseURL
         self.apiBaseURL = apiBaseURL
 
-        self.bdbDataTaskFunc = bdbDataTaskFunc ?? BlocksetSystemClient.defaultDataTaskFunc
-        self.apiDataTaskFunc = apiDataTaskFunc ?? BlocksetSystemClient.defaultDataTaskFunc
+        //self.bdbDataTaskFunc = bdbDataTaskFunc ?? BlocksetSystemClient.defaultDataTaskFunc
+        //self.apiDataTaskFunc = apiDataTaskFunc ?? BlocksetSystemClient.defaultDataTaskFunc
+        self.bdbDataTaskFunc = bdbDataTaskFunc ?? WhatsOnChainSystemClient.defaultDataTaskFunc
+        self.apiDataTaskFunc = apiDataTaskFunc ?? WhatsOnChainSystemClient.defaultDataTaskFunc
     }
 
     ///
     /// Create a BlocksetSystemClient using a specified Authorization token.  This is declared 'public'
     /// so that the Crypto Demo can use it.
     ///
-    public static func createForTest (bdbBaseURL: String, bdbToken: String) -> BlocksetSystemClient {
-        return BlocksetSystemClient (bdbBaseURL: bdbBaseURL,
+    public static func createForTest (bdbBaseURL: String, bdbToken: String) -> WhatsOnChainSystemClient {
+        return WhatsOnChainSystemClient (bdbBaseURL: bdbBaseURL,
                                      bdbDataTaskFunc: { (session, request, completion) -> URLSessionDataTask in
                                          var decoratedReq = request
                                          decoratedReq.setValue ("Bearer \(bdbToken)", forHTTPHeaderField: "Authorization")
@@ -222,7 +244,7 @@ public class BlocksetSystemClient: SystemClient {
         })
     }
 
-    public static func createForTest (blocksetAccess: BlocksetAccess) -> BlocksetSystemClient {
+    public static func createForTest (blocksetAccess: BlocksetAccess) -> WhatsOnChainSystemClient {
         return createForTest(bdbBaseURL: blocksetAccess.baseURL, bdbToken: blocksetAccess.token)
     }
 
@@ -273,6 +295,32 @@ public class BlocksetSystemClient: SystemClient {
                     verifiedBlockHash: verifiedBlockHash,
                     feeEstimates: feeEstimates,
                     confirmationsUntilFinal: confirmationsUntilFinal)
+        }
+        
+        static internal func asBlockchainWOC (json: JSON) -> SystemClient.Blockchain? {
+            guard let chain = json.asString (name: "chain"),
+                  let blocks = json.asInt64 (name: "blocks"),
+                  //let headers = json.asInt64 (name: "headers"),
+                  let bestblockhash = json.asString (name: "bestblockhash"),
+                  //let difficulty = json.asData (name: "difficulty"),
+                  let mediantime = json.asUInt64 (name: "mediantime")
+                  //let verificationprogress = json.asData (name: "verificationprogress"),
+                  //let pruned = json.asBool (name: "pruned"),
+                  //let chainwork = json.asString(name: "chainwork")
+            else {
+                print ("SYS: BDB:API: ERROR in Blockchain JSON: '\(json)'")
+                return nil
+            }
+
+            let isMainnet = (chain == "main") ? true : false
+            
+            let feeEstimates = [(amount: "500", tier: "tier", confirmationTimeInMilliseconds: mediantime)]
+            
+            return (SystemClient.Blockchain) (id: bestblockhash, name: chain, network: "WhatsOnChain", isMainnet: isMainnet, currency: "satoshis",
+                    blockHeight: -1 == blocks ? nil : UInt64 (blocks),
+                    verifiedBlockHash: bestblockhash,
+                    feeEstimates: feeEstimates,
+                    confirmationsUntilFinal: 0)
         }
 
         /// Currency & CurrencyDenomination
@@ -366,9 +414,9 @@ public class BlocksetSystemClient: SystemClient {
                  "failed":
                 return true
             case "reverted":
-                return BlocksetSystemClient.capabilities.contains(.transferStatusRevert)
+                return WhatsOnChainSystemClient.capabilities.contains(.transferStatusRevert)
             case "rejected":
-                return BlocksetSystemClient.capabilities.contains(.transferStatusReject)
+                return WhatsOnChainSystemClient.capabilities.contains(.transferStatusReject)
             default:
                 return false
             }
@@ -440,6 +488,234 @@ public class BlocksetSystemClient: SystemClient {
                      fromAddress: nil
                      )
         }
+        
+        static internal func asTransactionWOC (json: JSON) -> SystemClient.Transaction? {
+            /*guard let id = json.asString(name: "transaction_id"),
+                  let bid        = json.asString (name: "blockchain_id"),
+                  let hash       = json.asString (name: "hash"),
+                  let identifier = json.asString (name: "identifier"),
+                  let status     = json.asString (name: "status"),
+                  let size       = json.asUInt64 (name: "size"),
+                  let fee        = json.asDict (name: "fee")
+                    .map ({ JSON (dict: $0) })
+                    .flatMap ({ asAmount(json: $0)}),
+                  asTransactionValidateStatus(status)
+            else {
+                print ("SYS: BDB: API: ERROR in asTransaction JSON: '\(json)'")
+                return nil
+            }*/
+            
+            guard let hash = json.asString(name: "hash"),
+                  let blockHeight = json.asInt64 (name: "blockheight"),
+                  let blockHash = json.asString (name: "blockhash"),
+                  let identifier = json.asString (name: "txid"),
+                  let confirmations     = json.asUInt64 (name: "confirmations"),
+                  let size       = json.asInt64 (name: "size"),
+                  let version    = json.asInt64 (name: "version"),
+                  let lockTime   = json.asInt64 (name: "locktime"),
+                  let time       = json.asInt64 (name: "time"),
+                  let vin        = json.asJSONArray (name: "vin"),
+                  let vout       = json.asJSONArray (name: "vout")
+                  //let raw = json.asData (name: "txid")
+            else {
+                print ("SYS: BDB: API: ERROR in asTransaction JSON: '\(json)'")
+                return nil
+            }
+            
+            //var count = 0
+            //var json_array : [JSON.Dict] = []
+            var type : String?
+            var mintId : String?
+            var fromAddress : String?
+            var receiveAmount : UInt64? = 1
+
+            var inputs : [SystemClient.Inputs] = []
+            for anItem in vin {
+                let sequence = anItem.asInt64 (name: "sequence")
+                let scriptSig = anItem.asDict (name: "scriptSig")
+                //let scriptSig = anItem["scriptSig"] as! JSON.Dict
+                let script = scriptSig!["hex"] as! String
+                //let script = scriptSig.asString (name: "hex")
+                let signature = scriptSig!["asm"] as! String
+                let txid = anItem.asString (name: "txid")
+                
+                let input : SystemClient.Inputs = (txHash: txid!, script: script, signature: signature, sequence: sequence!)
+                inputs.append(input)
+                
+                //let script = anItem.asString ()
+                print("Stop")
+            }
+            
+            var count = 0
+            var outputs : [SystemClient.Outputs] = []
+            for anItem in vout {
+                //let value = anItem.asString (name: "value")
+                let value = (anItem.dict["value"] as? NSNumber).flatMap { Double (exactly: $0)}
+                
+                let scriptPubKey = anItem.asDict (name: "scriptPubKey")
+                //let scriptSig = anItem["scriptSig"] as! JSON.Dict
+                let script = scriptPubKey!["hex"] as! String
+
+                
+                //let output : SystemClient.Outputs = (script: script, amount: value!)
+                let output : SystemClient.Outputs = (script: script, amount: value ?? 0)
+                outputs.append(output)
+                
+                if(scriptPubKey!["opReturn"] != nil) {
+                    let opReturn = scriptPubKey!["opReturn"] as! JSON.Dict
+                    type = opReturn["type"] as! String
+                    let parts = opReturn["parts"] as! NSArray
+                    let str = parts[2] as! String
+                    
+                    print("STR: : (\(str))")
+                    
+                    let beginOfMintId = str.firstIndex(of: "[")!
+                    let firstIndexMintId = str.index(beginOfMintId, offsetBy: 2)
+                    let endOfMintId = str.firstIndex(of: "_")!
+                    let lastIndexMintId = str.index(endOfMintId, offsetBy: -1)
+                    //let substring = str[beginOfSentence...endOfSentence]
+                    let substring = str[firstIndexMintId...lastIndexMintId]
+                    mintId = String(substring)
+                    
+                    let beginOfAmount = str.lastIndex(of: ",")!
+                    let firstIndexAmount = str.index(beginOfAmount, offsetBy: 1)
+                    let endOfAmount = str.lastIndex(of: "]")!
+                    let endIndexAmount = str.index(endOfAmount, offsetBy: -4)
+                    let substringAmount = str[firstIndexAmount...endIndexAmount]
+                    let amount = String(substringAmount)
+                    
+                    receiveAmount = UInt64(amount) //FIXME!!!
+                } else if (count == 1) {
+                    let addresses : [String] = scriptPubKey!["addresses"] as! [String]
+                    if(addresses.count != 0) {
+                        fromAddress = addresses[0]
+                        print("Debugging")
+                    }
+                }
+                    
+                
+                //let script = anItem.asString ()
+                count = count + 1
+            }
+          
+            let inCount = inputs.count
+            
+            let outCount = outputs.count
+            
+            
+            
+            
+            //let url = URL(string: "https://api.whatsonchain.com/v1/bsv/test/tx/\(hash)/hex")!
+            
+            //print("\(url)")
+
+            //var request = URLRequest(url: url)
+            //request.httpMethod = "GET"
+            
+            
+            let session_ = URLSession (configuration: .default)
+            var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/test/tx/\(hash)/hex")!);
+            //var request = URLRequest(url: URL(string: "https://api.whatsonchain.com/v1/bsv/main/tx/\(hash)/hex")!); //FIXME!!!
+            //var request = URLRequest(url: URL(string: "https://api.whatsonchain.com/v1/bsv/test/chain/info")!);
+            request.httpMethod = "GET"
+            
+            //var request = NSMutableURLRequest(url: URL(string: "https://api.whatsonchain.com/v1/bsv/test/tx/\(hash)/hex")!)
+            //var session = URLSession.shared
+            //request.httpMethod = "GET"
+            print("request: \(request)")
+            
+            var data_: Data?
+                
+            let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+                //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+            let task = WhatsOnChainSystemClient.defaultDataTaskFuncSet (session_, request, data_) { (data, res, error) in
+            //var task = session.dataTask(with: request as URLRequest, completionHandler: {data, response, error -> Void in
+                //print("Response: \(response)")})
+                    //get responce here
+                    //Use response
+                    print("2")
+                    do {
+                        if(data != nil) {
+                            //let jsonResult = try JSONSerialization.data (withJSONObject: data, options: [])
+                            //let jsonResult = try JSONSerialization.jsonObject(with: data!, options: [])
+                            let convertedString = String(data: data!, encoding: String.Encoding.utf8)
+                            data_ = data
+                            print("data: \(convertedString)")
+                        } else {
+                            data_ = nil
+                        }
+                    } catch let error as NSError {
+                        print(error.localizedDescription)
+                    }
+                    semaphore.signal()
+                }
+                task.resume()
+                print("1")
+                semaphore.wait()
+                print("3")
+        
+            
+            
+            let dict_ : Dictionary<String,String> = [:]
+            
+            let transfers = [(
+                id: identifier,
+                source: "source",
+                target: "target",
+                amount: (currency: "satoshi", value: "5"),
+                acknowledgements: confirmations,
+                index: UInt64(0),
+                transactionId: identifier,
+                blockchainId: "whatsonchain-testnet",
+                metaData: dict_)
+            ]
+
+            return (id: identifier,
+                     blockchainId: "whatsonchain-testnet",
+                     hash: hash,
+                     identifier: identifier,
+                     blockHash: blockHash,
+                     blockHeight: -1 == blockHeight ? nil : UInt64(blockHeight),
+                     index: UInt64(0),
+                     confirmations: 0 == confirmations ? nil : confirmations,
+                     status: "confirmed",
+                     size: 0 <= size ? 0 : UInt64(size),
+                     timestamp: Date(),
+                     firstSeen: Date(),
+                     raw: data_,
+                     fee: (currency: "satoshi", value: "1"),
+                     transfers: transfers,
+                     acknowledgements: confirmations,
+                     metaData: dict_,
+                     version: version,
+                     lockTime: lockTime,
+                     time: time,
+                     inCount: inCount,
+                     inputs: inputs,
+                     outCount: outCount,
+                     outputs: outputs,
+                     type: type,
+                     receiveAmount: receiveAmount,
+                     mintId: mintId,
+                     fromAddress: fromAddress
+            
+            )
+            /*return (id: identifier, blockchainId: "test",
+                     hash: hash, identifier: identifier,
+                     blockHash: blockHash, blockHeight: blockHeight,
+                     index: UInt64(0),
+                     confirmations: confirmations,
+                     status: "",
+                     size: UInt64(size),
+                     timestamp: NSDate(),
+                     firstSeen: NSDate(),
+                     raw: raw,
+                     fee: (currency: "satoshi", value: "0"),
+                     transfers: transfers,
+                     acknowledgements: confirmations,
+                     metaData: dict_)*/
+        }
+        
 
         static internal func asTransactionIdentifier (json: JSON) -> SystemClient.TransactionIdentifier? {
             guard let id         = json.asString(name: "transaction_id"),
@@ -450,6 +726,13 @@ public class BlocksetSystemClient: SystemClient {
             let hash = json.asString (name: "hash")
 
             return (id: id, blockchainId: bid, hash: hash, identifier: identifier)
+        }
+        
+        static internal func asTransactionIdentifierWOC (json: JSON) -> SystemClient.TransactionIdentifier? {
+            guard let id         = json.asString(name: "txid")
+            else { return nil }
+
+            return (id: id, blockchainId: "whatsonchain-testnet", hash: id, identifier: id)
         }
 
         /// Transaction Fee
@@ -650,6 +933,42 @@ public class BlocksetSystemClient: SystemClient {
                     balance: balance,
                     deleted: "active" != status)
         }
+        
+        static internal func asTransactionHistoryWOC (json: JSON) -> [SystemClient.TransactionHistory]? {
+            /*guard let tx_hash  = json.asString (name: "tx_hash_0"),
+                  let height   = json.asUInt64 (name: "height_0")
+            else {
+                print ("SYS: BDB: API: ERROR in asTransactionHistory JSON: '\(json)'")
+                return nil
+            }
+
+            return [(tx_hash: tx_hash, height: height)]*/
+            
+            let size = json.dict.count/2
+            
+            var json_array : [SystemClient.TransactionHistory] = []
+            
+            if size > 0 {
+                for i in 0...(size-1) {
+                    let tx_hash_  = json.asString (name: "tx_hash_\(i)") ?? "nil"
+                    print("tx_hash_\(i): \(tx_hash_)")
+                    let height_   = json.asUInt64 (name: "height_\(i)") ?? 0
+                    json_array.append((tx_hash: tx_hash_, height: height_))
+                }
+            }
+            
+            return json_array
+            
+        }
+        
+        /*public typealias HistoryByAddress = (tx_hash: String, height: Int64)
+        
+        static internal func asJSON (history: HistoryByAddress) -> JSON.Dict {
+            return [
+                "tx_hash"   : history.tx_hash,
+                "height" : history.height
+            ]
+        }*/
 
     } // End of Model
 
@@ -668,19 +987,90 @@ public class BlocksetSystemClient: SystemClient {
             (more: URL?, res: Result<[JSON], SystemClientError>) in
             precondition (nil == more)
             completion (res.flatMap {
-                BlocksetSystemClient.getManyExpected(data: $0, transform: Model.asBlockchain)
+                WhatsOnChainSystemClient.getManyExpected(data: $0, transform: Model.asBlockchain)
+            })
+        }
+    }
+    
+    public func getBlockchain (blockchainId: String, completion: @escaping (Result<SystemClient.Blockchain,SystemClientError>) -> Void) {
+        var blockchain : String = "test"
+        if(blockchainId == "whatsonchain-mainnet") {
+            blockchain = "main"
+        }
+        //bdbMakeRequest(path: "blockchains/\(blockchainId)", query: zip(["verified"], ["true"]), embedded: false) {
+        bdbMakeRequest(path: "v1/bsv/\(blockchain)/chain/info", query: nil, embedded: false) {
+            (more: URL?, res: Result<[JSON], SystemClientError>) in
+            precondition (nil == more)
+            completion (res.flatMap {
+                //WhatsOnChainSystemClient.getOneExpected (id: blockchainId, data: $0, transform: Model.asBlockchain)
+                WhatsOnChainSystemClient.getOneExpected (id: blockchainId, data: $0, transform: Model.asBlockchainWOC)
             })
         }
     }
 
-    public func getBlockchain (blockchainId: String, completion: @escaping (Result<SystemClient.Blockchain,SystemClientError>) -> Void) {
-        bdbMakeRequest(path: "blockchains/\(blockchainId)", query: zip(["verified"], ["true"]), embedded: false) {
+    public func getBlockchainTest (blockchainId: String, completion: @escaping (Result<SystemClient.Blockchain,SystemClientError>) -> Void) {
+        /*var blockchain : String = "test"
+        if(blockchainId == "whatsonchain-mainnet") {
+            blockchain = "main"
+        }*/
+        //bdbMakeRequest(path: "blockchains/\(blockchainId)", query: zip(["verified"], ["true"]), embedded: false) {
+        //bdbMakeRequest(path: "v1/bsv/\(blockchainId)/chain/info", query: nil, embedded: false) {
+        /*bdbMakeRequest_(path: "v1/bsv/\(blockchainId)/chain/info", query: nil, embedded: false) {
             (more: URL?, res: Result<[JSON], SystemClientError>) in
             precondition (nil == more)
             completion (res.flatMap {
-                BlocksetSystemClient.getOneExpected (id: blockchainId, data: $0, transform: Model.asBlockchain)
+                //WhatsOnChainSystemClient.getOneExpected (id: blockchainId, data: $0, transform: Model.asBlockchain)
+                WhatsOnChainSystemClient.getOneExpected (id: blockchainId, data: $0, transform: Model.asBlockchainWOC)
             })
-        }
+        }*/
+        
+        let session_ = URLSession (configuration: .default)
+        //var request = URLRequest(url: URL(string: "http://bitcoin:local321@127.0.0.1:18332/")!);
+        var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/test/chain/info")!);
+        //var request = URLRequest(url: URL(string: "https://api.whatsonchain.com/v1/bsv/test/tx/decode")!);
+        //request.httpMethod = "POST"
+        request.httpMethod = "GET"
+        
+        /*let data: JSON.Dict = [
+            "jsonrpc"  : "1.0",
+            "id" : 1644337268902,
+            "method" : "getrawmempool",
+            "params" : []
+        ]*/
+        //let data: JSON.Dict = [:]
+        /*let data: JSON.Dict = [
+            "txhex"  : "0100000002e9c310fb7c62b3af431062941e034626a6a357c5d96611b594ef6d45e858131800000000fd2901483045022100ee3fd9bb4186335d24a10161b0e2e2518ff11e3923b16bfdc1f2151c1780e1c10220342cd7e844c89bce12e645d48ce45b58dd96ff87865130f518702f2213e72afd41210302e079d826eb9aa1b3b051206a3eb311185de3bfe21418c76e2be2cee6a3719847304402203985d151c1b40c8db99219f89ebdaf46500032a3b4a0cd07545aa4fd3034bf3d02200d89a98b10b7a3d24d804205613acc8ec2157a8feb1e1608bafca329109d9f5c4121025f44adfa89cc33c42def4165be539a523c3d3fd7e537bc1e9bd44b32fa341cfd0773667040302e334730440220066c269dba2c931729ab29f3d62939856f770bde8bae3a71c0ebde2eb5fe9759022009b50c89f99db8b7fa77b7f397091d5d6133930c8d2e5a74646699da3d2da6bb0001000100ffffffff6a18154dffa2b1ea67da06081d96d6e5f8791c5440a8812a8c57d5dc5dd7a8c7010000006b483045022100b931c5821f187c244d8be6227efaba3efa1d02a281c8cc8b744d69c70eab9c82022033213d3f83457d999ef012fbb4b06fef8c590cf07abd82dce372bb4f942ed5f6412102a717d8ac10318dcf42bd397eb1c31f85219ebb1497198783b688d8401063b01dffffffff023402000000000000fd9701610773667040302e33243866353539383237353266372e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a9146d861709c1cdb8fef249f13568efcf778fefef0d1412f88c3fa18325a8e42100b1d5ffa16384fa50cf4630440220260d19bcc4e5b25d5b7eaaa3a4ca898e42ac451a8a528cbcb120d1b302385cb20220252a2d0ee15728c6b19157d48142b8dc5255d06133cfdd3a9c01feb183318c9a24e9c310fb7c62b3af431062941e034626a6a357c5d96611b594ef6d45e858131800000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b01000000000000000800002bd3f505000000001976a91462aad08fc7df538ab349812ec41ef59cd9729e3f88ac00000000"
+        ]*/
+        
+       //if let data = data {
+        //    do { request.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
+        //    catch let jsonError as NSError {
+        //        let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(data.description)'"
+         //       completion (Result.failure (SystemClientError.model(warnString)))
+         //   }
+        //}
+        
+        var data_: JSON.Dict?
+            
+        let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+            //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+        let task = BitcoinRPCSystemClient.defaultDataTaskFuncSetJSON (session_, request, data_) { (data, res, error) in
+                do {
+                    if(data != nil) {
+                        let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                        print("Stop")
+                        data_ = json
+                    } else {
+                        data_ = nil
+                    }
+                } catch let error as NSError {
+                    print(error.localizedDescription)
+                }
+                semaphore.signal()
+            }
+            task.resume()
+            semaphore.wait()
+        
     }
 
     public func getCurrencies (blockchainId: String? = nil, mainnet: Bool = true, completion: @escaping (Result<[SystemClient.Currency],SystemClientError>) -> Void) {
@@ -728,7 +1118,7 @@ public class BlocksetSystemClient: SystemClient {
             (more: URL?, res: Result<[JSON], SystemClientError>) in
             precondition (nil == more)
             completion (res.flatMap {
-                BlocksetSystemClient.getOneExpected(id: currencyId, data: $0, transform: Model.asCurrency)
+                WhatsOnChainSystemClient.getOneExpected(id: currencyId, data: $0, transform: Model.asCurrency)
             })
         }
     }
@@ -755,7 +1145,7 @@ public class BlocksetSystemClient: SystemClient {
         bdbMakeRequest (path: "subscriptions", query: nil, embedded: true) {
             (more: URL?, res: Result<[JSON], SystemClientError>) in
             completion (res.flatMap {
-                BlocksetSystemClient.getManyExpected(data: $0, transform: Model.asSubscription)
+                WhatsOnChainSystemClient.getManyExpected(data: $0, transform: Model.asSubscription)
             })
         }
     }
@@ -765,7 +1155,7 @@ public class BlocksetSystemClient: SystemClient {
             (more: URL?, res: Result<[JSON], SystemClientError>) in
             precondition (nil == more)
             completion (res.flatMap {
-                BlocksetSystemClient.getOneExpected (id: id, data: $0, transform: Model.asSubscription)
+                WhatsOnChainSystemClient.getOneExpected (id: id, data: $0, transform: Model.asSubscription)
             })
         }
     }
@@ -889,9 +1279,55 @@ public class BlocksetSystemClient: SystemClient {
             (more: URL?, res: Result<[JSON], SystemClientError>) in
             precondition (nil == more)
             completion (res.flatMap {
-                BlocksetSystemClient.getOneExpected (id: transferId, data: $0, transform: Model.asTransfer)
+                WhatsOnChainSystemClient.getOneExpected (id: transferId, data: $0, transform: Model.asTransfer)
             })
         }
+    }
+    
+    public func getTransactionHistory (blockchainId: String, address: String, completion: @escaping (Result<[SystemClient.TransactionHistory], SystemClientError>) -> Void) {
+        bdbMakeRequest_(path: "v1/bsv/\(blockchainId)/address/\(address)/history", query: nil, embedded: false) {
+        //bdbMakeRequest_(path: "v1/bsv/main/address/\(address)/history", query: nil, embedded: false) { //FIXME!!!
+            (more: URL?, res: Result<[JSON], SystemClientError>) in
+            precondition (nil == more)
+            completion(res.flatMap {
+                WhatsOnChainSystemClient.getManyExpected_ (data: $0, transform: Model.asTransactionHistoryWOC)
+            })
+        }
+    }
+    
+    static internal func getMintId (json: JSON.Dict) -> String {
+        
+        let vout = json["vout"] as! [NSDictionary]
+        
+        var ret : String = String("")
+        
+        for anItem in vout {
+            
+            let scriptPubKey = anItem["scriptPubKey"] as! NSDictionary
+            
+            if(scriptPubKey["opReturn"] != nil) {
+                let opReturn = scriptPubKey["opReturn"] as! JSON.Dict
+                
+                let parts = opReturn["parts"] as! NSArray
+                
+                let str : String = parts[2] as! String
+                
+                //let indexBegin = str.range(of: ":[")
+                //let indexEnd = str.range(of: "_o1")
+                //let substring = str[indexBegin!.lowerBound..<indexEnd!.lowerBound]
+                
+                let beginOfSentence = str.firstIndex(of: "[")!
+                let firstIndex = str.index(beginOfSentence, offsetBy: 2)
+                let endOfSentence = str.firstIndex(of: "_")!
+                let lastIndex = str.index(endOfSentence, offsetBy: -1)
+                //let substring = str[beginOfSentence...endOfSentence]
+                let substring = str[firstIndex...lastIndex]
+                ret = String(substring)
+            }
+            
+        }
+        //return String("189bc8ad3bc44632581ec2701a244e1c23478eda69ab5c123e2bd47caa8666cc")
+        return ret
     }
 
     // Transactions
@@ -908,8 +1344,128 @@ public class BlocksetSystemClient: SystemClient {
         precondition(!addresses.isEmpty, "Empty `addresses`")
         let chunkedAddresses = canonicalAddresses(addresses, blockchainId)
             .chunked(into: BlocksetSystemClient.ADDRESS_COUNT)
+        
+        //let address = chunkedAddresses[0][0]
+        let address = "n44HTiHtFQ1hdMHBZPfsiVUUwYep5V3Yq1"
+        //let address = "n2DXd5qGBnNGHQ2jtd162RjwgBRYdxxYiq"
+        
+        var blockchain : String = "test"
+        if(blockchainId == "whatsonchain-mainnet") {
+            blockchain = "main"
+        }
+        
+        getTransactionHistory(blockchainId: blockchain, address: address) {
+            (res: Result<[SystemClient.TransactionHistory], SystemClientError>) in
+            defer { print("Deferring")}
+            res.resolve (
+                success: {
+                    //print("SYS: GetTransactionHistory: Success \($0[0].tx_hash)")
+                    
+                    var data_array: [JSON.Dict] = []
+                    
+                    for tx in $0 {
+                    
+                        let session_ = URLSession (configuration: .default)
+                        var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/\(blockchain)/tx/hash/\(tx.tx_hash!)")!);
+                        request.httpMethod = "GET"
+                        
+                        var data_: JSON.Dict?
+                            
+                        var semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+                            //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+                        let task = WhatsOnChainSystemClient.defaultDataTaskFuncSetJSON (session_, request, data_) { (data, res, error) in
+                                do {
+                                    if(data != nil) {
+                                        let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                                        data_ = json
+                                    } else {
+                                        data_ = nil
+                                    }
+                                } catch let error as NSError {
+                                    print(error.localizedDescription)
+                                }
+                                semaphore.signal()
+                            }
+                            task.resume()
+                            semaphore.wait()
+                        if(data_ != nil && data_!.count == 12) {
+                            let hash : String = data_!["hash"] as! String
+                            print("HASH: \(hash)")
+                            
+                            let storagePath = FileManager.default
+                                .urls(for: .documentDirectory, in: .userDomainMask)[0]
+                               .appendingPathComponent("Core").path
+                            
+                            var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
+                            authorizerGetPrivKeyRun(address, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+                            let privkeyHex = String(cString: privkeyHexBuf)
+                            
+                            var data0_: JSON.Dict?
+                            
+                            
+                            
+                            var request0 = URLRequest(url: URL(string: "http://localhost:8000/inventory/")!);
+                            self.decorateRequest(&request0, httpMethod: "POST")
+                            
+                            let mintId : String = WhatsOnChainSystemClient.getMintId(json: data_!);
+                            
+                            let data: JSON.Dict = [
+                                "txid"  : "\(hash)",
+                                "mintId" : "\(mintId)",
+                                "privkey" : "\(privkeyHex)"
+                            ]
+                            
+                           //if let data = data {
+                                do { request0.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
+                                catch let jsonError as NSError {
+                                    let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(data.description)'"
+                                    completion (Result.failure (SystemClientError.model(warnString)))
+                                }
+                            //}
+                            
+                            semaphore = DispatchSemaphore(value: 0)
+                                //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+                            let task0 = WhatsOnChainSystemClient.defaultDataTaskFuncSetJSON (session_, request0, data0_) { (data, res, error) in
+                                    do {
+                                        if(data != nil) {
+                                            let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                                            data0_ = json
+                                        } else {
+                                            data0_ = nil
+                                        }
+                                    } catch let error as NSError {
+                                        print(error.localizedDescription)
+                                    }
+                                    semaphore.signal()
+                                }
+                                task0.resume()
+                                semaphore.wait()
+                            
+                            if(data0_ != nil) {
+                                let txid : String = data0_!["txid"] as! String
+                                
+                                print("TXID: \(txid)")
+                                if(txid != "") {
+                                    data_array.append(data_!)
+                                }
+                            }
+                            
+                        }
+                        
+                    }
+                    completion(
+                        WhatsOnChainSystemClient.getManyExpected__ (data: data_array, transform: Model.asTransactionWOC)
+                    )
+                    
+                        
+                },
+                failure: { (e) in
+                    print ("SYS: GetTransactionHistory: Error: \(e)")
 
-        let results = ChunkedResults (queue: self.queue,
+                })
+            }
+
+        /*let results = ChunkedResults (queue: self.queue,
                                       transform: Model.asTransaction,
                                       completion: completion,
                                       resultsExpected: chunkedAddresses.count)
@@ -963,7 +1519,7 @@ public class BlocksetSystemClient: SystemClient {
             self.bdbMakeRequest (path: "transactions",
                                  query: zip (queryKeys, queryVals),
                                  completion: handleResult)
-        }
+        }*/
     }
 
     public func getTransaction (transactionId: String,
@@ -977,7 +1533,7 @@ public class BlocksetSystemClient: SystemClient {
             (more: URL?, res: Result<[JSON], SystemClientError>) in
             precondition (nil == more)
             completion (res.flatMap {
-                BlocksetSystemClient.getOneExpected (id: transactionId, data: $0, transform: Model.asTransaction)
+                WhatsOnChainSystemClient.getOneExpected (id: transactionId, data: $0, transform: Model.asTransaction)
             })
         }
     }
@@ -985,18 +1541,33 @@ public class BlocksetSystemClient: SystemClient {
     public func createTransaction (blockchainId: String,
                                    transaction: Data,
                                    identifier: String?,
-                                   exchangeId: String?,
                                    completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
-        let data            = transaction.base64EncodedString()
-        var json: JSON.Dict = [
+        
+        let storagePath = FileManager.default
+            .urls(for: .documentDirectory, in: .userDomainMask)[0]
+           .appendingPathComponent("Core").path
+        
+        var txnIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+        var addressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+        var mintIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+        var fromAddressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+        var amount : Int64 = 1
+        authorizerGetTransferDataRun(&txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, storagePath)
+        let txnIdHex = String(cString: txnIdHexBuf)
+        let addressHex = String(cString: addressHexBuf)
+        let mintIdHex = String(cString: mintIdHexBuf)
+        let fromAddressHex = String(cString: fromAddressHexBuf)
+        
+        var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
+        authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+        let privkeyHex = String(cString: privkeyHexBuf)
+        
+        /*let data            = transaction.base64EncodedString()
+        let json: JSON.Dict = [
             "blockchain_id"  : blockchainId,
             "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
-            "data"           : transaction.base64EncodedString(),
+            "data"           : transaction.base64EncodedString()
         ]
-        
-        if let exchangeId = exchangeId {
-            json["exchange_id"] = exchangeId
-        }
 
         makeRequest (bdbDataTaskFunc, bdbBaseURL,
                      path: "/transactions",
@@ -1006,9 +1577,35 @@ public class BlocksetSystemClient: SystemClient {
                 (more: URL?, res: Result<[JSON], SystemClientError>) in
                 precondition(nil == more)
                 completion (res.flatMap {
-                    BlocksetSystemClient.getOneExpected (id: "POST /transactions",
+                    WhatsOnChainSystemClient.getOneExpected (id: "POST /transactions",
                                                          data: $0,
                                                          transform: Model.asTransactionIdentifier)
+                })
+            }
+        }*/
+        
+        
+        
+        let json: JSON.Dict = [
+            "txid"  : "\(txnIdHex)",
+            "mintId"  : "\(mintIdHex)",
+            "privkey"  : "\(privkeyHex)",
+            "address"  : "\(addressHex)",
+            "amount" : amount
+        ]
+        
+        //makeRequest (bdbDataTaskFunc, bdbBaseURL,
+        makeRequest (bdbDataTaskFunc, "http://localhost:8000",
+                     path: "/transfer",
+                     data: json,
+                     httpMethod: "POST") {
+            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+                (more: URL?, res: Result<[JSON], SystemClientError>) in
+                precondition(nil == more)
+                completion (res.flatMap {
+                    WhatsOnChainSystemClient.getOneExpected (id: blockchainId,
+                                                         data: $0,
+                                                         transform: Model.asTransactionIdentifierWOC)
                 })
             }
         }
@@ -1033,7 +1630,7 @@ public class BlocksetSystemClient: SystemClient {
                             (more: URL?, res: Result<[JSON], SystemClientError>) in
                             precondition (nil == more)
                             completion (res.flatMap {
-                                BlocksetSystemClient.getOneExpected (id: "POST /transactions?estimate_fee",
+                                WhatsOnChainSystemClient.getOneExpected (id: "POST /transactions?estimate_fee",
                                                              data: $0,
                                                              transform: Model.asTransactionFee)
                             })
@@ -1115,7 +1712,7 @@ public class BlocksetSystemClient: SystemClient {
             (more: URL?, res: Result<[JSON], SystemClientError>) in
             precondition (nil == more)
             completion (res.flatMap {
-                BlocksetSystemClient.getOneExpected (id: blockId, data: $0, transform: Model.asBlock)
+                WhatsOnChainSystemClient.getOneExpected (id: blockId, data: $0, transform: Model.asBlock)
             })
         }
     }
@@ -1131,7 +1728,7 @@ public class BlocksetSystemClient: SystemClient {
             (more: URL?, res: Result<[JSON], SystemClientError>) in
             precondition (nil == more)
             completion (res.flatMap {
-                BlocksetSystemClient.getManyExpected(data: $0, transform: Model.asAddress)
+                WhatsOnChainSystemClient.getManyExpected(data: $0, transform: Model.asAddress)
             })
         }
     }
@@ -1145,7 +1742,7 @@ public class BlocksetSystemClient: SystemClient {
             (more: URL?, res: Result<[JSON], SystemClientError>) in
             precondition (nil == more)
             completion (res.flatMap {
-                BlocksetSystemClient.getOneExpected(id: address, data: $0, transform: Model.asAddress)
+                WhatsOnChainSystemClient.getOneExpected(id: address, data: $0, transform: Model.asAddress)
             })
         }
     }
@@ -1165,7 +1762,7 @@ public class BlocksetSystemClient: SystemClient {
                             (more: URL?, res: Result<[JSON], SystemClientError>) in
                             precondition (nil == more)
                             completion (res.flatMap {
-                                BlocksetSystemClient.getOneExpected (id: "POST /addresses",
+                                WhatsOnChainSystemClient.getOneExpected (id: "POST /addresses",
                                                              data: $0,
                                                              transform: Model.asAddress)
                             })
@@ -1235,9 +1832,9 @@ public class BlocksetSystemClient: SystemClient {
                      httpMethod: "GET") {
                         (res: Result<JSON.Dict, SystemClientError>) in
                         self.bdbHandleResult (res, embeddedPath: "accounts") {
-                            (ignore, res: Result<[BlocksetSystemClient.JSON], SystemClientError>) in
+                            (ignore, res: Result<[WhatsOnChainSystemClient.JSON], SystemClientError>) in
                             completion (res.flatMap {
-                                BlocksetSystemClient.getManyExpected(data: $0, transform: Model.asHederaAccount)
+                                WhatsOnChainSystemClient.getManyExpected(data: $0, transform: Model.asHederaAccount)
                             })
                         }
         }
@@ -1372,6 +1969,10 @@ public class BlocksetSystemClient: SystemClient {
         internal func asJSON (name: String) -> JSON? {
             return asDict(name: name).map { JSON (dict: $0) }
         }
+        
+        internal func asJSONArray (name: String) -> [JSON]? {
+            return asArray(name: name)?.map { JSON (dict: $0) }
+        }
     }
 
     private static func deserializeAsJSON<T> (_ data: Data?) -> Result<T, SystemClientError> {
@@ -1391,6 +1992,63 @@ public class BlocksetSystemClient: SystemClient {
             print ("SYS: BDB:API: ERROR: JSON.Error: '\(data.map { String(format: "%c", $0) }.joined())'")
             return Result.failure (SystemClientError.jsonParse (jsonError))
         }
+    }
+    
+    //private static func deserializeAsJSON_<T> (_ data: Data?) -> Result<T, SystemClientError> {
+    private static func deserializeAsJSON_ (_ data: Data?) -> Result<JSON.Dict, SystemClientError> {
+        guard let data = data else {
+            return Result.failure (SystemClientError.url("No Data"));
+        }
+        
+        
+        do {
+            //guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? T
+            let json = try JSONSerialization.jsonObject(with: data, options: [])
+            /*else {
+                    let dataString = data.map { String(format: "%c", $0) }.joined()
+                    print ("SYS: BDB:API: ERROR: JSON.Dict: '\(dataString)'")
+                    return Result.failure(SystemClientError.badResponse("JSON Parse: '\(dataString)'")) }*/
+            
+            var count = 0
+            //var json_array : [JSON.Dict] = []
+            var json_dict : JSON.Dict = [:]
+            for anItem in json as! [Dictionary<String, AnyObject>] {
+                let txhash = anItem["tx_hash"] as! String
+                let height = anItem["height"] as! Int64
+                //var json_item : JSON.Dict = [ "tx_hash_\(count)": txhash, "height_\(count)": height ]
+                //var json_item : JSON.Dict = [ "tx_hash": txhash, "height": height ]
+                json_dict["tx_hash_\(count)"] = txhash
+                json_dict["height_\(count)"] = height
+                //json_array.append(json_item)
+                count += 1
+            }
+            //return Result.success(json_array)
+            return Result.success(json_dict)
+            //return Result.success (json)
+        }
+        catch let jsonError as NSError {
+            let dataString = data.map { String(format: "%c", $0) }.joined()
+            let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(dataString)'"
+            print ("SYS: BDB:API: ERROR: \(warnString)")
+            return Result.failure (SystemClientError.url(warnString))
+        }
+        
+        /*do {
+            //guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? T
+            guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? JSON.Dict
+            else {
+                    let dataString = data.map { String(format: "%c", $0) }.joined()
+                    print ("SYS: BDB:API: ERROR: JSON.Dict: '\(dataString)'")
+                    return Result.failure(SystemClientError.badResponse("JSON Parse: '\(dataString)'")) }
+
+            return Result.success (json)
+        }
+        catch let jsonError as NSError {
+            let dataString = data.map { String(format: "%c", $0) }.joined()
+            let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(dataString)'"
+            print ("SYS: BDB:API: ERROR: \(warnString)")
+            return Result.failure (SystemClientError.badResponse(warnString))
+        }*/
     }
 
     private func sendRequest<T> (_ request: URLRequest,
@@ -1423,10 +2081,108 @@ public class BlocksetSystemClient: SystemClient {
             completion (deserializer (data))
             }.resume()
     }
+    
+    /*private func sendRequest<T> (_ request: URLRequest,
+                                 _ dataTaskFunc: DataTaskFunc,
+                                 _ responseSuccess: [Int],
+                                 deserializer: @escaping (_ data: Data?) -> Result<T, SystemClientError>,
+                                 completion: @escaping (Result<T, SystemClientError>) -> Void) {
+        dataTaskFunc (session, request) { (data, res, error) in
+            guard nil == error else {
+                var sce: SystemClientError = SystemClientError.url ("General Error: \(String (reflecting: error))")
+                let error = error! as NSError
+
+                if error.domain == NSURLErrorDomain {
+                    switch error.code {
+                    case NSURLErrorCannotFindHost,
+                        NSURLErrorCannotConnectToHost,
+                        NSURLErrorRedirectToNonExistentLocation:
+                        sce = SystemClientError.url ("unavailable")
+
+                    case NSURLErrorTimedOut,
+                        NSURLErrorNetworkConnectionLost,
+                        NSURLErrorDNSLookupFailed,
+                        NSURLErrorNotConnectedToInternet:
+                        sce = SystemClientError.url ("lostConnectivity")
+
+                    default: break
+                    }
+                }
+
+                completion (Result.failure(sce))
+                return
+            }
+
+            guard let res = res as? HTTPURLResponse else {
+                completion (Result.failure (SystemClientError.url ("Expected HTTP URL Response")))
+                return
+            }
+
+            guard responseSuccess.contains(res.statusCode) else {
+                // Try to parse the `data` as JSON
+                let json = data.flatMap { try? JSONSerialization.jsonObject(with: $0, options: []) as? [String:Any] }
+
+                var respError: SystemClientError!
+
+                switch (res.statusCode) {
+                case 400, 404: respError = SystemClientError.url ("Resource Not Found")
+                case 403:      respError = SystemClientError.url ("403")
+                case 429:      respError = SystemClientError.url ("429")
+                case 500, 504: respError = SystemClientError.url ("Submission Status Error: \(res.statusCode)")
+                case 422:
+                    // We expect `json` with more information about the error
+                    let status = json.flatMap { JSON (dict: $0) }.flatMap { $0.asString (name: "submit_status") }
+
+                    if nil == data {
+                        respError = SystemClientError.url ("Submission Status Error: No 'data' Provided")
+                    }
+                    else if nil == status {
+                        let dataString = data!.map { String(format: "%c", $0) }.joined()
+                        respError = SystemClientError.url ("Submission Status Error: No 'submit_status': \(dataString)")
+                    }
+                    else {
+                        let submitDetails = json.flatMap { JSON (dict: $0) }.flatMap { $0.asString (name: "network_message") }
+                        ?? "Submission Status Error: Missed 'network_message': \(data!.map { String(format: "%c", $0) }.joined())"
+
+                        var submitError: String
+                        switch (status!) {
+                        case "success":                       submitError = "success" // unexpected "success" on 422
+                        case "error_internal":                fallthrough
+                        case "error_unknown":                 submitError = "error_unknown"
+                        case "error_transaction_invalid":     submitError = "error_unknown"
+                        case "error_transaction_expired":     submitError = "error_transaction_expired"
+                        case "error_transaction_duplicate":   submitError = "error_transaction_duplicate"
+                        case "error_signature_invalid":       submitError = "error_signature_invalid"
+
+                        case "error_nonce_invalid":           submitError = "error_nonce_invalid"
+                        case "error_nonce_used":              submitError = "error_nonce_used"
+                        case "error_nonce_gap":               submitError = "error_nonce_gap"
+
+                        case "error_fee_insufficient":        submitError = "error_fee_insufficient"
+                        case "error_fee_rate_insufficient":   submitError = "error_fee_rate_insufficient"
+                        case "error_fee_budget_insufficient": submitError = "error_fee_budget_insufficient"
+
+                        case "error_balance_insufficient":    submitError = "error_balance_insufficient"
+                        case "error_account_unknown":         submitError = "error_account_unknown"
+                        default:                              submitError = "unknown"
+                        }
+                        respError = SystemClientError.url(submitError)
+                    }
+                default:
+                    respError = SystemClientError.url("Submission Status Error: Unrecognized Status Code: \(res.statusCode)")
+                }
+
+                completion (Result.failure(respError))
+                return
+            }
+
+            completion (deserializer (data))
+            }.resume()
+    }*/
 
     /// Update `request` with 'application/json' headers and the httpMethod
     internal func decorateRequest (_ request: inout URLRequest, httpMethod: String) {
-        request.addValue (BlocksetSystemClient.capabilities.versionDescription, forHTTPHeaderField: "Accept")
+        request.addValue (WhatsOnChainSystemClient.capabilities.versionDescription, forHTTPHeaderField: "Accept")
         request.addValue ("application/json", forHTTPHeaderField: "Content-Type")
         request.httpMethod = httpMethod
     }
@@ -1530,6 +2286,80 @@ public class BlocksetSystemClient: SystemClient {
 
         sendRequest (request, dataTaskFunc, responseSuccess (httpMethod), deserializer: deserializer, completion: completion)
     }
+    
+    //internal func makeRequest_<T> (_ dataTaskFunc: DataTaskFunc,
+    internal func makeRequest_ (_ dataTaskFunc: DataTaskFunc,
+                                  _ baseURL: String,
+                                  path: String,
+                                  query: Zip2Sequence<[String],[String]>? = nil,
+                                  data: JSON.Dict? = nil,
+                                  httpMethod: String = "POST",
+                                  //deserializer: @escaping (_ data: Data?) -> Result<T, SystemClientError> = deserializeAsJSON_,
+                                  deserializer: @escaping (_ data: Data?) -> Result<JSON.Dict, SystemClientError> = deserializeAsJSON_,
+                                  //completion: @escaping (Result<T, SystemClientError>) -> Void) {
+                                  completion: @escaping (Result<JSON.Dict, SystemClientError>) -> Void) {
+        guard var urlBuilder = URLComponents (string: baseURL)
+            else { completion (Result.failure(SystemClientError.url("URLComponents"))); return }
+
+        urlBuilder.path += path.starts(with: "/") ? path : "/\(path)"
+        if let query = query {
+            urlBuilder.queryItems = query.map { URLQueryItem (name: $0, value: $1) }
+        }
+
+        guard let url = urlBuilder.url
+            else { completion (Result.failure (SystemClientError.url("URLComponents.url"))); return }
+
+        print ("SYS: BDB: Request: \(url.absoluteString): Method: \(httpMethod): Data: \(data?.description ?? "[]")")
+
+        var request = URLRequest (url: url)
+        decorateRequest(&request, httpMethod: httpMethod)
+
+        // If we have data as a JSON.Dict, then add it as the httpBody to the request.
+        if let data = data {
+            do { request.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
+            catch let jsonError as NSError {
+                completion (Result.failure (SystemClientError.jsonParse(jsonError)))
+            }
+        }
+
+        sendRequest (request, dataTaskFunc, responseSuccess (httpMethod), deserializer: deserializer, completion: completion)
+    }
+    
+    /*internal func makeRequest<T> (_ dataTaskFunc: DataTaskFunc,
+                                  _ baseURL: String,
+                                  path: String,
+                                  query: Zip2Sequence<[String],[String]>? = nil,
+                                  data: JSON.Dict? = nil,
+                                  httpMethod: String = "POST",
+                                  deserializer: @escaping (_ data: Data?) -> Result<T, SystemClientError> = deserializeAsJSON,
+                                  completion: @escaping (Result<T, SystemClientError>) -> Void) {
+        guard var urlBuilder = URLComponents (string: baseURL)
+            else { completion (Result.failure(SystemClientError.url("URLComponents.url"))); return }
+
+        urlBuilder.path = path.starts(with: "/") ? path : "/\(path)"
+        if let query = query {
+            urlBuilder.queryItems = query.map { URLQueryItem (name: $0, value: $1) }
+        }
+
+        guard let url = urlBuilder.url
+            else { completion (Result.failure (SystemClientError.url("URLComponents.url"))); return }
+
+        print ("SYS: BDB: Request: \(url.absoluteString): Method: \(httpMethod): Data: \(data?.description ?? "[]")")
+
+        var request = URLRequest (url: url)
+        decorateRequest(&request, httpMethod: httpMethod)
+
+        // If we have data as a JSON.Dict, then add it as the httpBody to the request.
+        if let data = data {
+            do { request.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
+            catch let jsonError as NSError {
+                let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(data.description)'"
+                completion (Result.failure (SystemClientError.jsonParse(jsonError)))
+            }
+        }
+
+        sendRequest (request, dataTaskFunc, responseSuccess (httpMethod), deserializer: deserializer, completion: completion)
+    }*/
 
     /// We have two flavors of bdbMakeRequest but they both handle their result identically.
     /// Provide this helper function to process the JSON result to extract the content and then
@@ -1538,6 +2368,43 @@ public class BlocksetSystemClient: SystemClient {
                                    embedded: Bool = true,
                                    embeddedPath path: String,
                                    completion: @escaping (URL?, Result<[JSON], SystemClientError>) -> Void) {
+        let res = res.map { JSON (dict: $0) }
+
+        // Determine is there are more results for this query.  The BlocksetSystemClient
+        // will provide a "_links" JSON dictionary with a "next" field that provides
+        // a URL to use for the remaining values.  The "_links" dictionary looks
+        // like
+        // "_links":{ "next": { "href": <url> },
+        //            "self": { "href": <url> }}
+
+        let moreURL = try? res
+            .map {  $0.asJSON (name: "_links") }
+            .map { $0?.asJSON (name: "next")   }
+            .map { $0?.asString(name: "href")  }      // -> Result<String?, ...>
+            .map { $0.flatMap { URL (string: $0) } }  // -> Result<URL?,    ...>
+            .recover { (ignore) in return nil }       // -> ...
+            .get ()
+        // moreURL will be `nil` if `res` was not .success
+
+        // Invoke the callback with `moreURL` and Result with [JSON]
+        completion (moreURL,
+                    res.flatMap { (json: JSON) -> Result<[JSON], SystemClientError> in
+                        let json = (embedded
+                            ? (json.asDict(name: "_embedded")?[path] ?? [])
+                            : [json.dict])
+
+                        guard let data = json as? [JSON.Dict]
+                            else { return Result.failure(SystemClientError.model ("[JSON.Dict] expected")) }
+
+                        return Result.success (data.map { JSON (dict: $0) })
+        })
+    }
+    
+    internal func bdbHandleResult_ (_ res: Result<JSON.Dict, SystemClientError>,
+                                   embedded: Bool = true,
+                                   embeddedPath path: String,
+                                   completion: @escaping (URL?, Result<[JSON], SystemClientError>) -> Void) {
+        //let res = res.map { JSON (dict: $0) }
         let res = res.map { JSON (dict: $0) }
 
         // Determine is there are more results for this query.  The BlocksetSystemClient
@@ -1596,6 +2463,20 @@ public class BlocksetSystemClient: SystemClient {
                         self.bdbHandleResult ($0, embedded: embedded, embeddedPath: path, completion: completion)
         }
     }
+    
+    internal func bdbMakeRequest_ (path: String,
+                                  query: Zip2Sequence<[String],[String]>?,
+                                  embedded: Bool = true,
+                                completion: @escaping (URL?, Result<[JSON], SystemClientError>) -> Void) {
+        print("bdbBaseURL: \(bdbBaseURL) path: \(path) ")
+        makeRequest_ (bdbDataTaskFunc, bdbBaseURL,
+                     path: path,
+                     query: query,
+                     data: nil,
+                     httpMethod: "GET") {
+                        self.bdbHandleResult_ ($0, embedded: embedded, embeddedPath: path, completion: completion)
+        }
+    }
 
     ///
     /// Convert an array of JSON into a single value using a specified transform
@@ -1631,6 +2512,23 @@ public class BlocksetSystemClient: SystemClient {
     /// - Returns: A `Result` with success of `[T]`
     ///
     private static func getManyExpected<T> (data: [JSON], transform: (JSON) -> T?) -> Result<[T], SystemClientError> {
+        let results = data.map (transform)
+        return results.contains(where: { $0 == nil })
+            ? Result.failure(SystemClientError.model ("(JSON) -> T transform error (many)"))
+            : Result.success(results as! [T])
+    }
+    
+    private static func getManyExpected_<T> (data: [JSON], transform: (JSON) -> [T]?) -> Result<[T], SystemClientError> {
+        let results = data.map (transform)
+        return results.contains(where: { $0 == nil })
+            ? Result.failure(SystemClientError.model ("(JSON) -> T transform error (many)"))
+            : Result.success(results[0]!)
+            //: Result.success(results as! [T])
+    }
+    
+    private static func getManyExpected__<T> (data: [JSON.Dict], transform: (JSON) -> T?) -> Result<[T], SystemClientError> {
+        
+        let data = data.map { JSON (dict: $0) }
         let results = data.map (transform)
         return results.contains(where: { $0 == nil })
             ? Result.failure(SystemClientError.model ("(JSON) -> T transform error (many)"))
@@ -1700,7 +2598,7 @@ public class BlocksetSystemClient: SystemClient {
             var newError: SystemClientError? = nil
 
             let newResults = result
-                .flatMap { BlocksetSystemClient.getManyExpected(data: $0, transform: transform) }
+                .flatMap { WhatsOnChainSystemClient.getManyExpected(data: $0, transform: transform) }
                 .getWithRecovery { newError = $0; return [] }
 
             queue.async {

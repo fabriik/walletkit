@@ -178,6 +178,12 @@ extern "C" {
                                 BRCryptoAmount  amount,
                                  const char* path_);
 
+    extern void
+    cryptoWalletSaveTransferWOC (BRCryptoWallet  wallet,
+                                BRCryptoAddress target,
+                                BRCryptoAmount  amount,
+                                 const char* path_);
+
     extern BRCryptoTransfer
     cryptoWalletCreateTransferForPaymentProtocolRequest (BRCryptoWallet wallet,
                                                          BRCryptoPaymentProtocolRequest request,

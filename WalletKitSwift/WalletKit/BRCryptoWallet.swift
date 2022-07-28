@@ -224,6 +224,15 @@ public final class Wallet: Equatable {
                                          amount.core,
                                          storagePath)
             
+        } else if(self.manager.network.name == "WhatsOnChain") {
+            let storagePath = FileManager.default
+                .urls(for: .documentDirectory, in: .userDomainMask)[0]
+               .appendingPathComponent("Core").path
+            
+            cryptoWalletSaveTransferWOC (core,
+                                         target.core,
+                                         amount.core,
+                                         storagePath)
         }
         
         return cryptoWalletCreateTransfer (core,

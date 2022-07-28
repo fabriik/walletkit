@@ -6140,6 +6140,76 @@ static void initializeWallet (std::string path) {
     sqlite3_close(db);
 }
 
+static void initializeRunWallet (std::string path) {
+  sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    //const char* data = "Callback function called";
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+
+    //sql = (char *) "DROP TABLE RUN_WALLETS;"; //NEED TO DROP FOR SOME REASON
+    //rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    /* Create SQL statement */
+    sql = (char *) "CREATE TABLE RUN_WALLETS("  \
+      "ID INT PRIMARY KEY     NOT NULL," \
+        "PRIVKEY           CHAR(255)," \
+        "PUBKEY           CHAR(255)," \
+        "ADDRESS       CHAR(255));";
+
+    /* Execute SQL statement */
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    if( rc != SQLITE_OK ){
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "RUN_WALLETS Table created successfully\n");
+    }
+
+  sql = (char *) "INSERT INTO RUN_WALLETS (ID,PRIVKEY,PUBKEY,ADDRESS) "  \
+        "VALUES (2, 'cRhJVJ6BTehSvMjM7XSAYhZyENTrU4EWsH1mmJxW1vooMPLEqfbF'," \
+               "'024188a5f08b5a55e38655daf965fdda537561dabb27cb0472f680dc07ffef4920'," \
+               "'n44HTiHtFQ1hdMHBZPfsiVUUwYep5V3Yq1'); ";
+
+ /* Execute SQL statement */
+  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+  if( rc != SQLITE_OK ){
+     fprintf(stderr, "SQL error: %s\n", zErrMsg);
+     sqlite3_free(zErrMsg);
+  } else {
+     fprintf(stdout, "RUN_WALLETS Record created successfully\n");
+  }
+
+    sql = (char *) "INSERT INTO RUN_WALLETS (ID,PRIVKEY,PUBKEY,ADDRESS) "  \
+          "VALUES (3, 'cTTmPg6bxgr8u5JXLEWVPJxMztP9yrGtRr8CFHi37YJiS1BwxLGM'," \
+                 "'02938cbc9083663507f1896dd5f4596ce58247963410ca921499fcab30e2d0d94f'," \
+                 "'n2DXd5qGBnNGHQ2jtd162RjwgBRYdxxYiq'); ";
+
+ /* Execute SQL statement */
+  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+  if( rc != SQLITE_OK ){
+     fprintf(stderr, "SQL error: %s\n", zErrMsg);
+     sqlite3_free(zErrMsg);
+  } else {
+     fprintf(stdout, "RUN_WALLETS Record created successfully\n");
+  }
+
+    sqlite3_close(db);
+}
+
 static int getLastUsedAddressIndex (int64_t id, std::string path) {
   sqlite3 *db;
     char *zErrMsg = 0;
@@ -6709,7 +6779,29 @@ void initializeDB(std::string path) {
     } else {
       fprintf(stdout, "TRANSFERS Table created successfully\n");
     }
+    
+    //sql = (char *) "DROP TABLE RUN_TRANSFERS;";
+    //rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    /* Create SQL statement */
+    sql = (char *) "CREATE TABLE RUN_TRANSFERS("  \
+      "ID INT PRIMARY KEY     NOT NULL," \
+      "TXID          CHAR(64) NOT NULL," \
+      "TO_ADDRESS                CHAR(100)," \
+      "AMOUNT                BIGINT," \
+      "MINT_ID                 CHAR(100)," \
+      "FROM_ADDRESS                CHAR(100));";
 
+    /* Execute SQL statement */
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    if( rc != SQLITE_OK ){
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "RUN_TRANSFERS Table created successfully\n");
+    }
+    
   sqlite3_close(db);
 }
 
@@ -7054,6 +7146,7 @@ extern void authorizerInitializeTables(const char *path_) {
     std::string path = std::string(path_) + std::string("/sfp.db");
     printf("path: %s\n", path.c_str());
     
+    //SFP
     initializeWallet(path);
     
     initializeAddresses(path);
@@ -7061,6 +7154,9 @@ extern void authorizerInitializeTables(const char *path_) {
     initializeDB(path);
 
     initializeUtxos(path);
+    
+    //RUN
+    initializeRunWallet(path);
 }
 
 static int64_t getWalletIdByTxid(std::string txid, std::string path) {
@@ -7269,12 +7365,77 @@ extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsi
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
           } else {
-            fprintf(stdout, "TRANSFER Record Operation done successfully\n");
+            fprintf(stdout, "TRANSFERS Record Operation done successfully\n");
           }
       
     }
     sqlite3_close(db);
 }
+
+extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, const char *path_) {
+    printf("txid = %s\n", txid_);
+    printf("address = %s\n", address_);
+    printf("path = %s\n", path_);
+    
+    std::string txid(txid_);
+    std::string address(address_);
+    std::string mintId(mintId_);
+    std::string fromAddress(fromAddress_);
+    
+    unsigned long long amount = ceil((double) amount_/100000000);
+    
+    std::string path = std::string(path_) + std::string("/sfp.db");
+    printf("path: %s\n", path.c_str());
+    
+    sqlite3 *db;
+      char *zErrMsg = 0;
+      int rc;
+      char *sql;
+
+      rc = sqlite3_open(path.c_str(), &db);
+
+      if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return;
+      } else {
+        fprintf(stderr, "Opened database successfully\n");
+      }
+
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RUN_TRANSFERS;");
+
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+      size_t id = records.size() + 1;
+
+          std::string sql_query0 = std::string("INSERT INTO RUN_TRANSFERS (ID,TXID,TO_ADDRESS,AMOUNT,MINT_ID,FROM_ADDRESS) VALUES (") + std::to_string(id) + std::string(", '") + txid + std::string("', '") + address + std::string("', ") + std::to_string(amount) + std::string(", '") + mintId + std::string("', '") + fromAddress + std::string("'); ");
+          
+          sql = (char *) sql_query0.c_str();
+          printf("sql_query0 = %s\n", sql_query0.c_str());
+
+          rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+          if( rc != SQLITE_OK ) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+          } else {
+            fprintf(stdout, "RUN_TRANSFERS Record Operation done successfully\n");
+          }
+      
+    }
+    sqlite3_close(db);
+}
+
 
 typedef struct TransferRecord {
     std::string txid;
@@ -7323,6 +7484,59 @@ static TransferRecord getTransfer(std::string path) {
     return rec;
     sqlite3_close(db);
 }
+
+typedef struct TransferRecordRun {
+    std::string txid;
+    std::string address;
+    int64_t amount;
+    std::string mintId;
+    std::string fromAddress;
+}TransferRecordRun;
+
+static TransferRecordRun getTransferRun(std::string path) {
+    sqlite3 *db;
+      char *zErrMsg = 0;
+      int rc;
+      char *sql;
+    
+    TransferRecordRun rec;
+
+      rc = sqlite3_open(path.c_str(), &db);
+
+      if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return rec;
+      } else {
+        fprintf(stderr, "Opened database successfully\n");
+      }
+
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RUN_TRANSFERS ORDER BY ID DESC;");
+
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+        if(records.size() > 0) {
+            rec.txid = records[0][1];
+            rec.address = records[0][2];
+            rec.amount = std::stoll(records[0][3]);
+            rec.mintId = records[0][4];
+            rec.fromAddress = records[0][5];
+        }
+    }
+    return rec;
+    sqlite3_close(db);
+}
+
 
 extern void authorizerCreateSerialization(char *authHexStr, int authHexSize, const char *path_) {
 //extern void authorizerCreateSerialization(const char *toAddress, const char *fromAddress, const char *txid, long long vout, long long satoshis, const char *script_) {
@@ -7612,5 +7826,71 @@ extern void authorizerCreateSerialization(char *authHexStr, int authHexSize, con
     
     snprintf(authHexStr, authHexSize, "%s", hex2.c_str());
 }
+
+extern void authorizerGetTransferDataRun(char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, const char *path_) {
     
+    std::string path = std::string(path_) + std::string("/sfp.db");
+    printf("path: %s\n", path.c_str());
+    
+    TransferRecordRun rec = getTransferRun(path);
+    
+    snprintf(txnIdHexStr, txnIdSize, "%s", rec.txid.c_str());
+    
+    snprintf(addressHexStr, addressSize, "%s", rec.address.c_str());
+    
+    snprintf(mintIdHexStr, mintIdSize, "%s", rec.mintId.c_str());
+    
+    snprintf(fromAddressHexStr, fromAddressSize, "%s", rec.fromAddress.c_str());
+    
+    *amount = rec.amount;
+}
+
+extern void authorizerGetPrivKeyRun(const char * address_, char *privkeyHexStr, int privkeySize, const char *path_) {
+    
+    std::string path = std::string(path_) + std::string("/sfp.db");
+    printf("path: %s\n", path.c_str());
+    
+    std::string address(address_);
+    
+    sqlite3 *db;
+      char *zErrMsg = 0;
+      int rc;
+      char *sql;
+
+    int64_t res = 0;
+
+      rc = sqlite3_open(path.c_str(), &db);
+
+      if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return;
+      } else {
+        fprintf(stderr, "Opened database successfully\n");
+      }
+
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RUN_WALLETS WHERE ADDRESS = '") + address + \
+    std::string("';");
+    
+    printf("sql_query = %s\n", sql_query.c_str());
+
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+
+      if(records.size() > 0) {
+        snprintf(privkeyHexStr, privkeySize, "%s", records[0][1].c_str());
+      }
+    }
+    sqlite3_close(db);
+}
+
 } //end extern "C"

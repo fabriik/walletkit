@@ -21,7 +21,8 @@ cryptoWalletCoerceBTC (BRCryptoWallet wallet) {
             CRYPTO_NETWORK_TYPE_BCH == wallet->type ||
             //CRYPTO_NETWORK_TYPE_BSV == wallet->type);
             CRYPTO_NETWORK_TYPE_BSV == wallet->type ||
-            CRYPTO_NETWORK_TYPE_RPC == wallet->type);
+            CRYPTO_NETWORK_TYPE_RPC == wallet->type ||
+            CRYPTO_NETWORK_TYPE_WOC == wallet->type);
     return (BRCryptoWalletBTC) wallet;
 }
 
@@ -323,6 +324,7 @@ cryptoWalletCreateTransferRPC (BRCryptoWallet  wallet,
             tid->receiveAmount = value;
         }
         tid->direction = CRYPTO_TRANSFER_SENT;
+        tid->fromAddress = wid->transactions[0]->fromAddress;
     }
 
     return (NULL == tid

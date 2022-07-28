@@ -1011,8 +1011,9 @@ cryptoClientHandleSubmit (OwnershipKept BRCryptoWalletManager manager,
         cryptoWalletUpdBalance (manager->wallet, true);
     }
     
-    if(strcmp(manager->network->name, "BitcoinRPC") == 0) {
+    if(strcmp(manager->network->name, "BitcoinRPC") == 0 || strcmp(manager->network->name, "WhatsOnChain") == 0) {
         cryptoWalletUpdBalanceRPC (manager->wallet, transfer, true);
+        
     }
 
     cryptoTransferStateGive(transferState);
@@ -1525,7 +1526,9 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
                                  int outCount,
                                  BRCryptoClientTransactionOutput *outputs,
                                  const char *type,
-                                 uint64_t receiveAmount) {
+                                 uint64_t receiveAmount,
+                                 const char *mintId,
+                                 const char *fromAddress) {
     BRCryptoClientTransactionBundle bundle = calloc (1, sizeof (struct BRCryptoClientTransactionBundleRecord));
 
     bundle->status = status;
@@ -1571,7 +1574,16 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
     
     bundle->type = (char *) malloc(strlen(type));
     memcpy(bundle->type, type, strlen(type));
+    
     bundle->receiveAmount = receiveAmount;
+    
+    printf("strlen(mintId): %lu\n", strlen(mintId));
+    
+    bundle->mintId = (char *) malloc(strlen(mintId) + 1);
+    snprintf(bundle->mintId, strlen(mintId) + 1, "%s", mintId);
+    
+    bundle->fromAddress = (char *) malloc(strlen(fromAddress) + 1);
+    snprintf(bundle->fromAddress, strlen(fromAddress) + 1, "%s", fromAddress);
 
     return bundle;
 }

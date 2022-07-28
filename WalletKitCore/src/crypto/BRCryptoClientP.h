@@ -71,6 +71,8 @@ struct BRCryptoClientTransactionBundleRecord {
     //struct WKClientTransactionOutputRecord outputs[MAX_INPUTS_OUTPUTS];
     char *type;
     uint64_t receiveAmount;
+    char *mintId;
+    char *fromAddress;
 };
 
 

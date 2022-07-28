@@ -473,6 +473,13 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
     tx->outCount = (size_t) bundle->outCount;
     tx->receiveAmount = 100000000 * bundle->receiveAmount;
     tx->direction = CRYPTO_TRANSFER_RECEIVED;
+    //tx->mintId = "189bc8ad3bc44632581ec2701a244e1c23478eda69ab5c123e2bd47caa8666cc"; //FIX LATER
+    //tx->mintId = (char *) malloc(strlen(bundle->mintId) * sizeof(char));
+    //memcpy(tx->mintId, bundle->mintId, strlen(bundle->mintId) * sizeof(char));
+    //tx->fromAddress = (char *) malloc(strlen(bundle->fromAddress) * sizeof(char));
+    //memcpy(tx->fromAddress, bundle->fromAddress, strlen(bundle->fromAddress) * sizeof(char));
+    tx->mintId = bundle->mintId;
+    tx->fromAddress = bundle->fromAddress;
 
     for(size_t i = 0; i < tx->inCount; i++) {
         tx->inputs[i].txHash = uint256(bundle->inputs[i]->txHash);
@@ -949,6 +956,28 @@ BRCryptoWalletManagerHandlers cryptoWalletManagerHandlersBSV = {
 };
 
 BRCryptoWalletManagerHandlers cryptoWalletManagerHandlersRPC = {
+    cryptoWalletManagerCreateBTC,
+    cryptoWalletManagerReleaseBTC,
+    crytpWalletManagerCreateFileServiceBTC,
+    cryptoWalletManagerGetEventTypesBTC,
+    cryptoWalletManagerCreateP2PManagerBTC,
+    //cryptoWalletManagerCreateWalletBTC,
+    cryptoWalletManagerCreateWalletRPC,
+    cryptoWalletManagerSignTransactionWithSeedBTC,
+    cryptoWalletManagerSignTransactionWithKeyBTC,
+    cryptoWalletManagerEstimateLimitBTC,
+    cryptoWalletManagerEstimateFeeBasisBTC,
+    cryptoWalletManagerSaveTransactionBundleBTC,
+    NULL, // BRCryptoWalletManagerSaveTransactionBundleHandler
+    cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC,
+    //cryptoWalletManagerRecoverTransfersFromTransactionBundleBTC,
+    cryptoWalletManagerRecoverTransferFromTransferBundleBTC,
+    NULL,//BRCryptoWalletManagerRecoverFeeBasisFromFeeEstimateHandler not supported
+    cryptoWalletManagerWalletSweeperValidateSupportedBTC,
+    cryptoWalletManagerCreateWalletSweeperBTC
+};
+
+BRCryptoWalletManagerHandlers cryptoWalletManagerHandlersWOC = {
     cryptoWalletManagerCreateBTC,
     cryptoWalletManagerReleaseBTC,
     crytpWalletManagerCreateFileServiceBTC,

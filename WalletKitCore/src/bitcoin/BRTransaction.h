@@ -97,6 +97,8 @@ typedef struct {
     uint32_t timestamp; // time interval since unix epoch
     uint64_t receiveAmount; // Token protocols
     BRCryptoTransferDirection direction;
+    char *mintId; //RUN
+    char *fromAddress; //RUN
 } BRTransaction;
 
 // returns a newly allocated empty transaction that must be freed by calling BRTransactionFree()

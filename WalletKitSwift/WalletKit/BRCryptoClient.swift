@@ -170,7 +170,9 @@ public protocol SystemClient {
         outCount: Int?,
         outputs: [Outputs]?,
         type: String?,
-        receiveAmount: UInt64?
+        receiveAmount: UInt64?,
+        mintId: String?,
+        fromAddress: String?
     )
 
 

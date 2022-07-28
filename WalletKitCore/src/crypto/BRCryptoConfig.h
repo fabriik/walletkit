@@ -13,6 +13,7 @@
 #define HAS_BSV_TESTNET     0
 #define HAS_ETH_TESTNET     1
 #define HAS_RPC_TESTNET     1
+#define HAS_WOC_TESTNET     1
 #define HAS_XRP_TESTNET     0
 #define HAS_HBAR_TESTNET    0
 #define HAS_XTZ_TESTNET     0
@@ -206,6 +207,31 @@ DEFINE_ADDRESS_SCHEMES  ("bitcoinrpc-testnet", CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT,
 DEFINE_MODES            ("bitcoinrpc-testnet", CRYPTO_SYNC_MODE_API_ONLY,          CRYPTO_SYNC_MODE_P2P_ONLY)
 #else
 DEFINE_MODES            ("bitcoinrpc-testnet", CCRYPTO_SYNC_MODE_P2P_ONLY)
+#endif
+#undef NETWORK_NAME
+
+// MARK: WOC
+
+#define NETWORK_NAME    "WhatsOnChain"
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_WOC,  "whatsonchain-mainnet", NETWORK_NAME, "mainnet", true, 668821, 6, 10 * 60)
+DEFINE_NETWORK_FEE_ESTIMATE ("whatsonchain-mainnet", "18", "10m", 10 * 60 * 1000)
+DEFINE_CURRENCY ("whatsonchain-mainnet",     "whatsonchain-mainnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_WOC,  "native",   NULL,   true)
+    DEFINE_UNIT ("whatsonchain-mainnet:__native__",      "Satoshi",    "sat",      0,      "SAT")
+    DEFINE_UNIT ("whatsonchain-mainnet:__native__",      NETWORK_NAME, "btc",      8,      "₿")
+DEFINE_ADDRESS_SCHEMES  ("whatsonchain-mainnet", CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT,   CRYPTO_ADDRESS_SCHEME_BTC_LEGACY)
+DEFINE_MODES            ("whatsonchain-mainnet", CRYPTO_SYNC_MODE_API_ONLY,          CRYPTO_SYNC_MODE_P2P_ONLY)
+
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_WOC,  "whatsonchain-testnet", NETWORK_NAME, "testnet", false, 1931985, 6, 10 * 60)
+DEFINE_NETWORK_FEE_ESTIMATE ("whatsonchain-testnet", "18", "10m", 10 * 60 * 1000)
+DEFINE_CURRENCY ("whatsonchain-testnet",     "whatsonchain-testnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_WOC,  "native",   NULL,   true)
+    DEFINE_UNIT ("whatsonchain-testnet:__native__",      "Satoshi",    "sat",      0,      "SAT")
+    DEFINE_UNIT ("whatsonchain-testnet:__native__",      "run", "run",      8,      "RUN")
+    DEFINE_UNIT ("whatsonchain-testnet:__native__",      "unknown", "unk",      8,      "UNK")
+DEFINE_ADDRESS_SCHEMES  ("whatsonchain-testnet", CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT,   CRYPTO_ADDRESS_SCHEME_BTC_LEGACY)
+#if HAS_WOC_TESTNET
+DEFINE_MODES            ("whatsonchain-testnet", CRYPTO_SYNC_MODE_API_ONLY,          CRYPTO_SYNC_MODE_P2P_ONLY)
+#else
+DEFINE_MODES            ("whatsonchain-testnet", CCRYPTO_SYNC_MODE_P2P_ONLY)
 #endif
 #undef NETWORK_NAME
 

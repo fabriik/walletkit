@@ -26,7 +26,8 @@ cryptoAddressCoerceANY (BRCryptoAddress address) {
             CRYPTO_NETWORK_TYPE_BCH == address->type ||
             //CRYPTO_NETWORK_TYPE_BSV == address->type);
             CRYPTO_NETWORK_TYPE_BSV == address->type ||
-            CRYPTO_NETWORK_TYPE_RPC == address->type);
+            CRYPTO_NETWORK_TYPE_RPC == address->type ||
+            CRYPTO_NETWORK_TYPE_WOC == address->type);
     return (BRCryptoAddressBTC) address;
 }
 
@@ -107,6 +108,16 @@ cryptoAddressCreateFromStringAsRPC (BRAddressParams params, const char *bsvAddre
             : NULL);
 }
 
+extern BRCryptoAddress
+cryptoAddressCreateFromStringAsWOC (BRAddressParams params, const char *bsvAddress) {
+    assert (bsvAddress);
+
+    return (BRAddressIsValid (params, bsvAddress)
+            ? cryptoAddressCreateAsBTC (CRYPTO_NETWORK_TYPE_WOC,
+                                        BRAddressFill(params, bsvAddress))
+            : NULL);
+}
+
 static void
 cryptoAddressReleaseBTC (BRCryptoAddress address) {
     BRCryptoAddressBTC addressANY = cryptoAddressCoerceANY (address);
@@ -140,6 +151,11 @@ cryptoAddressAsStringRPC (BRCryptoAddress address) {
     return strdup (addressRPC->addr.s);
 }
 
+static char *
+cryptoAddressAsStringWOC (BRCryptoAddress address) {
+    BRCryptoAddressBTC addressWOC = cryptoAddressCoerce (address, CRYPTO_NETWORK_TYPE_WOC);
+    return strdup (addressWOC->addr.s);
+}
 
 static bool
 cryptoAddressIsEqualBTC (BRCryptoAddress address1, BRCryptoAddress address2) {
@@ -181,5 +197,11 @@ BRCryptoAddressHandlers cryptoAddressHandlersBSV = {
 BRCryptoAddressHandlers cryptoAddressHandlersRPC = {
     cryptoAddressReleaseBTC,
     cryptoAddressAsStringRPC,
+    cryptoAddressIsEqualBTC
+};
+
+BRCryptoAddressHandlers cryptoAddressHandlersWOC = {
+    cryptoAddressReleaseBTC,
+    cryptoAddressAsStringWOC,
     cryptoAddressIsEqualBTC
 };

@@ -32,4 +32,10 @@ extern void authorizerCreateSerialization(char *authHexStr, int authHexSize, con
 
 extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsigned long long amount_, const char *path_);
 
+extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, const char *path_);
+
+extern void authorizerGetTransferDataRun(char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, const char *path_);
+
+extern void authorizerGetPrivKeyRun(const char * address_, char *privkeyHexStr, int privkeySize, const char *path_);
+
 #endif /* Header_h */

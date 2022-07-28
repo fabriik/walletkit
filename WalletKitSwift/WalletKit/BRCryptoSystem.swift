@@ -1520,7 +1520,7 @@ extension System {
         }
     }
     
-    internal static func makeTransactionBundleRPC (_ model: SystemClient.Transaction) -> BRCryptoClientTransactionBundle {
+    internal static func makeTransactionBundleTokens (_ model: SystemClient.Transaction) -> BRCryptoClientTransactionBundle {
         let timestamp = model.timestamp.map { $0.asUnixTimestamp } ?? 0
         let height    = model.blockHeight ?? BLOCK_HEIGHT_UNBOUND
         let status    = System.getTransferStatus (model.status)
@@ -1549,6 +1549,8 @@ extension System {
         
         let type = model.type
         let receiveAmount = model.receiveAmount!
+        let mintId = model.mintId!
+        let fromAddress = model.fromAddress!
 
         var data = model.raw!
         let bytesCount = data.count
@@ -1556,11 +1558,50 @@ extension System {
             let bytesAsUInt8 = bytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
             //return wkClientTransactionBundleCreate (status, bytesAsUInt8, bytesCount, timestamp, height)
             return cryptoClientTransactionBundleCreateTokens (status, bytesAsUInt8, bytesCount, timestamp, height,
-                                                       txHash, version, lockTime, time, inCount, &inputs, outCount, &outputs, type, receiveAmount)
+                                                       txHash, version, lockTime, time, inCount, &inputs, outCount, &outputs, type, receiveAmount, mintId, fromAddress)
             //return wkClientTransactionBundleCreateWOC (status, bytesAsUInt8, bytesCount, timestamp, height,
             //                                           txHash, version, lockTime, time, inCount, outCount)
         }
     }
+    
+    /*internal static func makeTransactionBundleWOC (_ model: SystemClient.Transaction) -> BRCryptoClientTransactionBundle {
+        let timestamp = model.timestamp.map { $0.asUnixTimestamp } ?? 0
+        let height    = model.blockHeight ?? BLOCK_HEIGHT_UNBOUND
+        let status    = System.getTransferStatus (model.status)
+        
+        let txHash    = model.hash
+        let version   = model.version!
+        let lockTime  = model.lockTime!
+        let time      = model.time!
+        let inCount   = Int32(model.inCount!)
+        //let inputs    = model.inputs!
+        var inputs : [BRCryptoClientTransactionInput?] = model.inputs!.map { cryptoClientTransactionInputCreate($0.txHash, $0.script, $0.signature, $0.sequence)}
+        
+        
+        //let inputs    = UnsafeMutableRawPointer(mutating: model.inputs)
+        //var inputsPtr = model.inputs
+            //.map { OpaquePointer($0) }
+        let outCount  = Int32(model.outCount!)
+        //let outputs   = model.outputs
+        //let outputs   = UnsafeMutableRawPointer(mutating: model.outputs)
+        var outputs : [BRCryptoClientTransactionOutput?] = model.outputs!.map { cryptoClientTransactionOutputCreate($0.script, $0.amount) }
+        
+        let type = model.type
+        let receiveAmount = model.receiveAmount!
+        let mintId = model.mintId!
+        let fromAddress = model.fromAddress!
+
+        var data = model.raw!
+        let bytesCount = data.count
+        return data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) -> BRCryptoClientTransactionBundle in
+            let bytesAsUInt8 = bytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
+            //return wkClientTransactionBundleCreate (status, bytesAsUInt8, bytesCount, timestamp, height)
+            return cryptoClientTransactionBundleCreateTokens (status, bytesAsUInt8, bytesCount, timestamp, height,
+                                                       txHash, version, lockTime, time, inCount, &inputs, outCount, &outputs, type, receiveAmount, mintId, fromAddress)
+            //return wkClientTransactionBundleCreateWOC (status, bytesAsUInt8, bytesCount, timestamp, height,
+            //                                           txHash, version, lockTime, time, inCount, outCount)
+        }
+    }*/
 
     internal static func makeTransferBundles (_ transaction: SystemClient.Transaction, addresses:[String]) -> [BRCryptoClientTransferBundle] {
         let blockTimestamp = transaction.timestamp.map { $0.asUnixTimestamp } ?? 0
@@ -1650,8 +1691,8 @@ extension System {
                             /*var bundles: [BRCryptoClientTransactionBundle?] = System.canonicalizeTransactions ($0).map { System.makeTransactionBundle ($0) }
                             cryptoClientAnnounceTransactions (cwm, sid, CRYPTO_TRUE,  &bundles, bundles.count)*/
                             var bundles: [BRCryptoClientTransactionBundle?]
-                            if(manager.network.name == "BitcoinRPC") {
-                                bundles = System.canonicalizeTransactions ($0).map { System.makeTransactionBundleRPC ($0) }
+                            if(manager.network.name == "BitcoinRPC" || manager.network.name == "WhatsOnChain") {
+                                bundles = System.canonicalizeTransactions ($0).map { System.makeTransactionBundleTokens ($0) }
                             } else {
                                 bundles = System.canonicalizeTransactions ($0).map { System.makeTransactionBundle ($0) }
                             }

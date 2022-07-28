@@ -564,7 +564,23 @@ cryptoWalletUpdBalanceRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer, boo
     //BRCryptoAmount balance = cryptoAmountCreateInteger (0, wallet->unit);
     //cryptoWalletSetBalance (wallet, balance);
     cryptoWalletSetBalance (wallet, newBalance);
+    
+    BRCryptoAmount balance = cryptoAmountCreateInteger (0, wallet->unit);
+    for(size_t index = 0; index < array_count(wallet->transfers); index++) {
+        
+        BRCryptoAmount amount     = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[index]);
+        balance = cryptoAmountAdd (balance, amount);
+        BRCryptoAmount diff = cryptoAmountSub (transfer->amount, balance);
+        
+        wallet->transfers[index]->state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
+        
+        if(cryptoAmountIsZero(diff) == CRYPTO_TRUE || cryptoAmountIsNegative(diff) == CRYPTO_TRUE) {
+            break;
+        }
+    }
+    
     if (needLock) pthread_mutex_unlock (&wallet->lock);
+    
 }
 
 //
@@ -977,6 +993,25 @@ cryptoWalletSaveTransferRPC (BRCryptoWallet  wallet,
     uint64_t val = amount->value.u64[0];
     
     authorizerSaveTransfer((const char *) u256hex(wid->transactions[0]->txHash), address.s, val, path_);
+    
+}
+
+extern void
+cryptoWalletSaveTransferWOC (BRCryptoWallet  wallet,
+                            BRCryptoAddress target,
+                            BRCryptoAmount  amount,
+                            const char* path_) {
+    BRCryptoWalletBTC walletBTC = cryptoWalletCoerceBTC(wallet);
+
+    BRWallet *wid = walletBTC->wid;
+
+    BRCryptoBlockChainType addressType;
+    BRAddress address = cryptoAddressAsBTC (target, &addressType);
+    assert (addressType == wallet->type);
+    
+    uint64_t val = amount->value.u64[0];
+    
+    authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[0]->txHash), address.s, val,  wid->transactions[0]->mintId, wid->transactions[0]->fromAddress, path_);
     
 }
 

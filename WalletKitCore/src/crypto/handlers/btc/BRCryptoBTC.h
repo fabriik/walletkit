@@ -53,6 +53,9 @@ cryptoAddressCreateFromStringAsBSV (BRAddressParams params, const char *bsvAddre
 extern BRCryptoAddress
 cryptoAddressCreateFromStringAsRPC (BRAddressParams params, const char *bsvAddress);
 
+extern BRCryptoAddress
+cryptoAddressCreateFromStringAsWOC (BRAddressParams params, const char *bsvAddress);
+
 private_extern BRAddress
 cryptoAddressAsBTC (BRCryptoAddress address,
                     BRCryptoBlockChainType *type);

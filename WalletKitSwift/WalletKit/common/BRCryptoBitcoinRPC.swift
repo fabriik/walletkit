@@ -521,7 +521,9 @@ public class BitcoinRPCSystemClient: SystemClient {
                      outCount: nil,
                      outputs: nil,
                      type: nil,
-                     receiveAmount: nil
+                     receiveAmount: nil,
+                     mintId: nil,
+                     fromAddress: nil
                      )
         }
         
@@ -723,8 +725,9 @@ public class BitcoinRPCSystemClient: SystemClient {
                      outCount: outCount,
                      outputs: outputs,
                      type: type,
-                     receiveAmount: receiveAmount
-            
+                     receiveAmount: receiveAmount,
+                     mintId: String(""),
+                     fromAddress: String("")
             )
             /*return (id: identifier, blockchainId: "test",
                      hash: hash, identifier: identifier,
@@ -1296,8 +1299,8 @@ public class BitcoinRPCSystemClient: SystemClient {
         let chunkedAddresses = canonicalAddresses(addresses, blockchainId)
             .chunked(into: BlocksetSystemClient.ADDRESS_COUNT)
         
-        //let walletId: Int64 = 2 //FIX LATER
-        let walletId: Int64 = 3 //FIX LATER
+        let walletId: Int64 = 2 //FIX LATER
+        //let walletId: Int64 = 3 //FIX LATER
 
         getTransactionHistory(blockchainId: blockchainId) {
             (res: Result<[SystemClient.TransactionHistory], SystemClientError>) in
@@ -1543,11 +1546,8 @@ public class BitcoinRPCSystemClient: SystemClient {
             .urls(for: .documentDirectory, in: .userDomainMask)[0]
            .appendingPathComponent("Core").path
         
-        let storagePathStatic = "/Users/christinapeterson/Library/Developer/CoreSimulator/Devices/37BB3DC8-8E96-4FD6-B455-EF5842282B92/data/Containers/Data/Application"
-        
         var authorizerHexBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
         authorizerCreateSerialization(&authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
-        //authorizerCreateSerialization(&authorizerHexBuf, Int32(authorizerHexBuf.count), storagePathStatic)
         let authorizerHex = String(cString: authorizerHexBuf)
         
         /*let data            = transaction.base64EncodedString()

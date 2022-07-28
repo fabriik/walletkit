@@ -131,6 +131,7 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
             "bsv" : .api_only,
             "eth" : .api_only,
             "sfp" : .api_only,
+            "run" : .api_only,
             "xrp" : .api_only,
             "hbar": .api_only,
             "xtz" : .api_only
@@ -159,10 +160,6 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
                                      path: storagePath)
 
         System.wipeAll (atPath: storagePath, except: [self.system])
-        
-        let storagePathStatic = "/Users/christinapeterson/Library/Developer/CoreSimulator/Devices/37BB3DC8-8E96-4FD6-B455-EF5842282B92/data/Containers/Data/Application"
-        
-        //authorizerInitializeTables(storagePathStatic)
         
         authorizerInitializeTables(storagePath)
         
@@ -384,6 +381,7 @@ extension Network {
         case .bsv: return "bitcoinsv"
         case .eth: return "ethereum"
         case .rpc: return "bitcoinrpc"
+        case .woc: return "whatsonchain"
         case .xrp: return "ripple"
         case .hbar: return "hedera"
         case .xtz: return "tezos"

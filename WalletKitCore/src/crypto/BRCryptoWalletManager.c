@@ -905,7 +905,7 @@ cryptoWalletManagerSubmit (BRCryptoWalletManager manager,
                            BRCryptoTransfer transfer,
                            const char *paperKey) {
 
-    if(strcmp(manager->network->name, "BitcoinRPC") == 0) {
+    if(strcmp(manager->network->name, "BitcoinRPC") == 0 || strcmp(manager->network->name, "WhatsOnChain") == 0) {
         cryptoWalletManagerSubmitSigned (manager, wallet, transfer);
     } else {
         if (CRYPTO_TRUE == cryptoWalletManagerSign (manager, wallet, transfer, paperKey))

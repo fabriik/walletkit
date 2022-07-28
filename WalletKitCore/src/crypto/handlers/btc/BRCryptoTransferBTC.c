@@ -27,7 +27,8 @@ cryptoTransferCoerceBTC (BRCryptoTransfer transfer) {
             CRYPTO_NETWORK_TYPE_BCH == transfer->type ||
             //CRYPTO_NETWORK_TYPE_BSV == transfer->type);
             CRYPTO_NETWORK_TYPE_BSV == transfer->type ||
-            CRYPTO_NETWORK_TYPE_RPC == transfer->type);
+            CRYPTO_NETWORK_TYPE_RPC == transfer->type ||
+            CRYPTO_NETWORK_TYPE_WOC == transfer->type);
     return (BRCryptoTransferBTC) transfer;
 }
 
@@ -92,7 +93,7 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
     
     BRCryptoAmount amount;
     
-    if(strcmp(listener.manager->network->name, "BitcoinRPC") == 0) {
+    if(strcmp(listener.manager->network->name, "BitcoinRPC") == 0 || strcmp(listener.manager->network->name, "WhatsOnChain") == 0 ) {
         //direction = CRYPTO_TRANSFER_SENT; //FIX LATER
         //direction = CRYPTO_TRANSFER_RECEIVED; //FIX LATER
         direction = tid->direction;
@@ -170,7 +171,6 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
         }
     }
 
-
     // Currently this function, cryptoTransferCreateAsBTC(), is only called in various CWM
     // event handlers based on BTC events.  Thus for a newly created BTC transfer, the
     // BRCryptoFeeBasis is long gone.  The best we can do is reconstruct the feeBasis from the
@@ -194,6 +194,15 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
                                                                     tid->blockHeight,
                                                                     tid->timestamp,
                                                                     feeBasisEstimated);
+    
+    if(strcmp(listener.manager->network->name, "WhatsOnChain") == 0 ) {
+        if(direction == CRYPTO_TRANSFER_RECEIVED) {
+            targetAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
+        } else {
+            sourceAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
+            targetAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
+        }
+    }
 
     BRCryptoTransfer transfer = cryptoTransferAllocAndInit (sizeof (struct BRCryptoTransferBTCRecord),
                                                             type,
