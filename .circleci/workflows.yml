@@ -1,0 +1,79 @@
+version: 2.1
+
+orbs:
+   docker: circleci/docker@1.5.0
+
+parameters:
+  core-modified:
+    type: boolean
+    default: false
+  android-modified:
+    type: boolean
+    default: false
+  ios-modified:
+    type: boolean
+    default: false
+
+jobs:
+  build-walletkit-android:
+    docker:
+      - image: cimg/android:2022.06-ndk
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install CLang
+          command: |
+            sudo apt install clang libbsd-dev
+
+      - run:
+          name: Pull Submodules
+          command: |
+            git submodule update --init --recursive
+
+      - run:
+          name: Build WalletKit Java
+          command: |
+            cd WalletKitJava
+            ./gradlew assemble
+
+  build-walletkit-ios:
+    macos:
+      xcode: 13.4.1 # Specify the Xcode version to use
+
+    steps:
+      - checkout
+
+      - run:
+          name: Pull Submodules
+          command: |
+            git submodule update --init --recursive
+
+      - run:
+          name: Build WalletKitCore
+          command : |
+            cd WalletKitCore
+            swift build
+
+      - run:
+          name: Build WalletKitSwift
+          command: |
+            cd WalletKitSwift
+            swift build
+
+workflows:
+  build-android-app:
+    when:
+      or:
+        - << pipeline.parameters.core-modified >>
+        - << pipeline.parameters.android-modified >>
+    jobs:
+      - build-walletkit-android
+  build-ios-app:
+    when:
+      or:
+        - << pipeline.parameters.core-modified >>
+        - << pipeline.parameters.ios-modified >>
+    jobs:
+      - build-walletkit-ios
