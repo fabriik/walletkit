@@ -2,6 +2,7 @@
 //
 import PackageDescription
 
+
 let package = Package(
     name: "WalletKitCore",
     products: [
@@ -9,7 +10,7 @@ let package = Package(
             name: "WalletKitCore",
             targets: ["WalletKitCore"]
         ),
-        
+
         .executable(
             name: "WalletKitCoreExplore",
             targets: ["WalletKitCoreExplore"]
@@ -134,7 +135,7 @@ let package = Package(
                 ])
             ]
         ),
-        
+
         // Custom compilation flags for blake2 - to silence warnings
         .target(
             name: "WalletKitBlake2",
