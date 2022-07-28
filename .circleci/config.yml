@@ -11,7 +11,7 @@ workflows:
 
     jobs:
       - path-filtering/filter:
-          base-revision: mit
+          base-revision: support/fabriik-9.0.0.X
           mapping: |
             WalletKitCore/.* core-modified true
             WalletKitJava/.* android-modified true
