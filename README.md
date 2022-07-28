@@ -106,7 +106,7 @@ The WalletKit Swift framework can be built with `swift build`; the unit tests ca
 
 ### Gradle
 
-The WalletKit Java library can be built with `./gradle assemble`; this should be build from the WalletKitJava directory
+The WalletKit Java library can be built with `./gradlew assemble`; this should be build from the WalletKitJava directory
 
 ### Xcode
 
