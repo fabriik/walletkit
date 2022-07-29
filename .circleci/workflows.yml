@@ -17,10 +17,27 @@ parameters:
 jobs:
   build-walletkit-android:
     docker:
-      - image: cimg/android:2022.06-ndk
+      - image: circleci/android:api-30-ndk
+    working_directory: ~/brd-mobile
+    resource_class: medium+
+
+    environment:
+      DK_FILENAME: sdk-tools-linux-4333796.zip
+      ANDROID_HOME: /opt/android/sdk
 
     steps:
       - checkout
+
+      - restore_cache:
+        name: Restoring cache - Gradle
+        keys:
+          - v1-dependencies-{{ checksum "brd-android/build.gradle.kts" }}-{{ checksum "brd-android/app/build.gradle.kts" }}
+
+      - save_cache:
+        name: Saving cache - Gradle
+        key: v1-dependencies-{{ checksum "brd-android/build.gradle.kts" }}-{{ checksum "brd-android/app/build.gradle.kts" }}
+        paths:
+          - ~/.gradle
 
       - run:
           name: Install CLang and libbsd
@@ -72,6 +89,7 @@ jobs:
             swift build
 
 workflows:
+
   build-android-app:
     when:
       or:
@@ -79,6 +97,7 @@ workflows:
         - << pipeline.parameters.android-modified >>
     jobs:
       - build-walletkit-android
+
   build-ios-app:
     when:
       or:
