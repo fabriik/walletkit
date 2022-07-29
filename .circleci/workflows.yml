@@ -36,11 +36,10 @@ jobs:
           name: Configure Unit Tests
           command : |
             # we configure the unit tests just enough to complete the compile
-            cd WalletKitJava
             # setup .env file
-            cp WalletKit/templates/WalletKitTestsConfig.env WalletKit/WalletKitTestsConfig.env
+            cp templates/WalletKitTestsConfig.env WalletKitTestsConfig.env
             # setup .json file
-            cp walletKit/templates/WalletKitTestsConfig_example.json ${HOME}/.walletKitTestsConfig.json
+            cp templates/WalletKitTestsConfig_example.json ${HOME}/.walletKitTestsConfig.json
 
       - run:
           name: Build WalletKit Java
