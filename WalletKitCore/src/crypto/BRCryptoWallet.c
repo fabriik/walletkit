@@ -561,26 +561,29 @@ cryptoWalletUpdBalanceRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer, boo
     else {
         newBalance = cryptoAmountAdd (prevAmount, transfer->amount);
     }
-    //BRCryptoAmount balance = cryptoAmountCreateInteger (0, wallet->unit);
-    //cryptoWalletSetBalance (wallet, balance);
     cryptoWalletSetBalance (wallet, newBalance);
     
-    BRCryptoAmount balance = cryptoAmountCreateInteger (0, wallet->unit);
+    if (needLock) pthread_mutex_unlock (&wallet->lock);
+    
+}
+
+private_extern void
+cryptoWalletUpdTransferRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer) {
+    
+    /*BRCryptoAmount balance = cryptoAmountCreateInteger (0, wallet->unit);
     for(size_t index = 0; index < array_count(wallet->transfers); index++) {
         
         BRCryptoAmount amount     = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[index]);
         balance = cryptoAmountAdd (balance, amount);
         BRCryptoAmount diff = cryptoAmountSub (transfer->amount, balance);
         
-        wallet->transfers[index]->state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
+        cryptoTransferSetState (wallet->transfers[index], cryptoTransferStateInit (CRYPTO_TRANSFER_STATE_SUBMITTED));
         
         if(cryptoAmountIsZero(diff) == CRYPTO_TRUE || cryptoAmountIsNegative(diff) == CRYPTO_TRUE) {
             break;
         }
-    }
-    
-    if (needLock) pthread_mutex_unlock (&wallet->lock);
-    
+    }*/
+    cryptoTransferSetState (wallet->transfers[0], cryptoTransferStateInit (CRYPTO_TRANSFER_STATE_SUBMITTED));
 }
 
 //

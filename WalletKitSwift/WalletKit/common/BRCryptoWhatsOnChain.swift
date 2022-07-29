@@ -505,21 +505,41 @@ public class WhatsOnChainSystemClient: SystemClient {
                 return nil
             }*/
             
-            guard let hash = json.asString(name: "hash"),
-                  let blockHeight = json.asInt64 (name: "blockheight"),
-                  let blockHash = json.asString (name: "blockhash"),
-                  let identifier = json.asString (name: "txid"),
-                  let confirmations     = json.asUInt64 (name: "confirmations"),
-                  let size       = json.asInt64 (name: "size"),
+            guard let identifier = json.asString (name: "txid"),
+                  let hash = json.asString(name: "hash"),
                   let version    = json.asInt64 (name: "version"),
+                  let size       = json.asInt64 (name: "size"),
                   let lockTime   = json.asInt64 (name: "locktime"),
-                  let time       = json.asInt64 (name: "time"),
                   let vin        = json.asJSONArray (name: "vin"),
                   let vout       = json.asJSONArray (name: "vout")
-                  //let raw = json.asData (name: "txid")
+                  //let blockHeight = json.asInt64 (name: "blockheight"),
+                  //let blockHash = json.asString (name: "blockhash"),
+                  //let confirmations     = json.asUInt64 (name: "confirmations"),
+                  //let time       = json.asInt64 (name: "time")
             else {
                 print ("SYS: BDB: API: ERROR in asTransaction JSON: '\(json)'")
                 return nil
+            }
+            var curStatus : String = String("submitted")
+            var blockHeight : Int64? = -1
+            if(json.dict["blockheight"] != nil) {
+                blockHeight = json.asInt64 (name: "blockheight")
+                curStatus = String("confirmed")
+            }
+            
+            var blockHash : String? = String("")
+            if(json.dict["blockhash"] != nil) {
+                blockHash = json.asString (name: "blockhash")
+            }
+            
+            var confirmations : UInt64 = 0
+            if(json.dict["confirmations"] != nil) {
+                confirmations = json.asUInt64 (name: "confirmations")!
+            }
+            
+            var time : Int64? = 0
+            if(json.dict["time"] != nil) {
+                time = json.asInt64 (name: "time")
             }
             
             //var count = 0
@@ -627,17 +647,10 @@ public class WhatsOnChainSystemClient: SystemClient {
             var data_: Data?
                 
             let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
-                //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             let task = WhatsOnChainSystemClient.defaultDataTaskFuncSet (session_, request, data_) { (data, res, error) in
-            //var task = session.dataTask(with: request as URLRequest, completionHandler: {data, response, error -> Void in
-                //print("Response: \(response)")})
-                    //get responce here
-                    //Use response
                     print("2")
                     do {
                         if(data != nil) {
-                            //let jsonResult = try JSONSerialization.data (withJSONObject: data, options: [])
-                            //let jsonResult = try JSONSerialization.jsonObject(with: data!, options: [])
                             let convertedString = String(data: data!, encoding: String.Encoding.utf8)
                             data_ = data
                             print("data: \(convertedString)")
@@ -654,7 +667,6 @@ public class WhatsOnChainSystemClient: SystemClient {
                 semaphore.wait()
                 print("3")
         
-            
             
             let dict_ : Dictionary<String,String> = [:]
             
@@ -675,10 +687,12 @@ public class WhatsOnChainSystemClient: SystemClient {
                      hash: hash,
                      identifier: identifier,
                      blockHash: blockHash,
-                     blockHeight: -1 == blockHeight ? nil : UInt64(blockHeight),
+                     blockHeight: -1 == blockHeight! ? nil : UInt64(blockHeight!),
                      index: UInt64(0),
-                     confirmations: 0 == confirmations ? nil : confirmations,
-                     status: "confirmed",
+                     //confirmations: 0 == confirmations ? nil : UInt64(confirmations),
+                     confirmations:  confirmations,
+                     //status: "confirmed",
+                     status: curStatus,
                      size: 0 <= size ? 0 : UInt64(size),
                      timestamp: Date(),
                      firstSeen: Date(),
@@ -1345,8 +1359,18 @@ public class WhatsOnChainSystemClient: SystemClient {
         let chunkedAddresses = canonicalAddresses(addresses, blockchainId)
             .chunked(into: BlocksetSystemClient.ADDRESS_COUNT)
         
+        let storagePath = FileManager.default
+            .urls(for: .documentDirectory, in: .userDomainMask)[0]
+           .appendingPathComponent("Core").path
+        
+        let walletId : Int64 = getWalletIdByPrimaryAddress(chunkedAddresses[0][0], storagePath)
+        
+        var addressHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
+        getRUNAddressByWalletId(walletId, &addressHexBuf, Int32(addressHexBuf.count), storagePath)
+        let address = String(cString: addressHexBuf)
+        
         //let address = chunkedAddresses[0][0]
-        let address = "n44HTiHtFQ1hdMHBZPfsiVUUwYep5V3Yq1"
+        //let address = "n44HTiHtFQ1hdMHBZPfsiVUUwYep5V3Yq1"
         //let address = "n2DXd5qGBnNGHQ2jtd162RjwgBRYdxxYiq"
         
         var blockchain : String = "test"
@@ -1388,13 +1412,10 @@ public class WhatsOnChainSystemClient: SystemClient {
                             }
                             task.resume()
                             semaphore.wait()
-                        if(data_ != nil && data_!.count == 12) {
+                        //if(data_ != nil && data_!.count == 12) {
+                        if(data_ != nil) {
                             let hash : String = data_!["hash"] as! String
                             print("HASH: \(hash)")
-                            
-                            let storagePath = FileManager.default
-                                .urls(for: .documentDirectory, in: .userDomainMask)[0]
-                               .appendingPathComponent("Core").path
                             
                             var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
                             authorizerGetPrivKeyRun(address, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)

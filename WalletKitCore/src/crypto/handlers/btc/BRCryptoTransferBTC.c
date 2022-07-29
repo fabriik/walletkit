@@ -198,9 +198,13 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
     if(strcmp(listener.manager->network->name, "WhatsOnChain") == 0 ) {
         if(direction == CRYPTO_TRANSFER_RECEIVED) {
             targetAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
+            if(tid->blockHeight == 4294967295) {
+                state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
+            }
         } else {
-            sourceAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
+            //sourceAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
             targetAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
+            //state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
         }
     }
 

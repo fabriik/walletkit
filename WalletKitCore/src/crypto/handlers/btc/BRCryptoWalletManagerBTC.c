@@ -544,6 +544,12 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
                 // If our transaction made it into the wallet, do not deallocate it
                 needFree = false;
             }
+        } else {
+            /*BRTransaction *btcTransactionCur = BRWalletTransactionForHash (btcWallet, btcTransaction->txHash);
+            if(btcTransactionCur->blockHeight == 4294967295 && btcTransaction->blockHeight != 4294967295) {
+                printf("Update current transaction\n");
+             //Figure out how to really remove the transaction and reinsert it
+            }*/
         }
     }
 

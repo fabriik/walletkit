@@ -208,6 +208,9 @@ cryptoWalletUpdBalance (BRCryptoWallet wallet, bool needLock);
 private_extern void
 cryptoWalletUpdBalanceRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer, bool needLock);
 
+private_extern void
+cryptoWalletUpdTransferRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer);
+
 static inline void
 cryptoWalletGenerateEvent (BRCryptoWallet wallet,
                            OwnershipGiven BRCryptoWalletEvent event) {

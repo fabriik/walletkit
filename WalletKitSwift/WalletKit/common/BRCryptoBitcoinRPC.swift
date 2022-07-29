@@ -1299,8 +1299,14 @@ public class BitcoinRPCSystemClient: SystemClient {
         let chunkedAddresses = canonicalAddresses(addresses, blockchainId)
             .chunked(into: BlocksetSystemClient.ADDRESS_COUNT)
         
-        let walletId: Int64 = 2 //FIX LATER
+        //let walletId: Int64 = 2 //FIX LATER
         //let walletId: Int64 = 3 //FIX LATER
+        
+        let storagePath = FileManager.default
+            .urls(for: .documentDirectory, in: .userDomainMask)[0]
+           .appendingPathComponent("Core").path
+        
+        let walletId : Int64 = getWalletIdByPrimaryAddress(chunkedAddresses[0][0], storagePath)
 
         getTransactionHistory(blockchainId: blockchainId) {
             (res: Result<[SystemClient.TransactionHistory], SystemClientError>) in
@@ -1308,12 +1314,6 @@ public class BitcoinRPCSystemClient: SystemClient {
             res.resolve (
                 success: {
                     print("SYS: GetTransactionHistory: Success \($0[0].tx_hash)")
-                    
-                    let storagePath = FileManager.default
-                        .urls(for: .documentDirectory, in: .userDomainMask)[0]
-                       .appendingPathComponent("Core").path
-                    
-                    let storagePathStatic = "/Users/christinapeterson/Library/Developer/CoreSimulator/Devices/37BB3DC8-8E96-4FD6-B455-EF5842282B92/data/Containers/Data/Application"
                     
                     //authorizerInitializeTables(storagePath)
                     //authorizerInitializeTables(storagePathStatic)

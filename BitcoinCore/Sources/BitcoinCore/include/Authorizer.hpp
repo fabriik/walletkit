@@ -38,4 +38,8 @@ extern void authorizerGetTransferDataRun(char *txnIdHexStr, int txnIdSize, char 
 
 extern void authorizerGetPrivKeyRun(const char * address_, char *privkeyHexStr, int privkeySize, const char *path_);
 
+extern long long getWalletIdByPrimaryAddress(const char *address_, const char *path);
+
+extern void getRUNAddressByWalletId(long long walletId, char *addressHexStr, int addressSize, const char *path_);
+
 #endif /* Header_h */
