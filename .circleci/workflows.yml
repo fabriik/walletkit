@@ -23,7 +23,7 @@ jobs:
       - checkout
 
       - run:
-          name: Install CLang
+          name: Install CLang and libbsd
           command: |
             sudo apt install clang libbsd-dev
 
@@ -31,6 +31,16 @@ jobs:
           name: Pull Submodules
           command: |
             git submodule update --init --recursive
+
+      - run:
+          name: Configure Unit Tests
+          command : |
+            # we configure the unit tests just enough to complete the compile
+            cd WalletKitJava
+            # setup .env file
+            cp WalletKit/templates/WalletKitTestsConfig.env WalletKit/WalletKitTestsConfig.env
+            # setup .json file
+            cp walletKit/templates/WalletKitTestsConfig_example.json ${HOME}/.walletKitTestsConfig.json
 
       - run:
           name: Build WalletKit Java
