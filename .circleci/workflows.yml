@@ -39,7 +39,7 @@ jobs:
             # setup .env file
             cp templates/WalletKitTestsConfig.env WalletKitTestsConfig.env
             # setup .json file
-            cp templates/WalletKitTestsConfig_example.json ${HOME}/.walletKitTestsConfig.json
+            cp templates/WalletKitTestsConfig_Example.json ${HOME}/.walletKitTestsConfig.json
 
       - run:
           name: Build WalletKit Java
