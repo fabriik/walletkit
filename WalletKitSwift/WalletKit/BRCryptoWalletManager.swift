@@ -184,7 +184,7 @@ public final class WalletManager: Equatable, CustomStringConvertible {
     internal func stop () {
         cryptoWalletManagerStop (core);
     }
-    
+
     public func sync () {
         cryptoWalletManagerSync (core)
     }
@@ -230,7 +230,7 @@ public final class WalletManager: Equatable, CustomStringConvertible {
                                completion: @escaping (Result<WalletSweeper, WalletSweeperError>) -> Void) {
         WalletSweeper.create(wallet: wallet, key: key, client: client, completion: completion)
     }
-    
+
     public func createExportablePaperWallet () -> Result<ExportablePaperWallet, ExportablePaperWalletError> {
         return ExportablePaperWallet.create(manager: self)
     }
@@ -428,13 +428,13 @@ public final class WalletSweeper {
                                                 return
                                             }
                                         }
-                                        
+
                                         // validate that the sweeper has the necessary info
                                         if let e = WalletSweeperError(cryptoWalletSweeperValidate(self.core)) {
                                             completion(Result.failure(e))
                                             return
                                         }
-                                        
+
                                         // return the sweeper for use in estimation/submission
                                         completion(Result.success(self))},
                                     failure: { completion(Result.failure(.clientError($0))) })
@@ -603,7 +603,7 @@ public enum WalletManagerMode: Equatable {
                              WalletManagerMode.api_with_p2p_submit,
                              WalletManagerMode.p2p_with_api_sync,
                              WalletManagerMode.p2p_only]
-    
+
     // Equatable: [Swift-generated]
 }
 
@@ -757,7 +757,7 @@ public enum WalletManagerEvent {
         // wallet: added: ...
         case CRYPTO_WALLET_MANAGER_EVENT_SYNC_STARTED:
             self = .syncStarted
-            
+
         case CRYPTO_WALLET_MANAGER_EVENT_SYNC_CONTINUES:
             let timestamp: Date? = (0 == core.u.syncContinues.timestamp // NO_CRYPTO_TIMESTAMP
                 ? nil
@@ -787,7 +787,7 @@ public enum WalletManagerEvent {
 ///
 /// Listener For WalletManagerEvent
 ///
-public protocol WalletManagerListener: class {
+public protocol WalletManagerListener: AnyObject {
     ///
     /// Handle a WalletManagerEvent.
     ///

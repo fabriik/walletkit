@@ -28,7 +28,7 @@ public final class Wallet: Equatable {
     }
 
     internal var callbackCoordinator: SystemCallbackCoordinator
-    
+
     /// The unit for display of the wallet's balance
     public let unit: Unit
 
@@ -148,12 +148,12 @@ public final class Wallet: Equatable {
         var transfersCount: BRCryptoCount = 0
         let transfersPtr = cryptoWalletGetTransfers(core, &transfersCount);
         defer { if let ptr = transfersPtr { cryptoMemoryFree (ptr) } }
-        
+
         let transfers: [BRCryptoTransfer] = transfersPtr?
             .withMemoryRebound(to: BRCryptoTransfer.self, capacity: transfersCount) {
                 Array(UnsafeBufferPointer (start: $0, count: transfersCount))
             } ?? []
-        
+
         return transfers
             .map { Transfer (core: $0,
                              wallet: self,
@@ -212,7 +212,7 @@ public final class Wallet: Equatable {
 
         let coreAttributesCount = attributes?.count ?? 0
         var coreAttributes: [BRCryptoTransferAttribute?] = attributes?.map { $0.core } ?? []
-        
+
         return cryptoWalletCreateTransfer (core,
                                            target.core,
                                            amount.core,
@@ -237,7 +237,7 @@ public final class Wallet: Equatable {
                                        estimatedFeeBasis: estimatedFeeBasis)
         default:
             var coreOutputs = outputs.map { $0.core }
-            
+
             return cryptoWalletCreateTransferMultiple (core,
                                                        coreOutputsCount,
                                                        &coreOutputs,
@@ -266,7 +266,7 @@ public final class Wallet: Equatable {
                              take: false)
         }
     }
-    
+
     /// MARK: Estimate Limit
 
     ///
@@ -458,7 +458,7 @@ public final class Wallet: Equatable {
                 if transferFee == newTransferFee {
                     guard let transactionAmount = newTransferAmount + newTransferFee
                         else { preconditionFailure() }
-                    
+
                     completion (self.balance >= transactionAmount
                         ? Result.success (newTransferAmount)
                         : Result.failure (Wallet.LimitEstimationError.insufficientFunds))
@@ -539,7 +539,7 @@ public final class Wallet: Equatable {
 
         let coreAttributesCount = attributes?.count ?? 0
         var coreAttributes: [BRCryptoTransferAttribute?] = attributes?.map { $0.core } ?? []
-        
+
         // 'Redirect' up to the 'manager'
         cryptoWalletManagerEstimateFeeBasis (self.manager.core,
                                              self.core,
@@ -560,7 +560,7 @@ public final class Wallet: Equatable {
                                                            callbackCoordinator.addWalletFeeEstimateHandler(completion),
                                                            fee.core)
     }
-    
+
     internal func estimateFee (request: PaymentProtocolRequest,
                                fee: NetworkFee,
                                completion: @escaping EstimateFeeHandler) {
@@ -583,12 +583,12 @@ public final class Wallet: Equatable {
             }
         }
     }
-    
+
     internal func defaultFeeBasis () -> TransferFeeBasis? {
         return cryptoWalletGetDefaultFeeBasis (core)
             .map { TransferFeeBasis (core: $0, take: false) }
     }
-    
+
     ///
     /// Create a wallet
     ///
@@ -693,7 +693,7 @@ public enum WalletEvent {
         switch cryptoWalletEventGetType(core) {
         case CRYPTO_WALLET_EVENT_CREATED:
             self = .created
-            
+
         case CRYPTO_WALLET_EVENT_CHANGED:
             var oldState: BRCryptoWalletState!
             var newState: BRCryptoWalletState!
@@ -701,10 +701,10 @@ public enum WalletEvent {
             cryptoWalletEventExtractState(core, &oldState, &newState)
             self = .changed (oldState: WalletState (core: oldState),
                              newState: WalletState (core: newState))
-            
+
         case CRYPTO_WALLET_EVENT_DELETED:
             self = .deleted
-            
+
         case CRYPTO_WALLET_EVENT_TRANSFER_ADDED:
             var transfer: BRCryptoTransfer!
 
@@ -712,7 +712,7 @@ public enum WalletEvent {
             self = .transferAdded (transfer: Transfer (core: transfer,
                                                        wallet: wallet,
                                                        take: false))
-            
+
         case CRYPTO_WALLET_EVENT_TRANSFER_CHANGED:
             var transfer: BRCryptoTransfer!
 
@@ -720,7 +720,7 @@ public enum WalletEvent {
             self = .transferChanged (transfer: Transfer (core: transfer,
                                                          wallet: wallet,
                                                          take: false))
-            
+
         case CRYPTO_WALLET_EVENT_TRANSFER_SUBMITTED:
             var transfer: BRCryptoTransfer!
             cryptoWalletEventExtractTransferSubmit (core, &transfer);
@@ -729,7 +729,7 @@ public enum WalletEvent {
                                                            wallet: wallet,
                                                            take: false),
                                        success: true);
-            
+
         case CRYPTO_WALLET_EVENT_TRANSFER_DELETED:
             var transfer: BRCryptoTransfer!
 
@@ -737,13 +737,13 @@ public enum WalletEvent {
             self = .transferDeleted (transfer: Transfer (core: transfer,
                                                          wallet: wallet,
                                                          take: false))
-            
+
         case CRYPTO_WALLET_EVENT_BALANCE_UPDATED:
             var balance: BRCryptoAmount!
 
             cryptoWalletEventExtractBalanceUpdate (core, &balance);
             self = .balanceUpdated (amount: Amount (core: balance, take: false))
-            
+
         case CRYPTO_WALLET_EVENT_FEE_BASIS_UPDATED:
             var feeBasis: BRCryptoFeeBasis!
 
@@ -756,10 +756,10 @@ public enum WalletEvent {
             var feeBasis: BRCryptoFeeBasis!
 
             cryptoWalletEventExtractFeeBasisEstimate (core, nil, nil, &feeBasis);
-            
+
             guard nil != feeBasis else { return nil }
             self = .feeBasisEstimated (feeBasis: TransferFeeBasis (core: feeBasis, take: false))
-            
+
         default:
             preconditionFailure()
         }
@@ -786,7 +786,7 @@ extension WalletEvent: CustomStringConvertible {
 ///
 /// Listener for WalletEvent
 ///
-public protocol WalletListener: class {
+public protocol WalletListener: AnyObject {
     ///
     /// Handle a WalletEvent
     ///

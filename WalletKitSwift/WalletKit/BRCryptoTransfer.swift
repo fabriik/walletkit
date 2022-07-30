@@ -43,10 +43,10 @@ public final class Transfer: Equatable {
 
     /// The unit for display of the transfer fee.
     public let unitForFee: Unit
-    
+
     /// The exchamgeId returned from the swap EP
     public var exchangeId: String?
-    
+
     /// The source pays the fee and sends the amount.
     public private(set) lazy var source: Address? = {
         cryptoTransferGetSourceAddress (core)
@@ -108,7 +108,7 @@ public final class Transfer: Equatable {
         return cryptoTransferGetIdentifier(core)
             .map { asUTF8String($0) }
     }
-    
+
     /// An optional hash.  This only exists if the TransferState is .included or .submitted
     public var hash: TransferHash? {
         return cryptoTransferGetHash (core)
@@ -534,7 +534,7 @@ public struct TransferOutput {
         self.target = target
         self.amount = amount
     }
-    
+
     var core: BRCryptoTransferOutput {
         return BRCryptoTransferOutput (target: target.core,
                                        amount: amount.core)
@@ -544,7 +544,7 @@ public struct TransferOutput {
 ///
 /// Listener for TransferEvent
 ///
-public protocol TransferListener: class {
+public protocol TransferListener: AnyObject {
     ///
     /// Handle a TranferEvent.
     ///

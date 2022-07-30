@@ -223,7 +223,7 @@ public final class Network: CustomStringConvertible {
             cryptoNetworkAddCurrency (core, currency.core, baseUnit.core, defaultUnit.core)
         }
     }
-    
+
     internal func addUnitFor (currency: Currency, unit: Unit) {
         precondition (hasCurrency(currency))
         precondition (unit.hasCurrency(currency))
@@ -380,7 +380,7 @@ public enum NetworkEvent {
 ///
 /// Listener for NetworkEvent
 ///
-public protocol NetworkListener: class {
+public protocol NetworkListener: AnyObject {
     ///
     /// Handle a NetworkEvent
     ///
