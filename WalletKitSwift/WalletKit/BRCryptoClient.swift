@@ -172,7 +172,8 @@ public protocol SystemClient {
         type: String?,
         receiveAmount: UInt64?,
         mintId: String?,
-        fromAddress: String?
+        fromAddress: String?,
+        senderAddress: String?
     )
 
 

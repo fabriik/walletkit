@@ -113,6 +113,10 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
                                      CRYPTO_FALSE,
                                                     uint256Create (cryptoTransferComputeAmountBTC (direction, send, recv, fee)));
     }
+    
+    if(strcmp(listener.manager->network->name, "WhatsOnChain") == 0 ) {
+        fee = tid->outputs[1].amount;
+    }
 
     BRCryptoAddress sourceAddress = NULL;
     {
@@ -198,14 +202,15 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
     if(strcmp(listener.manager->network->name, "WhatsOnChain") == 0 ) {
         if(direction == CRYPTO_TRANSFER_RECEIVED) {
             targetAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
-            if(tid->blockHeight == 4294967295) {
+            sourceAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->senderAddress);
+            if(tid->blockHeight == TX_UNCONFIRMED) {
                 state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
             }
-        } else {
-            //sourceAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
-            targetAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
+        } /*else {
+            sourceAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
+            //targetAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
             //state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
-        }
+        } */
     }
 
     BRCryptoTransfer transfer = cryptoTransferAllocAndInit (sizeof (struct BRCryptoTransferBTCRecord),

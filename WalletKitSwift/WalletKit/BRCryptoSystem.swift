@@ -1551,6 +1551,7 @@ extension System {
         let receiveAmount = model.receiveAmount!
         let mintId = model.mintId!
         let fromAddress = model.fromAddress!
+        let senderAddress = model.senderAddress!
 
         var data = model.raw!
         let bytesCount = data.count
@@ -1558,7 +1559,7 @@ extension System {
             let bytesAsUInt8 = bytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
             //return wkClientTransactionBundleCreate (status, bytesAsUInt8, bytesCount, timestamp, height)
             return cryptoClientTransactionBundleCreateTokens (status, bytesAsUInt8, bytesCount, timestamp, height,
-                                                       txHash, version, lockTime, time, inCount, &inputs, outCount, &outputs, type, receiveAmount, mintId, fromAddress)
+                                                       txHash, version, lockTime, time, inCount, &inputs, outCount, &outputs, type, receiveAmount, mintId, fromAddress, senderAddress)
             //return wkClientTransactionBundleCreateWOC (status, bytesAsUInt8, bytesCount, timestamp, height,
             //                                           txHash, version, lockTime, time, inCount, outCount)
         }

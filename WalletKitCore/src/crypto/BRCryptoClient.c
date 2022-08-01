@@ -1528,7 +1528,8 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
                                  const char *type,
                                  uint64_t receiveAmount,
                                  const char *mintId,
-                                 const char *fromAddress) {
+                                 const char *fromAddress,
+                                 const char *senderAddress) {
     BRCryptoClientTransactionBundle bundle = calloc (1, sizeof (struct BRCryptoClientTransactionBundleRecord));
 
     bundle->status = status;
@@ -1570,6 +1571,7 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
         bundle->outputs[i]->script = (char *) malloc(strlen(outputs[i]->script));
         memcpy(bundle->outputs[i]->script, outputs[i]->script, strlen(outputs[i]->script));
         
+        bundle->outputs[i]->amount = outputs[i]->amount;
     }
     
     bundle->type = (char *) malloc(strlen(type));
@@ -1584,6 +1586,9 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
     
     bundle->fromAddress = (char *) malloc(strlen(fromAddress) + 1);
     snprintf(bundle->fromAddress, strlen(fromAddress) + 1, "%s", fromAddress);
+    
+    bundle->senderAddress = (char *) malloc(strlen(senderAddress) + 1);
+    snprintf(bundle->senderAddress, strlen(senderAddress) + 1, "%s", senderAddress);
 
     return bundle;
 }

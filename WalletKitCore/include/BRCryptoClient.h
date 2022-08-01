@@ -77,7 +77,8 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
                                  const char *type,
                                  uint64_t receiveAmount,
                                  const char *mintId,
-                                 const char *fromAddress);
+                                 const char *fromAddress,
+                                 const char *senderAddress);
 
 extern BRCryptoClientTransactionInput
 cryptoClientTransactionInputCreate (const char* txHash,

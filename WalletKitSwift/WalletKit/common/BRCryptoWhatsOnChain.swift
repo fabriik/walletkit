@@ -485,8 +485,52 @@ public class WhatsOnChainSystemClient: SystemClient {
                      type: nil,
                      receiveAmount: nil,
                      mintId: nil,
-                     fromAddress: nil
+                     fromAddress: nil,
+                     senderAddress: nil
                      )
+        }
+        
+        static internal func getSenderAddress (hash: String, blockchainId: String) -> String {
+            var blockchain : String = "test"
+            if(blockchainId == "whatsonchain-mainnet") {
+                blockchain = "main"
+            }
+            
+            var senderAddress : String = String("")
+            
+            let session = URLSession (configuration: .default)
+            var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/\(blockchain)/tx/hash/\(hash)")!);
+            request.httpMethod = "GET"
+            
+            var data_: JSON.Dict?
+                
+            let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+            let task = WhatsOnChainSystemClient.defaultDataTaskFuncSetJSON (session, request, data_) { (data, res, error) in
+                do {
+                    if(data != nil) {
+                        let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                        data_ = json
+                    } else {
+                        data_ = nil
+                    }
+                } catch let error as NSError {
+                    print(error.localizedDescription)
+                }
+                semaphore.signal()
+            }
+            task.resume()
+            semaphore.wait()
+        
+            if(data_ != nil) {
+                let vout       = data_!["vout"] as! [NSDictionary]
+                let scriptPubKey = vout[1]["scriptPubKey"] as! NSDictionary
+                let addresses : [String] = scriptPubKey["addresses"] as! [String]
+                if(addresses.count != 0) {
+                    senderAddress = addresses[0]
+                }
+            }
+            
+            return senderAddress
         }
         
         static internal func asTransactionWOC (json: JSON) -> SystemClient.Transaction? {
@@ -561,9 +605,6 @@ public class WhatsOnChainSystemClient: SystemClient {
                 
                 let input : SystemClient.Inputs = (txHash: txid!, script: script, signature: signature, sequence: sequence!)
                 inputs.append(input)
-                
-                //let script = anItem.asString ()
-                print("Stop")
             }
             
             var count = 0
@@ -612,7 +653,6 @@ public class WhatsOnChainSystemClient: SystemClient {
                         print("Debugging")
                     }
                 }
-                    
                 
                 //let script = anItem.asString ()
                 count = count + 1
@@ -622,51 +662,39 @@ public class WhatsOnChainSystemClient: SystemClient {
             
             let outCount = outputs.count
             
+            var blockchainId : String = String("whatsonchain-mainnet")
             
-            
-            
-            //let url = URL(string: "https://api.whatsonchain.com/v1/bsv/test/tx/\(hash)/hex")!
-            
-            //print("\(url)")
-
-            //var request = URLRequest(url: url)
-            //request.httpMethod = "GET"
-            
-            
-            let session_ = URLSession (configuration: .default)
-            var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/test/tx/\(hash)/hex")!);
-            //var request = URLRequest(url: URL(string: "https://api.whatsonchain.com/v1/bsv/main/tx/\(hash)/hex")!); //FIXME!!!
-            //var request = URLRequest(url: URL(string: "https://api.whatsonchain.com/v1/bsv/test/chain/info")!);
+            let session = URLSession (configuration: .default)
+            var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/main/tx/\(hash)/hex")!);
             request.httpMethod = "GET"
-            
-            //var request = NSMutableURLRequest(url: URL(string: "https://api.whatsonchain.com/v1/bsv/test/tx/\(hash)/hex")!)
-            //var session = URLSession.shared
-            //request.httpMethod = "GET"
-            print("request: \(request)")
             
             var data_: Data?
                 
-            let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
-            let task = WhatsOnChainSystemClient.defaultDataTaskFuncSet (session_, request, data_) { (data, res, error) in
-                    print("2")
-                    do {
-                        if(data != nil) {
-                            let convertedString = String(data: data!, encoding: String.Encoding.utf8)
-                            data_ = data
-                            print("data: \(convertedString)")
-                        } else {
-                            data_ = nil
-                        }
-                    } catch let error as NSError {
-                        print(error.localizedDescription)
-                    }
+            var semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+            let task = WhatsOnChainSystemClient.defaultDataTaskFuncSet (session, request, data_) { (data, res, error) in
+                    data_ = data
                     semaphore.signal()
                 }
                 task.resume()
-                print("1")
                 semaphore.wait()
-                print("3")
         
+            if(data_ != nil && data_!.count == 0) {
+                blockchainId = String("whatsonchain-testnet")
+                var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/test/tx/\(hash)/hex")!);
+                request.httpMethod = "GET"
+                semaphore = DispatchSemaphore(value: 0)
+                let task1 = WhatsOnChainSystemClient.defaultDataTaskFuncSet (session, request, data_) { (data, res, error) in
+                    data_ = data
+                    semaphore.signal()
+                }
+                task1.resume()
+                semaphore.wait()
+            }
+            
+            var senderAddress : String = String("")
+            if(inCount > 0) {
+                senderAddress = getSenderAddress (hash: inputs[0].txHash, blockchainId: blockchainId)
+            }
             
             let dict_ : Dictionary<String,String> = [:]
             
@@ -678,12 +706,12 @@ public class WhatsOnChainSystemClient: SystemClient {
                 acknowledgements: confirmations,
                 index: UInt64(0),
                 transactionId: identifier,
-                blockchainId: "whatsonchain-testnet",
+                blockchainId: blockchainId,
                 metaData: dict_)
             ]
 
             return (id: identifier,
-                     blockchainId: "whatsonchain-testnet",
+                     blockchainId: blockchainId,
                      hash: hash,
                      identifier: identifier,
                      blockHash: blockHash,
@@ -711,7 +739,8 @@ public class WhatsOnChainSystemClient: SystemClient {
                      type: type,
                      receiveAmount: receiveAmount,
                      mintId: mintId,
-                     fromAddress: fromAddress
+                     fromAddress: fromAddress,
+                     senderAddress: senderAddress
             
             )
             /*return (id: identifier, blockchainId: "test",
@@ -745,8 +774,28 @@ public class WhatsOnChainSystemClient: SystemClient {
         static internal func asTransactionIdentifierWOC (json: JSON) -> SystemClient.TransactionIdentifier? {
             guard let id         = json.asString(name: "txid")
             else { return nil }
+            
+            var blockchainId : String = String("whatsonchain-mainnet")
+            
+            let session = URLSession (configuration: .default)
+            var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/main/tx/\(id)/hex")!);
+            request.httpMethod = "GET"
+            
+            var data_: Data?
+                
+            let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+            let task = WhatsOnChainSystemClient.defaultDataTaskFuncSet (session, request, data_) { (data, res, error) in
+                    data_ = data
+                    semaphore.signal()
+                }
+                task.resume()
+                semaphore.wait()
+        
+            if(data_ != nil && data_!.count == 0) {
+                blockchainId = String("whatsonchain-testnet")
+            }
 
-            return (id: id, blockchainId: "whatsonchain-testnet", hash: id, identifier: id)
+            return (id: id, blockchainId: blockchainId, hash: id, identifier: id)
         }
 
         /// Transaction Fee
@@ -1433,7 +1482,8 @@ public class WhatsOnChainSystemClient: SystemClient {
                             let data: JSON.Dict = [
                                 "txid"  : "\(hash)",
                                 "mintId" : "\(mintId)",
-                                "privkey" : "\(privkeyHex)"
+                                "privkey" : "\(privkeyHex)",
+                                "network" : "\(blockchain)"
                             ]
                             
                            //if let data = data {

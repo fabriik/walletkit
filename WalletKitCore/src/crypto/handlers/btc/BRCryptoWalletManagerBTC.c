@@ -294,7 +294,8 @@ cryptoWalletManagerCreateWalletRPC (BRCryptoWalletManager manager,
     BRCryptoWallet wallet = cryptoWalletCreateAsBTC (manager->type,
                                                      manager->listenerWallet,
                                                      unitAsDefault,
-                                                     unitAsDefault,
+                                                     //unitAsDefault,
+                                                     unitAsBase,
                                                      btcWallet);
     cryptoWalletManagerAddWallet (manager, wallet);
 
@@ -467,7 +468,11 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
     tx->wtxHash = uint256(bundle->txHash);
     tx->version = (uint32_t) bundle->version;
     tx->lockTime = (uint32_t) bundle->lockTime;
-    tx->blockHeight = (uint32_t) bundle->blockHeight;
+    if(bundle->blockHeight == UINT64_MAX) {
+        tx->blockHeight = TX_UNCONFIRMED;
+    } else {
+        tx->blockHeight = (uint32_t) bundle->blockHeight;
+    }
     tx->timestamp = (uint32_t) bundle->time;
     tx->inCount = (size_t) bundle->inCount;
     tx->outCount = (size_t) bundle->outCount;
@@ -480,6 +485,7 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
     //memcpy(tx->fromAddress, bundle->fromAddress, strlen(bundle->fromAddress) * sizeof(char));
     tx->mintId = bundle->mintId;
     tx->fromAddress = bundle->fromAddress;
+    tx->senderAddress = bundle->senderAddress;
 
     for(size_t i = 0; i < tx->inCount; i++) {
         tx->inputs[i].txHash = uint256(bundle->inputs[i]->txHash);
@@ -545,11 +551,20 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
                 needFree = false;
             }
         } else {
-            /*BRTransaction *btcTransactionCur = BRWalletTransactionForHash (btcWallet, btcTransaction->txHash);
-            if(btcTransactionCur->blockHeight == 4294967295 && btcTransaction->blockHeight != 4294967295) {
-                printf("Update current transaction\n");
-             //Figure out how to really remove the transaction and reinsert it
-            }*/
+            BRTransaction *btcTransactionCur = BRWalletTransactionForHash (btcWallet, btcTransaction->txHash);
+            if(btcTransactionCur->blockHeight == TX_UNCONFIRMED && btcTransaction->blockHeight != TX_UNCONFIRMED) {
+                //Remove the unconfirmed transaction and insert the confirmed transaction
+                BRSetRemove(btcWallet->allTx, btcTransactionCur);
+                BRCryptoTransferBTC transferBTC = cryptoWalletFindTransferByHashAsBTC (manager->wallet, btcTransactionCur->txHash);
+                BRCryptoTransfer    oldTransfer    = (BRCryptoTransfer) transferBTC;
+                cryptoWalletRemTransfer (manager->wallet, oldTransfer);
+                
+                BRWalletRegisterTransactionTokens (btcWallet, btcTransaction);
+                if (btcTransaction == BRWalletTransactionForHash (btcWallet, btcTransaction->txHash)) {
+                    // If our transaction made it into the wallet, do not deallocate it
+                    needFree = false;
+                }
+            }
         }
     }
 
