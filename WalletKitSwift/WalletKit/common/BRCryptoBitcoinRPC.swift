@@ -1315,7 +1315,7 @@ public class BitcoinRPCSystemClient: SystemClient {
             defer { print("Deferring")}
             res.resolve (
                 success: {
-                    print("SYS: GetTransactionHistory: Success \($0[0].tx_hash)")
+                    //print("SYS: GetTransactionHistory: Success \($0[0].tx_hash)")
                     
                     //authorizerInitializeTables(storagePath)
                     //authorizerInitializeTables(storagePathStatic)
@@ -1399,11 +1399,13 @@ public class BitcoinRPCSystemClient: SystemClient {
                         print("Debugging")
                         
                     }
-                    for i in 0...txn_hash_array.count - 1 {
-                        let ret : Bool = isTxidUnspentSFPToken (walletId, txn_hash_array[i], storagePath);
-                        
-                        if(ret) {
-                            data_array.append(response_array[i])
+                    if(txn_hash_array.count > 0) {
+                        for i in 0...txn_hash_array.count - 1 {
+                            let ret : Bool = isTxidUnspentSFPToken (walletId, txn_hash_array[i], storagePath);
+                            
+                            if(ret) {
+                                data_array.append(response_array[i])
+                            }
                         }
                     }
                     completion(

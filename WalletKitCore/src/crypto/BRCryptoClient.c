@@ -1541,9 +1541,10 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
     bundle->timestamp   = timestamp;
     bundle->blockHeight = (BRCryptoBlockNumber) blockHeight;
     
-    //bundle->txHash = txHash;
-    bundle->txHash = (uint8_t *) malloc(strlen(txHash));
-    memcpy(bundle->txHash, txHash, strlen(txHash));
+    //bundle->txHash = (uint8_t *) malloc(strlen(txHash));
+    //memcpy(bundle->txHash, txHash, strlen(txHash));
+    bundle->txHash = (uint8_t *) malloc(strlen(txHash) + 1);
+    snprintf(bundle->txHash, strlen(txHash) + 1, "%s", txHash);
     bundle->version = version;
     bundle->lockTime = lockTime;
     bundle->time = time;
@@ -1553,12 +1554,18 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
     for(int i = 0; i < inCount; i++) {
         bundle->inputs[i] = calloc (1, sizeof (struct BRCryptoClientTransactionInputRecord));
         
-        bundle->inputs[i]->txHash = (char *) malloc(strlen(inputs[i]->txHash));
-        memcpy(bundle->inputs[i]->txHash, inputs[i]->txHash, strlen(inputs[i]->txHash));
-        bundle->inputs[i]->script = (char *) malloc(strlen(inputs[i]->script));
-        memcpy(bundle->inputs[i]->script, inputs[i]->script, strlen(inputs[i]->script));
-        bundle->inputs[i]->signature = (char *) malloc(strlen(inputs[i]->signature));
-        memcpy(bundle->inputs[i]->signature, inputs[i]->txHash, strlen(inputs[i]->signature));
+        //bundle->inputs[i]->txHash = (char *) malloc(strlen(inputs[i]->txHash));
+        //memcpy(bundle->inputs[i]->txHash, inputs[i]->txHash, strlen(inputs[i]->txHash));
+        bundle->inputs[i]->txHash = (char *) malloc(strlen(inputs[i]->txHash) + 1);
+        snprintf(bundle->inputs[i]->txHash, strlen(inputs[i]->txHash) + 1, "%s", inputs[i]->txHash);
+        //bundle->inputs[i]->script = (char *) malloc(strlen(inputs[i]->script));
+        //memcpy(bundle->inputs[i]->script, inputs[i]->script, strlen(inputs[i]->script));
+        bundle->inputs[i]->script = (char *) malloc(strlen(inputs[i]->script) + 1);
+        snprintf(bundle->inputs[i]->script, strlen(inputs[i]->script) + 1, "%s", inputs[i]->script);
+        //bundle->inputs[i]->signature = (char *) malloc(strlen(inputs[i]->signature));
+        //memcpy(bundle->inputs[i]->signature, inputs[i]->txHash, strlen(inputs[i]->signature));
+        bundle->inputs[i]->signature = (char *) malloc(strlen(inputs[i]->signature) + 1);
+        snprintf(bundle->inputs[i]->signature, strlen(inputs[i]->signature) + 1, "%s", inputs[i]->signature);
         bundle->inputs[i]->sequence = inputs[i]->sequence;
         
     }

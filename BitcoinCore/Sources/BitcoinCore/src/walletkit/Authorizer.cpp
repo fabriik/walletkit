@@ -4917,107 +4917,63 @@ static void initializeAddresses(std::string path) {
     }
 
     sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (1, 2, 'mhWYLCXz1Xv7aARrPbZprDTjTb5Q9RvTdm', 0); ";
+         "VALUES (1, 2, 'mrrJuS5zRx2DZL1N92yB5qQDkwDQGvLWoR', 0); ";
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
   sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (2, 2, 'mr2b9Z1vTGWKLBZ3ipm9i6bwNppqp8bZck', 1); ";
+         "VALUES (2, 2, 'mijATKkGVwvEdf3ZbJcKp7EK6fR7CPpCwz', 1); ";
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
   sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (3, 2, 'muYaCpRTMvUeqtkTtPM8z3KX3jLK42DaCR', 2); ";
+         "VALUES (3, 2, 'n1VaSNmvaXGQmBFFQZv9RWqy3Jch3pURFj', 2); ";
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
   sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (4, 2, 'mjvSKk48pYshBy6hchT4Ay9ZCvNKxEo73c', 3); ";
+         "VALUES (4, 3, 'mpZLCtJYHFPvaNi9cKVWEh7hVExnNVaXQc', 0); ";
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
   sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (5, 2, 'mkGQ4dDS7HYkEaEkfDic5qC1CMi3GCRsys', 4); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (6, 2, 'mtGgN5HMweLa3ypzVuFVEd9JEgCAKGEpgW', 5); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (7, 3, 'n2wtGEFnzxzGN273a8fZ18UngBhD72KJU3', 0); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (8, 3, 'n1ADqDXZdKqrrs7jnKg5eqjTa9KeVmEgyQ', 1); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (9, 2, 'mxMFoqgirJuT5iP1ZrmeVaAQc281Uwc46r', 6); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (10, 2, 'mkk9en83NYBCa53f8rRbvAwno1S81xpQTw', 7); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (11, 2, 'mmugasXg65VVv54t4UUejVqA4JB6d86S2q', 8); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (12, 2, 'n4HawVttbCdh1HsSKTWtto9Dg2kAfydApU', 9); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (13, 2, 'mrYBqezyanhQi8Te3HF5rNUdeLHjCWH9iC', 10); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (14, 3, 'moyZRWuEXttPgJ84NaUesjHQTR4fC2Q4gQ', 2); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (15, 2, 'mmDRTJXgSCRmapL4pLtH3Y2b7QfoZFdRAL', 11); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-         "VALUES (16, 2, 'mhKqa18LtKu2xtZjQrAMhGtV8dhcePW7J4', 12); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-           "VALUES (17, 2, 'mvmnXNFC3gGqQeW5mstLbC474zXxhmQn28', 13); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-             "VALUES (18, 2, 'mp3UATarJWkvc1MnxwZgqZAhtuwnWn3cx3', 14); ";
-  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    
-  sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-               "VALUES (19, 3, 'mjj3yvAvELAN5ufrhg2jL3n91U3Ht76Aqf', 3); ";
+         "VALUES (5, 3, 'mzvWpC5AoaiNLXXqYG1wMMgrGuLdA8SVJB', 1); ";
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     
     sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-             "VALUES (20, 3, 'muPQfeACfp6bewaJz3R5rz8S8x77vVAZkC', 4); ";
+       "VALUES (6, 3, 'mgPCJbkFGtGpdmYMJGgBgjQaENNyDPPqYR', 2); ";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
     sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-             "VALUES (21, 3, 'mku1WnX4fijuRD5wQtvX9TzCdW8M4YBfiX', 5); ";
+       "VALUES (7, 2, 'moGTBiYp8jPGo9MDXL8f2SqUqr9cAYmG5J', 3); ";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
     sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-             "VALUES (22, 2, 'mkC8iRKNZMo15hoz9SmCfvwoC8VzqUFn15', 15); ";
+       "VALUES (8, 2, 'mjv7Rc5XwL5ddkaQV6GNWmnwx6HfP13may', 4); ";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
     sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-             "VALUES (23, 3, 'ms39svxvcazktz8wKZwCjAipq77VWPhhxf', 6); ";
+       "VALUES (9, 2, 'mkhvkxJGdgsV3GiL5VBpKiP2v6zrL3H5QW', 5); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+       "VALUES (10, 2, 'mxoCysEZPetePjsFLGsQDDdTdkTh8noqgs', 6); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+       "VALUES (11, 2, 'n42Yh8vBCvEAKnBi8BF48kkjKhEUvxRiMq', 7); ";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     
     sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-                 "VALUES (24, 3, 'mnAsk2zPhGRWs8inAc8VKH6rerYikns7De', 7); ";
+       "VALUES (12, 2, 'mv2T4VmrrbWJgeLbcoYEyTazUxL2Qa4cRD', 8); ";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
+    
     sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-             "VALUES (25, 3, 'mmJsf7d11jiWiAM6iCQSxRVXqSEo3LvHFi', 8); ";
+       "VALUES (13, 3, 'mxd9bxmoVLPN3mAX7d2LXViVZA9vs22adM', 3); ";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
+    
     sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
-             "VALUES (26, 2, 'mmigN8vzA8H4ARCiqLva2PMcc7mqq1njk2', 16); ";
+       "VALUES (14, 2, 'myGcW3JWzSsDPVPxZHv9TRwkeoA2svMCSu', 9); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+       "VALUES (15, 2, 'n24k5esbag2M1KNRRhDx19EGBV8zY6Qj2x', 10); ";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
   if( rc != SQLITE_OK ){
@@ -6108,9 +6064,9 @@ static void initializeWallet (std::string path) {
     }
 
   sql = (char *) "INSERT INTO WALLETS (ID,USER_ID,MNEMONIC,XPUB,LAST_USED_ADDRESS_INDEX,NEXT_ADDRESS_INDEX) "  \
-        "VALUES (2, 5, 'sense tent make blue industry fantasy brush army make gather quote discover'," \
-               "'tpubDEVpyDo8xspSmcmQX7GVRitdfis6S9QsWxA5oMB1ScFAc5yYxjS9775gaPvr1Egq7bhAbYHaEwfGsuCnpKqd3rsU1DnCYH1ar3Zt54j7N7j'," \
-               "-1, 15); ";
+        "VALUES (2, 5, 'erosion lunar replace innocent target output video trophy poem wave only rent'," \
+               "'tpubDEmqXyC4D7jUkUPPodgQAKii8NyYGoiZYjgv6VTiu3fiVKXoj1cySwvwviJUg2J3W59f6NoUwhUSZBaXVn134ddp44bC8LLN6RpV4EdW6u4'," \
+               "-1, 8); ";
 
  /* Execute SQL statement */
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -6123,9 +6079,9 @@ static void initializeWallet (std::string path) {
   }
 
   sql = (char *) "INSERT INTO WALLETS (ID,USER_ID,MNEMONIC,XPUB,LAST_USED_ADDRESS_INDEX,NEXT_ADDRESS_INDEX) "  \
-        "VALUES (3, 6, 'start area few frequent ocean blouse across game account sport prosper soda'," \
-               "'tpubDFUpCAWz7aHga4p1uwPpuJiVFcixAhaSAgJsTQAK59mWhyhhiVnRdMSNje15HLXDVjkGxAmuSFqzocsGUXcNhC9vnjpgB5CjvT31geutCfg'," \
-               "-1, 5); ";
+        "VALUES (3, 6, 'special wire month lift spirit essay elevator wrong please slender basket ball'," \
+               "'tpubDFJpRZHgBykK8XpgHZkfiHKC2MktubJNuJGYp6CPJijonZ4WciktSKkkBhJkuAuQ8dj3eAcz5DD4FsJwoD2sTLzVz2gARR3cvRo6XLGLFmg'," \
+               "-1, 3); ";
 
  /* Execute SQL statement */
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -6855,7 +6811,8 @@ void initializeDB(std::string path) {
       "TO_ADDRESS                CHAR(100)," \
       "AMOUNT                BIGINT," \
       "MINT_ID                 CHAR(100)," \
-      "FROM_ADDRESS                CHAR(100));";
+      "FROM_ADDRESS            CHAR(100)," \
+      "NUM_TXNS                CHAR(100));";
 
     /* Execute SQL statement */
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -6867,7 +6824,212 @@ void initializeDB(std::string path) {
       fprintf(stdout, "RUN_TRANSFERS Table created successfully\n");
     }
     
+    //sql = (char *) "DROP TABLE RPC_BUNDLES;";
+    //rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    typedef struct {
+        uint64_t amount;
+        uint8_t *script;
+        size_t scriptLen;
+    } BRTxOutput;
+    
+    sql = (char *) "CREATE TABLE RPC_BUNDLES("  \
+      "ID INT PRIMARY KEY     NOT NULL," \
+      "TXHASH          CHAR(100) NOT NULL," \
+      "VERSION                BIGINT," \
+      "INCOUNT                 BIGINT," \
+      "INPUT1_TXHASH          CHAR(100)," \
+      "INPUT1_SCRIPT          TEXT," \
+      "INPUT1_SCRIPT_LEN      BIGINT," \
+      "INPUT1_SIGNATURE          TEXT," \
+      "INPUT1_SIG_LENGTH         BIGINT," \
+      "INPUT1_SEQUENCE           BIGINT," \
+    "INPUT2_TXHASH          CHAR(100)," \
+    "INPUT2_SCRIPT          TEXT," \
+    "INPUT2_SCRIPT_LEN      BIGINT," \
+    "INPUT2_SIGNATURE          TEXT," \
+    "INPUT2_SIG_LENGTH         BIGINT," \
+    "INPUT2_SEQUENCE           BIGINT," \
+    "INPUT3_TXHASH          CHAR(100)," \
+    "INPUT3_SCRIPT          TEXT," \
+    "INPUT3_SCRIPT_LEN      BIGINT," \
+    "INPUT3_SIGNATURE          TEXT," \
+    "INPUT3_SIG_LENGTH         BIGINT," \
+    "INPUT3_SEQUENCE           BIGINT," \
+      "OUTCOUNT                 BIGINT," \
+    "OUTPUT1_AMOUNT      BIGINT," \
+    "OUTPUT1_SCRIPT          TEXT," \
+    "OUTPUT1_SCRIPT_LENGTH      BIGINT," \
+    "OUTPUT2_AMOUNT      BIGINT," \
+    "OUTPUT2_SCRIPT          TEXT," \
+    "OUTPUT2_SCRIPT_LENGTH      BIGINT," \
+    "OUTPUT3_AMOUNT      BIGINT," \
+    "OUTPUT3_SCRIPT          TEXT," \
+    "OUTPUT3_SCRIPT_LENGTH      BIGINT," \
+      "LOCKTIME                 BIGINT," \
+      "BLOCKHEIGHT              BIGINT," \
+      "TIMESTAMP                BIGINT," \
+      "RECEIVE_AMOUNT           BIGINT," \
+      "MINT_ID                 CHAR(100)," \
+      "FROM_ADDRESS            CHAR(100)," \
+      "SENDER_ADDRESS          CHAR(100));";
+
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    if( rc != SQLITE_OK ){
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "RPC_BUNDLES Table created successfully\n");
+    }
+    
   sqlite3_close(db);
+}
+
+extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, unsigned long inCount, unsigned long outCount, unsigned int lockTime, unsigned int blockHeight, unsigned int timestamp, unsigned long long receiveAmount, const char *mintId, const char *fromAddress, const char *senderAddress, const char *path_) {
+     
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    std::string delimiter = "Core/";
+    
+    std::string pathStr(path_);
+    
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 4) + std::string("/sfp.db");
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES WHERE TXHASH = '") + txHash + std::string("';");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+        if(records.size() == 0) {
+            size_t id = 0;
+            
+            Records records0;
+
+            sql = (char *) "SELECT * FROM RPC_BUNDLES;";
+
+            rc = sqlite3_exec(db, sql, select_callback, &records0, &zErrMsg);
+            //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+            if( rc != SQLITE_OK ) {
+              fprintf(stderr, "SQL error: %s\n", zErrMsg);
+              sqlite3_free(zErrMsg);
+            } else {
+              fprintf(stdout, "Operation done successfully\n");
+              printf("%lu records returned\n", records0.size());
+                id = records0.size();
+            }
+
+            std::string sql_query0 = std::string("INSERT INTO RPC_BUNDLES (ID,TXHASH,VERSION,INCOUNT,OUTCOUNT,LOCKTIME,BLOCKHEIGHT,TIMESTAMP, RECEIVE_AMOUNT,MINT_ID,FROM_ADDRESS,SENDER_ADDRESS) VALUES (") +
+            std::to_string(id) + std::string(", '") + txHash + std::string("', ") + std::to_string(version) + \
+            std::string(", ") + std::to_string(inCount) + std::string(", ") + std::to_string(outCount) + std::string(", ") + \
+            std::to_string(lockTime) + std::string(", ") + std::to_string(blockHeight) + std::string(", ") + \
+            std::to_string(timestamp) + std::string(", ") + std::to_string(receiveAmount) + std::string(", '") + mintId + \
+            std::string("', '") + fromAddress + std::string("', '") + senderAddress + std::string("'); ");
+
+            sql = (char *) sql_query0.c_str();
+            
+            printf("sql_query = %s\n", sql_query0.c_str());
+
+            rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+          
+            if( rc != SQLITE_OK ){
+                fprintf(stderr, "SQL error: %s\n", zErrMsg);
+                sqlite3_free(zErrMsg);
+            } else {
+                fprintf(stdout, "Bundle created successfully\n");
+            }
+        }
+    }
+
+    sqlite3_close(db);
+    
+}
+
+extern void authorizerSaveBundleInputRPC(unsigned long index, const char *txHash, const char *inputTxHash, const char *inputScript, unsigned long intputScriptLen, const char *inputSignature, unsigned long inputSigLength, long long inputSequence, const char *path_) {
+    
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    std::string delimiter = "Core/";
+    
+    std::string pathStr(path_);
+    
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 4) + std::string("/sfp.db");
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    std::string sql_query;
+    
+    if(index == 0) {
+        sql_query = std::string("UPDATE RPC_BUNDLES SET INPUT1_TXHASH = '") + std::string(inputTxHash) + \
+        std::string("', INPUT1_SCRIPT = '") + std::string(inputScript) + std::string("', INPUT1_SCRIPT_LEN = ") + \
+        std::to_string(intputScriptLen) + std::string(", INPUT1_SIGNATURE = '") + std::string(inputSignature) + \
+        std::string("', INPUT1_SIG_LENGTH = ") + std::to_string(inputSigLength) + std::string(", INPUT1_SEQUENCE = ") + \
+        std::to_string(inputSequence) + std::string(" WHERE TXHASH = '") + txHash + std::string("'; ");
+    } else if(index == 1) {
+        sql_query = std::string("UPDATE RPC_BUNDLES SET INPUT2_TXHASH = '") + std::string(inputTxHash) + \
+        std::string("', INPUT2_SCRIPT = '") + std::string(inputScript) + std::string("', INPUT2_SCRIPT_LEN = ") + \
+        std::to_string(intputScriptLen) + std::string(", INPUT2_SIGNATURE = '") + std::string(inputSignature) + \
+        std::string("', INPUT2_SIG_LENGTH = ") + std::to_string(inputSigLength) + std::string(", INPUT2_SEQUENCE = ") + \
+        std::to_string(inputSequence) + std::string(" WHERE TXHASH = '") + txHash + std::string("'; ");
+    } else if(index == 2) {
+        sql_query = std::string("UPDATE RPC_BUNDLES SET INPUT3_TXHASH = '") + std::string(inputTxHash) + \
+        std::string("', INPUT3_SCRIPT = '") + std::string(inputScript) + std::string("', INPUT3_SCRIPT_LEN = ") + \
+        std::to_string(intputScriptLen) + std::string(", INPUT3_SIGNATURE = '") + std::string(inputSignature) + \
+        std::string("', INPUT3_SIG_LENGTH = ") + std::to_string(inputSigLength) + std::string(", INPUT3_SEQUENCE = ") + \
+        std::to_string(inputSequence) + std::string(" WHERE TXHASH = '") + txHash + std::string("'; ");
+    }
+    
+    sql = (char *) sql_query.c_str();
+    
+    printf("sql_query = %s\n", sql_query.c_str());
+
+    sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+    }
+    sqlite3_close(db);
+}
+
+extern void authorizerSaveBundleOutputRPC(unsigned long index, const char *txHash, unsigned long long outputAmount, const char *outputScript, unsigned long outputScriptLength, const char *path_) {
+    
 }
 
 void createSFPUtxos(std::string path) {
@@ -7526,7 +7688,7 @@ extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsi
     sqlite3_close(db);
 }
 
-extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, const char *path_) {
+extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, unsigned long numTxns, const char *path_) {
     printf("txid = %s\n", txid_);
     printf("address = %s\n", address_);
     printf("path = %s\n", path_);
@@ -7572,7 +7734,7 @@ extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, u
         
       size_t id = records.size() + 1;
 
-          std::string sql_query0 = std::string("INSERT INTO RUN_TRANSFERS (ID,TXID,TO_ADDRESS,AMOUNT,MINT_ID,FROM_ADDRESS) VALUES (") + std::to_string(id) + std::string(", '") + txid + std::string("', '") + address + std::string("', ") + std::to_string(amount) + std::string(", '") + mintId + std::string("', '") + fromAddress + std::string("'); ");
+          std::string sql_query0 = std::string("INSERT INTO RUN_TRANSFERS (ID,TXID,TO_ADDRESS,AMOUNT,MINT_ID,FROM_ADDRESS,NUM_TXNS) VALUES (") + std::to_string(id) + std::string(", '") + txid + std::string("', '") + address + std::string("', ") + std::to_string(amount) + std::string(", '") + mintId + std::string("', '") + fromAddress + std::string("', ") + std::to_string(numTxns) + std::string("); ");
           
           sql = (char *) sql_query0.c_str();
           printf("sql_query0 = %s\n", sql_query0.c_str());
@@ -7645,9 +7807,10 @@ typedef struct TransferRecordRun {
     int64_t amount;
     std::string mintId;
     std::string fromAddress;
+    int64_t numTxns;
 }TransferRecordRun;
 
-static TransferRecordRun getTransferRun(std::string path) {
+static TransferRecordRun getTransferRun(long long index, std::string path) {
     sqlite3 *db;
       char *zErrMsg = 0;
       int rc;
@@ -7680,11 +7843,12 @@ static TransferRecordRun getTransferRun(std::string path) {
       printf("%lu records returned\n", records.size());
         
         if(records.size() > 0) {
-            rec.txid = records[0][1];
-            rec.address = records[0][2];
-            rec.amount = std::stoll(records[0][3]);
-            rec.mintId = records[0][4];
-            rec.fromAddress = records[0][5];
+            rec.txid = records[index][1];
+            rec.address = records[index][2];
+            rec.amount = std::stoll(records[index][3]);
+            rec.mintId = records[index][4];
+            rec.fromAddress = records[index][5];
+            rec.numTxns = std::stoll(records[index][6]);
         }
     }
     return rec;
@@ -7981,12 +8145,21 @@ extern void authorizerCreateSerialization(char *authHexStr, int authHexSize, con
     snprintf(authHexStr, authHexSize, "%s", hex2.c_str());
 }
 
-extern void authorizerGetTransferDataRun(char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, const char *path_) {
+extern void authorizerGetNumTxnsForTransferRUN(long long *numTxns, const char *path_) {
+    std::string path = std::string(path_) + std::string("/sfp.db");
+    printf("path: %s\n", path.c_str());
+    
+    TransferRecordRun rec = getTransferRun(0, path);
+    
+    *numTxns = rec.numTxns;
+}
+
+extern void authorizerGetTransferDataRun(long long index, char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, const char *path_) {
     
     std::string path = std::string(path_) + std::string("/sfp.db");
     printf("path: %s\n", path.c_str());
     
-    TransferRecordRun rec = getTransferRun(path);
+    TransferRecordRun rec = getTransferRun(index, path);
     
     snprintf(txnIdHexStr, txnIdSize, "%s", rec.txid.c_str());
     

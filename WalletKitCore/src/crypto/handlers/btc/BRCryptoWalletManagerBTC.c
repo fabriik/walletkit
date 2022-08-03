@@ -18,6 +18,8 @@
 #include "crypto/BRCryptoWalletManagerP.h"
 #include "crypto/BRCryptoWalletSweeperP.h"
 
+#include "../../BitcoinCore/Sources/BitcoinCore/include/Authorizer.hpp"
+
 // BRWallet Callbacks
 
 // MARK: - Foward Declarations
@@ -437,10 +439,42 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleBTC (BRCryptoWalletManag
     }
 }
 
+static void saveBundle(const char* path, OwnershipKept BRCryptoClientTransactionBundle bundle) {
+    uint32_t blockHeight = 0;
+    if(bundle->blockHeight == UINT64_MAX) {
+        blockHeight = TX_UNCONFIRMED;
+    } else {
+        blockHeight = (uint32_t) bundle->blockHeight;
+    }
+    
+    authorizerSaveBundleRPC((const char*) bundle->txHash,
+                            (uint32_t) bundle->version,
+                            (size_t) bundle->inCount,
+                            (size_t) bundle->outCount,
+                            (uint32_t) bundle->lockTime,
+                            blockHeight,
+                            (uint32_t) bundle->timestamp,
+                            bundle->receiveAmount,
+                            bundle->mintId,
+                            bundle->fromAddress,
+                            bundle->senderAddress,
+                            path);
+    
+    for(size_t i = 0; i < bundle->inCount; i++) {
+        authorizerSaveBundleInputRPC(i, (const char*) bundle->txHash, bundle->inputs[i]->txHash, bundle->inputs[i]->script, strlen(bundle->inputs[i]->script), bundle->inputs[i]->signature, strlen(bundle->inputs[i]->signature), bundle->inputs[i]->sequence, path);
+    }
+    
+    /*for(size_t i = 0; i < bundle->outCount; i++) {
+        
+    }*/
+}
+
 static void
 cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManager manager,
                                                              OwnershipKept BRCryptoClientTransactionBundle bundle) {
     //BRTransaction *btcTransaction = BRTransactionParse (bundle->serialization, bundle->serializationCount);
+    
+    saveBundle(manager->path, bundle);
     
     BRTransaction *btcTransaction;
     

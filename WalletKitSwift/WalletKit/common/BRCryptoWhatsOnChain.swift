@@ -724,7 +724,7 @@ public class WhatsOnChainSystemClient: SystemClient {
                      size: 0 <= size ? 0 : UInt64(size),
                      timestamp: Date(),
                      firstSeen: Date(),
-                     raw: data_,
+                     raw: data_ != nil ? data_ : Data(),
                      fee: (currency: "satoshi", value: "1"),
                      transfers: transfers,
                      acknowledgements: confirmations,
@@ -1392,6 +1392,15 @@ public class WhatsOnChainSystemClient: SystemClient {
         //return String("189bc8ad3bc44632581ec2701a244e1c23478eda69ab5c123e2bd47caa8666cc")
         return ret
     }
+    
+    static internal func getDeployId (json: JSON.Dict) -> String {
+        
+        let vin = json["vin"] as! [NSDictionary]
+        
+        let txid : String = vin[1]["txid"] as! String
+        
+        return txid
+    }
 
     // Transactions
 
@@ -1479,9 +1488,12 @@ public class WhatsOnChainSystemClient: SystemClient {
                             
                             let mintId : String = WhatsOnChainSystemClient.getMintId(json: data_!);
                             
+                            //let deployId : String = WhatsOnChainSystemClient.getDeployId(json: data_!);
+                            
                             let data: JSON.Dict = [
                                 "txid"  : "\(hash)",
                                 "mintId" : "\(mintId)",
+                                //"deployId" : "\(deployId)",
                                 "privkey" : "\(privkeyHex)",
                                 "network" : "\(blockchain)"
                             ]
@@ -1618,20 +1630,45 @@ public class WhatsOnChainSystemClient: SystemClient {
             .urls(for: .documentDirectory, in: .userDomainMask)[0]
            .appendingPathComponent("Core").path
         
-        var txnIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
-        var addressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
-        var mintIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
-        var fromAddressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
-        var amount : Int64 = 1
-        authorizerGetTransferDataRun(&txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, storagePath)
-        let txnIdHex = String(cString: txnIdHexBuf)
-        let addressHex = String(cString: addressHexBuf)
-        let mintIdHex = String(cString: mintIdHexBuf)
-        let fromAddressHex = String(cString: fromAddressHexBuf)
+        var txnIdList : String = String("")
+        var mintIdList : String = String("")
+        var privkeyList : String = String("")
+        var addressList : String = String("")
+        var amountList : String = String("")
         
-        var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
-        authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
-        let privkeyHex = String(cString: privkeyHexBuf)
+        var numTxns : Int64 = 1
+        authorizerGetNumTxnsForTransferRUN(&numTxns, storagePath)
+        for index in 0...(numTxns - 1) {
+            if(index != 0) {
+                txnIdList = txnIdList + String(",")
+                mintIdList = mintIdList + String(",")
+                privkeyList = privkeyList + String(",")
+                addressList = addressList + String(",")
+                amountList = amountList + String(",")
+            }
+            var txnIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+            var addressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+            var mintIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+            var fromAddressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+            var amount : Int64 = 1
+            
+            authorizerGetTransferDataRun(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, storagePath)
+            let txnIdHex = String(cString: txnIdHexBuf)
+            let addressHex = String(cString: addressHexBuf)
+            let mintIdHex = String(cString: mintIdHexBuf)
+            let fromAddressHex = String(cString: fromAddressHexBuf)
+            
+            var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
+            authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+            let privkeyHex = String(cString: privkeyHexBuf)
+            
+            txnIdList = txnIdList + txnIdHex
+            mintIdList = mintIdList + mintIdHex
+            privkeyList = privkeyList + privkeyHex
+            addressList = addressList + addressHex
+            amountList = amountList + String(amount)
+        }
+        
         
         /*let data            = transaction.base64EncodedString()
         let json: JSON.Dict = [
@@ -1655,14 +1692,19 @@ public class WhatsOnChainSystemClient: SystemClient {
             }
         }*/
         
-        
+        var blockchain : String = "test"
+        if(blockchainId == "whatsonchain-mainnet") {
+            blockchain = "main"
+        }
         
         let json: JSON.Dict = [
-            "txid"  : "\(txnIdHex)",
-            "mintId"  : "\(mintIdHex)",
-            "privkey"  : "\(privkeyHex)",
-            "address"  : "\(addressHex)",
-            "amount" : amount
+            //"txid"  : "\(txnIdHex)",
+            "txid"  : "\(txnIdList)",
+            "mintId"  : "\(mintIdList)",
+            "privkey"  : "\(privkeyList)",
+            "address"  : "\(addressList)",
+            "amount" : "\(amountList)",
+            "network" : blockchain
         ]
         
         //makeRequest (bdbDataTaskFunc, bdbBaseURL,

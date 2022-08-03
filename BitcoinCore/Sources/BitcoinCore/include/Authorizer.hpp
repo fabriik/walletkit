@@ -32,14 +32,22 @@ extern void authorizerCreateSerialization(char *authHexStr, int authHexSize, con
 
 extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsigned long long amount_, const char *path_);
 
-extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, const char *path_);
+extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, unsigned long numTxns, const char *path_);
 
-extern void authorizerGetTransferDataRun(char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, const char *path_);
+extern void authorizerGetTransferDataRun(long long index, char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, const char *path_);
+
+extern void authorizerGetNumTxnsForTransferRUN(long long *numTxns, const char *path_);
 
 extern void authorizerGetPrivKeyRun(const char * address_, char *privkeyHexStr, int privkeySize, const char *path_);
 
 extern long long getWalletIdByPrimaryAddress(const char *address_, const char *path);
 
 extern void getRUNAddressByWalletId(long long walletId, char *addressHexStr, int addressSize, const char *path_);
+
+extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, unsigned long inCount, unsigned long outCount, unsigned int lockTime, unsigned int blockHeight, unsigned int timestamp, unsigned long long receiveAmount, const char *mintId, const char *fromAddress, const char *senderAddress, const char *path_);
+
+extern void authorizerSaveBundleInputRPC(unsigned long index, const char *txHash, const char *inputTxHash, const char *inputScript, unsigned long intputScriptLen, const char *inputSignature, unsigned long inputSigLength, long long inputSequence, const char *path_);
+
+extern void authorizerSaveBundleOutputRPC(unsigned long index, const char *txHash, unsigned long long outputAmount, const char *outputScript, unsigned long outputScriptLength, const char *path_);
 
 #endif /* Header_h */

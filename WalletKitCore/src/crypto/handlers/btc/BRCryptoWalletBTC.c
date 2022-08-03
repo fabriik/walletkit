@@ -325,7 +325,7 @@ cryptoWalletCreateTransferRPC (BRCryptoWallet  wallet,
         }
         tid->blockHeight = wid->transactions[0]->blockHeight;
         tid->direction = CRYPTO_TRANSFER_SENT;
-        tid->fromAddress = wid->transactions[0]->fromAddress;
+        //tid->fromAddress = wid->transactions[0]->fromAddress;
     }
 
     return (NULL == tid
