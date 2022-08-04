@@ -41,6 +41,7 @@
 // a versioning system (at least on read; everything gets written/saved w/ the latest version).
 // Allow an upgrade path from existing IOS/Andriod Sqlite3 databases.
 //
+
 typedef struct BRFileServiceRecord *BRFileService;
 
 /// A context used in callbacks
@@ -91,6 +92,8 @@ fileServiceCreate (const char *basePath,
                    const char *network,
                    BRFileServiceContext context,
                    BRFileServiceErrorHandler handler);
+
+extern char* fileServiceGetSdbPath(BRFileService fs);
 
 /**
  * Release fs.  This will close `fs` if it hasn't been already and then free the memory and any

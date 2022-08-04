@@ -44,10 +44,46 @@ extern long long getWalletIdByPrimaryAddress(const char *address_, const char *p
 
 extern void getRUNAddressByWalletId(long long walletId, char *addressHexStr, int addressSize, const char *path_);
 
-extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, unsigned long inCount, unsigned long outCount, unsigned int lockTime, unsigned int blockHeight, unsigned int timestamp, unsigned long long receiveAmount, const char *mintId, const char *fromAddress, const char *senderAddress, const char *path_);
+extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, unsigned long inCount, unsigned long outCount, unsigned int lockTime, unsigned int blockHeight, unsigned int timestamp, unsigned long long receiveAmount, const char *type, const char *mintId, const char *fromAddress, const char *senderAddress, const char *path_);
 
-extern void authorizerSaveBundleInputRPC(unsigned long index, const char *txHash, const char *inputTxHash, const char *inputScript, unsigned long intputScriptLen, const char *inputSignature, unsigned long inputSigLength, long long inputSequence, const char *path_);
+extern void authorizerSaveBundleInputRPC(int inCount, const char *txHash, const char *inputTxHash, const char *inputScript, const char *inputSignature, long long inputSequence, const char *path_);
 
-extern void authorizerSaveBundleOutputRPC(unsigned long index, const char *txHash, unsigned long long outputAmount, const char *outputScript, unsigned long outputScriptLength, const char *path_);
+extern void authorizerSaveBundleOutputRPC(int outCount, const char *txHash, unsigned long long outputAmount, const char *outputScript, const char *path_);
+
+extern void initializePersistDB(const char* path_);
+
+extern unsigned long fileServiceLoadRPCGetSize(const char *path_);
+
+extern char* fileServiceLoadRPCGetTxHash(unsigned long index, const char *path_);
+
+extern unsigned int fileServiceLoadRPCGetVersion(unsigned long index, const char *path_);
+
+extern unsigned long fileServiceLoadRPCGetInCount(unsigned long index, const char *path_);
+
+extern unsigned long fileServiceLoadRPCGetOutCount(unsigned long index, const char *path_);
+
+extern unsigned int fileServiceLoadRPCGetLockTime(unsigned long index, const char *path_);
+
+extern long long fileServiceLoadRPCGetBlockHeight(unsigned long index, const char *path_);
+
+extern unsigned int fileServiceLoadRPCGetTimestamp(unsigned long index, const char *path_);
+
+extern char* fileServiceLoadRPCGetType(unsigned long index, const char *path_);
+
+extern unsigned long long fileServiceLoadRPCGetReceiveAmount(unsigned long index, const char *path_);
+
+extern char* fileServiceLoadRPCGetMintId(unsigned long index, const char *path_);
+
+extern char* fileServiceLoadRPCGetReceiverAdddress(unsigned long index, const char *path_);
+
+extern char* fileServiceLoadRPCGetSenderAdddress(unsigned long index, const char *path_);
+
+extern char* fileServiceLoadRPCGetInputTxHash(unsigned long index, const char *txHash, const char *path_);
+
+extern char* fileServiceLoadRPCGetInputScript(unsigned long index, const char *txHash, const char *path_);
+
+extern char* fileServiceLoadRPCGetInputSignature(unsigned long index, const char *txHash, const char *path_);
+
+extern long long fileServiceLoadRPCGetInputSequence(unsigned long index, const char *txHash, const char *path_);
 
 #endif /* Header_h */

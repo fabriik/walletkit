@@ -455,18 +455,19 @@ static void saveBundle(const char* path, OwnershipKept BRCryptoClientTransaction
                             blockHeight,
                             (uint32_t) bundle->timestamp,
                             bundle->receiveAmount,
+                            bundle->type,
                             bundle->mintId,
                             bundle->fromAddress,
                             bundle->senderAddress,
                             path);
     
     for(size_t i = 0; i < bundle->inCount; i++) {
-        authorizerSaveBundleInputRPC(i, (const char*) bundle->txHash, bundle->inputs[i]->txHash, bundle->inputs[i]->script, strlen(bundle->inputs[i]->script), bundle->inputs[i]->signature, strlen(bundle->inputs[i]->signature), bundle->inputs[i]->sequence, path);
+        authorizerSaveBundleInputRPC(bundle->inCount, (const char*) bundle->txHash, bundle->inputs[i]->txHash, bundle->inputs[i]->script, bundle->inputs[i]->signature, bundle->inputs[i]->sequence, path);
     }
     
-    /*for(size_t i = 0; i < bundle->outCount; i++) {
-        
-    }*/
+    for(size_t i = 0; i < bundle->outCount; i++) {
+        authorizerSaveBundleOutputRPC(bundle->outCount, (const char*) bundle->txHash, bundle->outputs[i]->amount, bundle->outputs[i]->script, path);
+    }
 }
 
 static void
@@ -474,7 +475,7 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
                                                              OwnershipKept BRCryptoClientTransactionBundle bundle) {
     //BRTransaction *btcTransaction = BRTransactionParse (bundle->serialization, bundle->serializationCount);
     
-    saveBundle(manager->path, bundle);
+    saveBundle(fileServiceGetSdbPath(manager->fileService), bundle);
     
     BRTransaction *btcTransaction;
     
@@ -523,6 +524,7 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
 
     for(size_t i = 0; i < tx->inCount; i++) {
         tx->inputs[i].txHash = uint256(bundle->inputs[i]->txHash);
+        
         tx->inputs[i].scriptLen = strlen(bundle->inputs[i]->script);
         //tx->inputs[i].script = (uint8_t *) bundle->inputs[i]->script;
         array_new(tx->inputs[i].script, tx->inputs[i].scriptLen);

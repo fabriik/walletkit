@@ -6824,51 +6824,45 @@ void initializeDB(std::string path) {
       fprintf(stdout, "RUN_TRANSFERS Table created successfully\n");
     }
     
+  sqlite3_close(db);
+}
+
+extern void initializePersistDB(const char* path_) {
+  sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    //const char* data = "Callback function called";
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
     //sql = (char *) "DROP TABLE RPC_BUNDLES;";
     //rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    
-    typedef struct {
-        uint64_t amount;
-        uint8_t *script;
-        size_t scriptLen;
-    } BRTxOutput;
-    
+
     sql = (char *) "CREATE TABLE RPC_BUNDLES("  \
       "ID INT PRIMARY KEY     NOT NULL," \
       "TXHASH          CHAR(100) NOT NULL," \
       "VERSION                BIGINT," \
       "INCOUNT                 BIGINT," \
-      "INPUT1_TXHASH          CHAR(100)," \
-      "INPUT1_SCRIPT          TEXT," \
-      "INPUT1_SCRIPT_LEN      BIGINT," \
-      "INPUT1_SIGNATURE          TEXT," \
-      "INPUT1_SIG_LENGTH         BIGINT," \
-      "INPUT1_SEQUENCE           BIGINT," \
-    "INPUT2_TXHASH          CHAR(100)," \
-    "INPUT2_SCRIPT          TEXT," \
-    "INPUT2_SCRIPT_LEN      BIGINT," \
-    "INPUT2_SIGNATURE          TEXT," \
-    "INPUT2_SIG_LENGTH         BIGINT," \
-    "INPUT2_SEQUENCE           BIGINT," \
-    "INPUT3_TXHASH          CHAR(100)," \
-    "INPUT3_SCRIPT          TEXT," \
-    "INPUT3_SCRIPT_LEN      BIGINT," \
-    "INPUT3_SIGNATURE          TEXT," \
-    "INPUT3_SIG_LENGTH         BIGINT," \
-    "INPUT3_SEQUENCE           BIGINT," \
       "OUTCOUNT                 BIGINT," \
-    "OUTPUT1_AMOUNT      BIGINT," \
-    "OUTPUT1_SCRIPT          TEXT," \
-    "OUTPUT1_SCRIPT_LENGTH      BIGINT," \
-    "OUTPUT2_AMOUNT      BIGINT," \
-    "OUTPUT2_SCRIPT          TEXT," \
-    "OUTPUT2_SCRIPT_LENGTH      BIGINT," \
-    "OUTPUT3_AMOUNT      BIGINT," \
-    "OUTPUT3_SCRIPT          TEXT," \
-    "OUTPUT3_SCRIPT_LENGTH      BIGINT," \
       "LOCKTIME                 BIGINT," \
       "BLOCKHEIGHT              BIGINT," \
       "TIMESTAMP                BIGINT," \
+      "TYPE                   CHAR(100)," \
       "RECEIVE_AMOUNT           BIGINT," \
       "MINT_ID                 CHAR(100)," \
       "FROM_ADDRESS            CHAR(100)," \
@@ -6883,10 +6877,48 @@ void initializeDB(std::string path) {
       fprintf(stdout, "RPC_BUNDLES Table created successfully\n");
     }
     
+    //sql = (char *) "DROP TABLE RPC_BUNDLES_INPUTS;";
+    //rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "CREATE TABLE RPC_BUNDLES_INPUTS("  \
+      "ID INT PRIMARY KEY     NOT NULL," \
+      "TXHASH          CHAR(100) NOT NULL," \
+      "INPUT_TXHASH          CHAR(100)," \
+      "INPUT_SCRIPT          TEXT," \
+      "INPUT_SIGNATURE          TEXT," \
+      "INPUT_SEQUENCE           BIGINT);";
+
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    if( rc != SQLITE_OK ){
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "RPC_BUNDLES_INPUTS Table created successfully\n");
+    }
+    
+    //sql = (char *) "DROP TABLE RPC_BUNDLES_OUTPUTS;";
+    //rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "CREATE TABLE RPC_BUNDLES_OUTPUTS("  \
+      "ID INT PRIMARY KEY     NOT NULL," \
+      "TXHASH          CHAR(100) NOT NULL," \
+      "OUTPUT_AMOUNT      BIGINT," \
+      "OUTPUT_SCRIPT          TEXT);";
+
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    if( rc != SQLITE_OK ){
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "RPC_BUNDLES_OUTPUTS Table created successfully\n");
+    }
+    
   sqlite3_close(db);
 }
 
-extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, unsigned long inCount, unsigned long outCount, unsigned int lockTime, unsigned int blockHeight, unsigned int timestamp, unsigned long long receiveAmount, const char *mintId, const char *fromAddress, const char *senderAddress, const char *path_) {
+extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, unsigned long inCount, unsigned long outCount, unsigned int lockTime, unsigned int blockHeight, unsigned int timestamp, unsigned long long receiveAmount, const char *type, const char *mintId, const char *fromAddress, const char *senderAddress, const char *path_) {
      
     sqlite3 *db;
     char *zErrMsg = 0;
@@ -6894,10 +6926,10 @@ extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, un
     char *sql;
     
     std::string delimiter = "Core/";
-    
     std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
     
-    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 4) + std::string("/sfp.db");
+    //std::string path(path_);
 
     //rc = sqlite3_open("test.db", &db);
     rc = sqlite3_open(path.c_str(), &db);
@@ -6911,7 +6943,7 @@ extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, un
     
     Records records;
 
-    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES WHERE TXHASH = '") + txHash + std::string("';");
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES WHERE TXHASH = '") + std::string(txHash) + std::string("';");
     
     sql = (char *) sql_query.c_str();
 
@@ -6942,12 +6974,8 @@ extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, un
                 id = records0.size();
             }
 
-            std::string sql_query0 = std::string("INSERT INTO RPC_BUNDLES (ID,TXHASH,VERSION,INCOUNT,OUTCOUNT,LOCKTIME,BLOCKHEIGHT,TIMESTAMP, RECEIVE_AMOUNT,MINT_ID,FROM_ADDRESS,SENDER_ADDRESS) VALUES (") +
-            std::to_string(id) + std::string(", '") + txHash + std::string("', ") + std::to_string(version) + \
-            std::string(", ") + std::to_string(inCount) + std::string(", ") + std::to_string(outCount) + std::string(", ") + \
-            std::to_string(lockTime) + std::string(", ") + std::to_string(blockHeight) + std::string(", ") + \
-            std::to_string(timestamp) + std::string(", ") + std::to_string(receiveAmount) + std::string(", '") + mintId + \
-            std::string("', '") + fromAddress + std::string("', '") + senderAddress + std::string("'); ");
+            std::string sql_query0 = std::string("INSERT INTO RPC_BUNDLES (ID,TXHASH,VERSION,INCOUNT,OUTCOUNT,LOCKTIME,BLOCKHEIGHT,TIMESTAMP,TYPE, RECEIVE_AMOUNT,MINT_ID,FROM_ADDRESS,SENDER_ADDRESS) VALUES (") + \
+            std::to_string(id) + std::string(", '") + std::string(txHash) + std::string("', ") + std::to_string(version) + std::string(", ") + std::to_string(inCount) + std::string(", ") + std::to_string(outCount) + std::string(", ") + std::to_string(lockTime) + std::string(", ") + std::to_string(blockHeight) + std::string(", ") + std::to_string(timestamp) + std::string(", '") + std::string(type) + std::string("', ") + std::to_string(receiveAmount) + std::string(", '") + std::string(mintId) + std::string("', '") + std::string(fromAddress) + std::string("', '") + std::string(senderAddress) + std::string("'); ");
 
             sql = (char *) sql_query0.c_str();
             
@@ -6969,7 +6997,7 @@ extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, un
     
 }
 
-extern void authorizerSaveBundleInputRPC(unsigned long index, const char *txHash, const char *inputTxHash, const char *inputScript, unsigned long intputScriptLen, const char *inputSignature, unsigned long inputSigLength, long long inputSequence, const char *path_) {
+extern void authorizerSaveBundleInputRPC(int inCount, const char *txHash, const char *inputTxHash, const char *inputScript, const char *inputSignature, long long inputSequence, const char *path_) {
     
     sqlite3 *db;
     char *zErrMsg = 0;
@@ -6977,10 +7005,9 @@ extern void authorizerSaveBundleInputRPC(unsigned long index, const char *txHash
     char *sql;
     
     std::string delimiter = "Core/";
-    
     std::string pathStr(path_);
-    
-    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 4) + std::string("/sfp.db");
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
 
     //rc = sqlite3_open("test.db", &db);
     rc = sqlite3_open(path.c_str(), &db);
@@ -6992,44 +7019,966 @@ extern void authorizerSaveBundleInputRPC(unsigned long index, const char *txHash
       fprintf(stderr, "Opened database successfully\n");
     }
     
-    std::string sql_query;
-    
-    if(index == 0) {
-        sql_query = std::string("UPDATE RPC_BUNDLES SET INPUT1_TXHASH = '") + std::string(inputTxHash) + \
-        std::string("', INPUT1_SCRIPT = '") + std::string(inputScript) + std::string("', INPUT1_SCRIPT_LEN = ") + \
-        std::to_string(intputScriptLen) + std::string(", INPUT1_SIGNATURE = '") + std::string(inputSignature) + \
-        std::string("', INPUT1_SIG_LENGTH = ") + std::to_string(inputSigLength) + std::string(", INPUT1_SEQUENCE = ") + \
-        std::to_string(inputSequence) + std::string(" WHERE TXHASH = '") + txHash + std::string("'; ");
-    } else if(index == 1) {
-        sql_query = std::string("UPDATE RPC_BUNDLES SET INPUT2_TXHASH = '") + std::string(inputTxHash) + \
-        std::string("', INPUT2_SCRIPT = '") + std::string(inputScript) + std::string("', INPUT2_SCRIPT_LEN = ") + \
-        std::to_string(intputScriptLen) + std::string(", INPUT2_SIGNATURE = '") + std::string(inputSignature) + \
-        std::string("', INPUT2_SIG_LENGTH = ") + std::to_string(inputSigLength) + std::string(", INPUT2_SEQUENCE = ") + \
-        std::to_string(inputSequence) + std::string(" WHERE TXHASH = '") + txHash + std::string("'; ");
-    } else if(index == 2) {
-        sql_query = std::string("UPDATE RPC_BUNDLES SET INPUT3_TXHASH = '") + std::string(inputTxHash) + \
-        std::string("', INPUT3_SCRIPT = '") + std::string(inputScript) + std::string("', INPUT3_SCRIPT_LEN = ") + \
-        std::to_string(intputScriptLen) + std::string(", INPUT3_SIGNATURE = '") + std::string(inputSignature) + \
-        std::string("', INPUT3_SIG_LENGTH = ") + std::to_string(inputSigLength) + std::string(", INPUT3_SEQUENCE = ") + \
-        std::to_string(inputSequence) + std::string(" WHERE TXHASH = '") + txHash + std::string("'; ");
-    }
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES_INPUTS WHERE TXHASH = '") + std::string(txHash) + std::string("';");
     
     sql = (char *) sql_query.c_str();
-    
-    printf("sql_query = %s\n", sql_query.c_str());
 
-    sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     if( rc != SQLITE_OK ) {
       fprintf(stderr, "SQL error: %s\n", zErrMsg);
       sqlite3_free(zErrMsg);
     } else {
       fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+        if(records.size() < inCount) {
+            size_t id = 0;
+            
+            Records records0;
+
+            sql = (char *) "SELECT * FROM RPC_BUNDLES_INPUTS;";
+
+            rc = sqlite3_exec(db, sql, select_callback, &records0, &zErrMsg);
+            //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+            if( rc != SQLITE_OK ) {
+              fprintf(stderr, "SQL error: %s\n", zErrMsg);
+              sqlite3_free(zErrMsg);
+            } else {
+              fprintf(stdout, "Operation done successfully\n");
+              printf("%lu records returned\n", records0.size());
+                id = records0.size();
+            }
+            
+            std::string sql_query0 = std::string("INSERT INTO RPC_BUNDLES_INPUTS (ID,TXHASH,INPUT_TXHASH,INPUT_SCRIPT,INPUT_SIGNATURE,INPUT_SEQUENCE) VALUES (") +
+            std::to_string(id) + std::string(", '") + std::string(txHash) + std::string("', '") + \
+            std::string(inputTxHash) + std::string("', '") + std::string(inputScript) + std::string("', '") + \
+            std::string(inputSignature) + std::string("', ") + std::to_string(inputSequence) + std::string("); ");
+
+            sql = (char *) sql_query0.c_str();
+            
+            printf("sql_query = %s\n", sql_query0.c_str());
+
+            rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+            
+            if( rc != SQLITE_OK ){
+                fprintf(stderr, "SQL error: %s\n", zErrMsg);
+                sqlite3_free(zErrMsg);
+            } else {
+                fprintf(stdout, "Bundle created successfully\n");
+            }
+
+        }
+        
     }
+    
     sqlite3_close(db);
 }
 
-extern void authorizerSaveBundleOutputRPC(unsigned long index, const char *txHash, unsigned long long outputAmount, const char *outputScript, unsigned long outputScriptLength, const char *path_) {
+extern void authorizerSaveBundleOutputRPC(int outCount, const char *txHash, unsigned long long outputAmount, const char *outputScript, const char *path_) {
     
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES_OUTPUTS WHERE TXHASH = '") + std::string(txHash) + std::string("';");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+        if(records.size() < outCount) {
+            size_t id = 0;
+            
+            Records records0;
+
+            sql = (char *) "SELECT * FROM RPC_BUNDLES_OUTPUTS;";
+
+            rc = sqlite3_exec(db, sql, select_callback, &records0, &zErrMsg);
+            //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+            if( rc != SQLITE_OK ) {
+              fprintf(stderr, "SQL error: %s\n", zErrMsg);
+              sqlite3_free(zErrMsg);
+            } else {
+              fprintf(stdout, "Operation done successfully\n");
+              printf("%lu records returned\n", records0.size());
+                id = records0.size();
+            }
+            
+            std::string sql_query0 = std::string("INSERT INTO RPC_BUNDLES_OUTPUTS (ID,TXHASH,OUTPUT_AMOUNT,OUTPUT_SCRIPT) VALUES (") +
+            std::to_string(id) + std::string(", '") + std::string(txHash) + std::string("', ") + \
+            std::to_string(outputAmount) + std::string(", '") + std::string(outputScript) + std::string("'); ");
+
+            sql = (char *) sql_query0.c_str();
+            
+            printf("sql_query = %s\n", sql_query0.c_str());
+
+            rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+            
+            if( rc != SQLITE_OK ){
+                fprintf(stderr, "SQL error: %s\n", zErrMsg);
+                sqlite3_free(zErrMsg);
+            } else {
+                fprintf(stdout, "Bundle created successfully\n");
+            }
+
+        }
+        
+    }
+    
+    sqlite3_close(db);
+}
+
+extern unsigned long fileServiceLoadRPCGetSize(const char *path_) {
+    
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    unsigned long size = 0;
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      size = records.size();
+    }
+    
+    sqlite3_close(db);
+    
+    return size;
+}
+
+extern char* fileServiceLoadRPCGetTxHash(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    char *txHash;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            txHash = (char *) malloc(strlen(records[index][1].c_str()) + 1);
+            snprintf(txHash, strlen(records[index][1].c_str()) + 1, "%s", records[index][1].c_str());
+        }
+    }
+    
+    sqlite3_close(db);
+    
+    return txHash;
+}
+
+extern unsigned int fileServiceLoadRPCGetVersion(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    unsigned int version;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            version = (unsigned int) std::stoi(records[index][2]);
+        }
+    }
+    
+    sqlite3_close(db);
+    
+    return version;
+}
+
+extern unsigned long fileServiceLoadRPCGetInCount(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    unsigned long inCount;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            inCount = (unsigned long) std::stoi(records[index][3]);
+        }
+    }
+    
+    sqlite3_close(db);
+    
+    return inCount;
+}
+
+extern unsigned long fileServiceLoadRPCGetOutCount(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    unsigned long outCount;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            outCount = (unsigned long) std::stoi(records[index][4]);
+        }
+    }
+    
+    sqlite3_close(db);
+    
+    return outCount;
+}
+
+extern unsigned int fileServiceLoadRPCGetLockTime(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    unsigned int lockTime;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            lockTime = (unsigned int) std::stoi(records[index][5]);
+        }
+    }
+    
+    sqlite3_close(db);
+    
+    return lockTime;
+}
+
+extern long long fileServiceLoadRPCGetBlockHeight(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    unsigned int blockHeight;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            blockHeight = std::stoll(records[index][6]);
+        }
+    }
+    
+    sqlite3_close(db);
+    
+    return blockHeight;
+}
+
+extern unsigned int fileServiceLoadRPCGetTimestamp(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    unsigned int timestamp;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            timestamp = (unsigned int) std::stoi(records[index][7]);
+        }
+    }
+    
+    sqlite3_close(db);
+    
+    return timestamp;
+}
+
+extern char* fileServiceLoadRPCGetType(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    char *type;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            type = (char *) malloc(strlen(records[index][8].c_str()) + 1);
+            snprintf(type, strlen(records[index][8].c_str()) + 1, "%s", records[index][8].c_str());
+        }
+    }
+    sqlite3_close(db);
+    
+    return type;
+}
+
+extern unsigned long long fileServiceLoadRPCGetReceiveAmount(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    unsigned int receiveAmount;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            receiveAmount = (unsigned long long) std::stoll(records[index][9]);
+        }
+    }
+    
+    sqlite3_close(db);
+    
+    return receiveAmount;
+}
+
+extern char* fileServiceLoadRPCGetMintId(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    char *mintId;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            mintId = (char *) malloc(strlen(records[index][10].c_str()) + 1);
+            snprintf(mintId, strlen(records[index][10].c_str()) + 1, "%s", records[index][10].c_str());
+        }
+    }
+    sqlite3_close(db);
+    
+    return mintId;
+}
+
+extern char* fileServiceLoadRPCGetReceiverAdddress(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    char *receiverAddress;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            receiverAddress = (char *) malloc(strlen(records[index][11].c_str()) + 1);
+            snprintf(receiverAddress, strlen(records[index][11].c_str()) + 1, "%s", records[index][11].c_str());
+        }
+    }
+    sqlite3_close(db);
+    
+    return receiverAddress;
+}
+
+extern char* fileServiceLoadRPCGetSenderAdddress(unsigned long index, const char *path_) {
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    char *senderAddress;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES;");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+      
+        if(records.size() > index) {
+            senderAddress = (char *) malloc(strlen(records[index][12].c_str()) + 1);
+            snprintf(senderAddress, strlen(records[index][12].c_str()) + 1, "%s", records[index][12].c_str());
+        }
+    }
+    sqlite3_close(db);
+    
+    return senderAddress;
+}
+
+extern char* fileServiceLoadRPCGetInputTxHash(unsigned long index, const char *txHash, const char *path_) {
+    
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    char *inputTxHash;
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES_INPUTS WHERE TXHASH = '") + std::string(txHash) + std::string("';");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+        if(records.size() > index) {
+            inputTxHash = (char *) malloc(strlen(records[index][2].c_str()) + 1);
+            snprintf(inputTxHash, strlen(records[index][2].c_str()) + 1, "%s", records[index][2].c_str());
+        }
+        
+    }
+    
+    sqlite3_close(db);
+    
+    return inputTxHash;
+}
+
+extern char* fileServiceLoadRPCGetInputScript(unsigned long index, const char *txHash, const char *path_) {
+    
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    char *inputScript;
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES_INPUTS WHERE TXHASH = '") + std::string(txHash) + std::string("';");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+        if(records.size() > index) {
+            inputScript = (char *) malloc(strlen(records[index][3].c_str()) + 1);
+            snprintf(inputScript, strlen(records[index][3].c_str()) + 1, "%s", records[index][3].c_str());
+        }
+        
+    }
+    
+    sqlite3_close(db);
+    
+    return inputScript;
+}
+
+extern char* fileServiceLoadRPCGetInputSignature(unsigned long index, const char *txHash, const char *path_) {
+    
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    char *inputSignature;
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES_INPUTS WHERE TXHASH = '") + std::string(txHash) + std::string("';");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+        if(records.size() > index) {
+            inputSignature = (char *) malloc(strlen(records[index][4].c_str()) + 1);
+            snprintf(inputSignature, strlen(records[index][4].c_str()) + 1, "%s", records[index][4].c_str());
+        }
+        
+    }
+    
+    sqlite3_close(db);
+    
+    return inputSignature;
+}
+
+extern long long fileServiceLoadRPCGetInputSequence(unsigned long index, const char *txHash, const char *path_) {
+    
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    
+    std::string delimiter = "Core/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 41) + std::string("-bundles.db");
+    //std::string path(path_);
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    long long inputSequence;
+    
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES_INPUTS WHERE TXHASH = '") + std::string(txHash) + std::string("';");
+    
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+        if(records.size() > index) {
+            inputSequence = std::stoll(records[index][5]);
+        }        
+    }
+    
+    sqlite3_close(db);
+    
+    return inputSequence;
 }
 
 void createSFPUtxos(std::string path) {

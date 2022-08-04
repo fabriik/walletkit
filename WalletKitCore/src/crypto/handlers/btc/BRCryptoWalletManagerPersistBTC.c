@@ -11,6 +11,7 @@
 #include "BRCryptoBTC.h"
 #include "crypto/BRCryptoFileService.h"
 
+#include "../../../../../BitcoinCore/Sources/BitcoinCore/include/Authorizer.hpp"
 
 /// MARK: - Transaction File Service
 
@@ -101,6 +102,91 @@ initialTransactionsLoadBTC (BRCryptoWalletManager manager) {
     return transactions;
 }
 
+static void fileServiceLoadRPC(const char* path, BRSet *transactionSet) {
+    unsigned long numTransactions = fileServiceLoadRPCGetSize(path);
+    
+    for(unsigned long index = 0; index < numTransactions; index++) {
+        BRTransaction* tx = BRTransactionNewRPC();
+        char *txHash = fileServiceLoadRPCGetTxHash(index, path);
+        unsigned int version = fileServiceLoadRPCGetVersion(index, path);
+        unsigned long inCount = fileServiceLoadRPCGetInCount(index, path);
+        unsigned long outCount = fileServiceLoadRPCGetOutCount(index, path);
+        unsigned int lockTime = fileServiceLoadRPCGetLockTime(index, path);
+        long long blockHeight = fileServiceLoadRPCGetBlockHeight(index, path);
+        unsigned int timestamp = fileServiceLoadRPCGetTimestamp(index, path);
+        char *type = fileServiceLoadRPCGetType(index, path);
+        unsigned long long receiveAmount = fileServiceLoadRPCGetReceiveAmount(index, path);
+        char *mintId = fileServiceLoadRPCGetMintId(index, path);
+        char *fromAddress = fileServiceLoadRPCGetReceiverAdddress(index, path);
+        char *senderAddress = fileServiceLoadRPCGetSenderAdddress(index, path);
+        
+        tx->txHash = uint256(txHash);
+        tx->wtxHash = uint256(txHash);
+        tx->version = (uint32_t) version;
+        tx->lockTime = (uint32_t) lockTime;
+        //if(blockHeight == UINT64_MAX) {
+        if(blockHeight == INT64_MAX) {
+            tx->blockHeight = TX_UNCONFIRMED;
+        } else {
+            tx->blockHeight = (uint32_t) blockHeight;
+        }
+        tx->timestamp = (uint32_t) timestamp;
+        tx->inCount = (size_t) inCount;
+        tx->outCount = (size_t) outCount;
+        tx->receiveAmount = 100000000 * receiveAmount;
+        tx->direction = CRYPTO_TRANSFER_RECEIVED;
+        tx->mintId = mintId;
+        tx->fromAddress = fromAddress;
+        tx->senderAddress = senderAddress;
+        
+        for(unsigned long i = 0; i < inCount; i++) {
+            char *inputTxHash = fileServiceLoadRPCGetInputTxHash(i, txHash, path);
+            char *inputScript = fileServiceLoadRPCGetInputScript(i, txHash, path);
+            char *inputSignature = fileServiceLoadRPCGetInputSignature(i, txHash, path);
+            long long inputSequence = fileServiceLoadRPCGetInputSequence(i, txHash, path);
+            
+            tx->inputs[i].txHash = uint256(inputTxHash);
+            
+            tx->inputs[i].scriptLen = strlen(inputScript);
+            //tx->inputs[i].script = (uint8_t *) inputScript;
+            array_new(tx->inputs[i].script, tx->inputs[i].scriptLen);
+            array_add_array(tx->inputs[i].script, (uint8_t *) inputScript, tx->inputs[i].scriptLen);
+            
+            tx->inputs[i].sigLen = strlen(inputSignature);
+            //tx->inputs[i].signature = (uint8_t *) inputSignagure;
+            array_new(tx->inputs[i].signature, tx->inputs[i].sigLen);
+            array_add_array(tx->inputs[i].signature, (uint8_t *) inputSignature, tx->inputs[i].sigLen);
+            
+            tx->inputs[i].witLen = strlen(inputTxHash);
+            //tx->inputs[i].witness = (uint8_t *) inputTxHash;
+            array_new(tx->inputs[i].witness, tx->inputs[i].witLen);
+            array_add_array(tx->inputs[i].witness, (uint8_t *) inputTxHash, tx->inputs[i].witLen);
+            
+            tx->inputs[i].sequence = (uint32_t) inputSequence;
+            
+            printf("Debugging\n");
+        }
+        
+        
+        //UInt256 txHash;
+        //UInt256 wtxHash;
+        //uint32_t version;
+        //BRTxInput *inputs;
+        //size_t inCount;
+        //BRTxOutput *outputs;
+        //size_t outCount;
+        //uint32_t lockTime;
+        //uint32_t blockHeight;
+        //uint32_t timestamp; // time interval since unix epoch
+        //uint64_t receiveAmount; // Token protocols
+        //BRCryptoTransferDirection direction;
+        //char *mintId; //RUN
+        //char *fromAddress; //RUN
+        //char *senderAddress;
+        
+    }
+}
+
 extern BRArrayOf(BRTransaction*)
 initialTransactionsLoadRPC (BRCryptoWalletManager manager) {
     BRSetOf(BRTransaction*) transactionSet = BRSetNew(BRTransactionHash, BRTransactionEq, 100);
@@ -109,6 +195,9 @@ initialTransactionsLoadRPC (BRCryptoWalletManager manager) {
         _peer_log ("BWM: failed to load transactions");
         return NULL;
     }*/
+    
+    initializePersistDB(fileServiceGetSdbPath(manager->fileService));
+    fileServiceLoadRPC(fileServiceGetSdbPath(manager->fileService), transactionSet);
 
     size_t transactionsCount = BRSetCount(transactionSet);
 

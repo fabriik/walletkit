@@ -1575,8 +1575,10 @@ cryptoClientTransactionBundleCreateTokens (BRCryptoTransferStateType status,
     for(int i = 0; i < outCount; i++) {
         bundle->outputs[i] = calloc (1, sizeof (struct BRCryptoClientTransactionOutputRecord));
         
-        bundle->outputs[i]->script = (char *) malloc(strlen(outputs[i]->script));
-        memcpy(bundle->outputs[i]->script, outputs[i]->script, strlen(outputs[i]->script));
+        //bundle->outputs[i]->script = (char *) malloc(strlen(outputs[i]->script));
+        //memcpy(bundle->outputs[i]->script, outputs[i]->script, strlen(outputs[i]->script));
+        bundle->outputs[i]->script = (char *) malloc(strlen(outputs[i]->script) + 1);
+        snprintf(bundle->outputs[i]->script, strlen(outputs[i]->script) + 1, "%s", outputs[i]->script);
         
         bundle->outputs[i]->amount = outputs[i]->amount;
     }

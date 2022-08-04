@@ -224,6 +224,10 @@ fileServiceCreateFilePath (const char *basePath,
     return sdbPath;
 }
 
+extern char* fileServiceGetSdbPath(BRFileService fs) {
+    return fs->sdbPath;
+}
+
 extern BRFileService
 fileServiceCreate (const char *basePath,
                    const char *currency,
