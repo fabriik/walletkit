@@ -219,7 +219,8 @@ public final class Wallet: Equatable {
                 .urls(for: .documentDirectory, in: .userDomainMask)[0]
                .appendingPathComponent("Core").path
             
-            cryptoWalletSaveTransferRPC (core,
+            //cryptoWalletSaveTransferRPC (core,
+            cryptoWalletSaveTransferWOC (core,
                                          target.core,
                                          amount.core,
                                          storagePath)

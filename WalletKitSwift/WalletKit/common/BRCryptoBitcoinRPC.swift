@@ -770,6 +770,14 @@ public class BitcoinRPCSystemClient: SystemClient {
             else {
                 return nil
             }
+            
+            let storagePath = FileManager.default
+                .urls(for: .documentDirectory, in: .userDomainMask)[0]
+               .appendingPathComponent("Core").path
+            
+            let hex = BitcoinRPCSystemClient.getTransactionHex (hash: result)
+            
+            authorizerAddUtxo(hex, storagePath)
 
             //let hash = json.asString (name: "hash")
 
@@ -1285,6 +1293,64 @@ public class BitcoinRPCSystemClient: SystemClient {
         
         return ret;
     }
+    
+    static internal func getTransactionHex (hash: String) -> String {
+       
+        let urlBuilder = URLComponents (string: "http://bitcoin:local321@127.0.0.1:18332/")
+
+        let url = urlBuilder!.url
+
+        var request = URLRequest (url: url!)
+        //decorateRequest(&request, httpMethod: "POST")
+        request.httpMethod = "POST"
+        
+        let data: JSON.Dict = [
+            "jsonrpc"  : "1.0",
+            "id" : 1644337268902,
+            "method" : "getrawtransaction",
+            "params" : ["\(hash)"]
+        ]
+        
+       //if let data = data {
+            do { request.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
+            catch let jsonError as NSError {
+                let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(data.description)'"
+            }
+       //}
+        
+        var data_ : JSON.Dict? = [:]
+        
+        let session_ = URLSession (configuration: .default)
+            
+        let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+            //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+        let task = BitcoinRPCSystemClient.defaultDataTaskFuncSetJSON (session_, request, data_) { (data, res, error) in
+        //let task = BitcoinRPCSystemClient.defaultDataTaskFunc (session, request) { (data, res, error) in
+                do {
+                    if(data != nil) {
+                        let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                        if(json != nil) {
+                            //let result = json!["result"] as! String?
+                            data_ = json!
+                        } else {
+                            data_ = nil
+                        }
+                    }
+                } catch let error as NSError {
+                    print(error.localizedDescription)
+                }
+                semaphore.signal()
+            }
+            task.resume()
+            semaphore.wait()
+        
+        if(data_ != nil) {
+            let result = data_!["result"] as! String
+            return result
+        } else {
+            return String("")
+        }
+    }
 
     // Transactions
 
@@ -1300,6 +1366,10 @@ public class BitcoinRPCSystemClient: SystemClient {
         precondition(!addresses.isEmpty, "Empty `addresses`")
         let chunkedAddresses = canonicalAddresses(addresses, blockchainId)
             .chunked(into: BlocksetSystemClient.ADDRESS_COUNT)
+        
+        //for addresses in chunkedAddresses {
+        //    print("addresses: \(addresses)")
+        //}
         
         //let walletId: Int64 = 2 //FIX LATER
         //let walletId: Int64 = 3 //FIX LATER
@@ -1550,8 +1620,70 @@ public class BitcoinRPCSystemClient: SystemClient {
             .urls(for: .documentDirectory, in: .userDomainMask)[0]
            .appendingPathComponent("Core").path
         
+        var numTxns : Int64 = 1
+        authorizerGetNumTxnsForTransfer(&numTxns, storagePath)
+        
+        if(numTxns >= 2) {
+            for index in 0...(numTxns - 2) {
+                
+                var authorizerHexBuf0 = [Int8](repeating: 0, count: 5000) // Buffer for C string
+                authorizerCreateSerialization(index, &authorizerHexBuf0, Int32(authorizerHexBuf0.count), storagePath)
+                let authorizerHex0 = String(cString: authorizerHexBuf0)
+                
+                guard var urlBuilder = URLComponents (string: bdbBaseURL)
+                    else { completion (Result.failure(SystemClientError.url("URLComponents.url"))); return }
+
+                guard let url = urlBuilder.url
+                    else { completion (Result.failure (SystemClientError.url("URLComponents.url"))); return }
+
+                var request = URLRequest (url: url)
+                decorateRequest(&request, httpMethod: "POST")
+                
+                let data: JSON.Dict = [
+                    "jsonrpc"  : "1.0",
+                    "id" : 1644337268902,
+                    "method" : "sendrawtransaction",
+                    //"method" : "decoderawtransaction",
+                    "params" : ["\(authorizerHex0)"]
+                ]
+                
+               //if let data = data {
+                    do { request.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
+                    catch let jsonError as NSError {
+                        let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(data.description)'"
+                        completion (Result.failure (SystemClientError.model(warnString)))
+                    }
+               //}
+                    
+                let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+                    //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+                //let task = BitcoinRPCSystemClient.defaultDataTaskFuncSetJSON (session, request, data_) { (data, res, error) in
+                let task = BitcoinRPCSystemClient.defaultDataTaskFunc (session, request) { (data, res, error) in
+                        do {
+                            if(data != nil) {
+                                let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                                if(json != nil) {
+                                    let result = json!["result"] as! String?
+                                    let hex = BitcoinRPCSystemClient.getTransactionHex (hash: result!)
+                                    
+                                    authorizerAddUtxo(hex, storagePath)
+                                }
+                            } else {
+                                //data_ = nil
+                            }
+                        } catch let error as NSError {
+                            print(error.localizedDescription)
+                        }
+                        semaphore.signal()
+                    }
+                    task.resume()
+                    semaphore.wait()
+            }
+        }
+        
         var authorizerHexBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
-        authorizerCreateSerialization(&authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
+        authorizerCreateSerialization(numTxns - 1, &authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
+        //authorizerCreateSerialization(0, &authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
         let authorizerHex = String(cString: authorizerHexBuf)
         
         /*let data            = transaction.base64EncodedString()

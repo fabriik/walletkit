@@ -260,6 +260,7 @@ public final class WalletManager: Equatable, CustomStringConvertible {
             let testConfiguration     = TestConfiguration.loadFrom (bundle: appBundle, resource: "WalletKitTestsConfig")!
             let blocksetAccess = testConfiguration.blocksetAccess
             self.client = WhatsOnChainSystemClient.createForTest (bdbBaseURL: "http://api.whatsonchain.com", bdbToken:   blocksetAccess.token)
+            //self.client = WhatsOnChainSystemClient.createForTest (bdbBaseURL: "https://api.whatsonchain.com", bdbToken:   blocksetAccess.token)
         }
         else {
             self.client  = system.client

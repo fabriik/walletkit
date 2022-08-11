@@ -1029,7 +1029,7 @@ cryptoWalletSaveTransferRPC (BRCryptoWallet  wallet,
     
     uint64_t val = amount->value.u64[0];
     
-    authorizerSaveTransfer((const char *) u256hex(wid->transactions[0]->txHash), address.s, val, path_);
+    authorizerSaveTransfer((const char *) u256hex(wid->transactions[0]->txHash), address.s, val, 1, path_);
     
 }
 
@@ -1060,7 +1060,11 @@ cryptoWalletSaveTransferWOC (BRCryptoWallet  wallet,
     }
     
     if(exact) {
-        authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[index0]->txHash), address.s, val,  wid->transactions[index0]->mintId, wid->transactions[index0]->fromAddress, 1, path_);
+        if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
+            authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[index0]->txHash), address.s, val,  wid->transactions[index0]->mintId, wid->transactions[index0]->fromAddress, 1, path_);
+        } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
+            authorizerSaveTransfer((const char *) u256hex(wid->transactions[index0]->txHash), address.s, val, 1, path_);
+        }
     } else {
         //We need to find out which transactions to involve in the transfer
         size_t sorted[array_count(wid->transactions)];
@@ -1085,14 +1089,26 @@ cryptoWalletSaveTransferWOC (BRCryptoWallet  wallet,
             balance = balance + receiveAmount;
             
             if(balance == ((uint64_t) val/100000000) * 100000000 + 100000000) {
-                authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount,  wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
+                if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
+                    authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount,  wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
+                } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
+                    authorizerSaveTransfer((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount, index + 1, path_);
+                }
                 break;
             } else if (balance > ((uint64_t) val/100000000) * 100000000 + 100000000) {
                 uint64_t remainder = ((uint64_t) val/100000000) * 100000000 + 100000000 - (balance - receiveAmount);
-                authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, remainder, wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
+                if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
+                    authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, remainder, wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
+                } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
+                    authorizerSaveTransfer((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, remainder, index + 1, path_);
+                }
                 break;
             } else {
-                authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount,  wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
+                if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
+                    authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount,  wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
+                } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
+                    authorizerSaveTransfer((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount, index + 1, path_);
+                }
             }
         }
         

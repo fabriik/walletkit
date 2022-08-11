@@ -80,6 +80,8 @@ typedef struct BRWalletStruct BRWallet;
 // allocates and populates a BRWallet struct that must be freed by calling BRWalletFree()
 BRWallet *BRWalletNew(BRAddressParams addrParams, BRTransaction *transactions[], size_t txCount, BRMasterPubKey mpk);
 
+BRWallet *BRWalletNewRPC(BRAddressParams addrParams, BRTransaction *transactions[], size_t txCount, BRMasterPubKey mpk);
+
 // not thread-safe, set callbacks once after BRWalletNew(), before calling other BRWallet functions
 // info is a void pointer that will be passed along with each callback call
 // void balanceChanged(void *, uint64_t) - called when the wallet balance changes

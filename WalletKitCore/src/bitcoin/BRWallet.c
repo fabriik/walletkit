@@ -308,6 +308,57 @@ BRWallet *BRWalletNew(BRAddressParams addrParams, BRTransaction *transactions[],
     return wallet;
 }
 
+BRWallet *BRWalletNewRPC(BRAddressParams addrParams, BRTransaction *transactions[], size_t txCount, BRMasterPubKey mpk)
+{
+    BRWallet *wallet = NULL;
+    BRTransaction *tx;
+    const uint8_t *pkh;
+
+    assert(transactions != NULL || txCount == 0);
+    wallet = calloc(1, sizeof(*wallet));
+    assert(wallet != NULL);
+    array_new(wallet->utxos, 100);
+    array_new(wallet->transactions, txCount + 100);
+    wallet->feePerKb = DEFAULT_FEE_PER_KB;
+    wallet->masterPubKey = mpk;
+    wallet->addrParams = addrParams;
+    array_new(wallet->internalChain, 100);
+    array_new(wallet->externalChain, 100);
+    array_new(wallet->balanceHist, txCount + 100);
+    wallet->allTx = BRSetNew(BRTransactionHash, BRTransactionEq, txCount + 100);
+    wallet->invalidTx = BRSetNew(BRTransactionHash, BRTransactionEq, 10);
+    wallet->pendingTx = BRSetNew(BRTransactionHash, BRTransactionEq, 10);
+    wallet->spentOutputs = BRSetNew(BRUTXOHash, BRUTXOEq, txCount + 100);
+    wallet->usedPKH = BRSetNew(_pkhHash, _pkhEq, txCount + 100);
+    wallet->allPKH = BRSetNew(_pkhHash, _pkhEq, txCount + 100);
+    pthread_mutex_init(&wallet->lock, NULL);
+
+    for (size_t i = 0; transactions && i < txCount; i++) {
+        tx = transactions[i];
+        if (! BRTransactionIsSigned(tx) || BRSetContains(wallet->allTx, tx)) continue;
+        BRSetAdd(wallet->allTx, tx);
+        _BRWalletInsertTx(wallet, tx);
+
+        for (size_t j = 0; j < tx->outCount; j++) {
+            pkh = BRScriptPKH(tx->outputs[j].script, tx->outputs[j].scriptLen);
+            if (pkh) BRSetAdd(wallet->usedPKH, (void *)pkh);
+        }
+    }
+    
+    BRWalletUnusedAddrs(wallet, NULL, SEQUENCE_GAP_LIMIT_EXTERNAL_EXTENDED, SEQUENCE_EXTERNAL_CHAIN);
+    BRWalletUnusedAddrs(wallet, NULL, SEQUENCE_GAP_LIMIT_INTERNAL_EXTENDED, SEQUENCE_INTERNAL_CHAIN);
+
+    _BRWalletUpdateBalance(wallet);
+
+    /*if (txCount > 0 && ! _BRWalletContainsTx(wallet, transactions[0])) { // verify transactions match master pubKey
+        BRWalletFree(wallet);
+        wallet = NULL;
+    }*/
+    
+    return wallet;
+}
+
+
 // not thread-safe, set callbacks once after BRWalletNew(), before calling other BRWallet functions
 // info is a void pointer that will be passed along with each callback call
 // void balanceChanged(void *, uint64_t) - called when the wallet balance changes

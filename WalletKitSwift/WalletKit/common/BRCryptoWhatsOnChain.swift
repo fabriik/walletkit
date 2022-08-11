@@ -217,6 +217,7 @@ public class WhatsOnChainSystemClient: SystemClient {
     ///
     //public init (bdbBaseURL: String = "https://api.blockset.com",
     public init (bdbBaseURL: String = "http://api.whatsonchain.com",
+    //public init (bdbBaseURL: String = "https://api.whatsonchain.com",
                  bdbDataTaskFunc: DataTaskFunc? = nil,
                  //apiBaseURL: String = "https://api.breadwallet.com",
                  apiBaseURL: String = "http://api.whatsonchain.com",
@@ -1071,7 +1072,7 @@ public class WhatsOnChainSystemClient: SystemClient {
         }
     }
 
-    public func getBlockchainTest (blockchainId: String, completion: @escaping (Result<SystemClient.Blockchain,SystemClientError>) -> Void) {
+    public func getBlockchainDebug (blockchainId: String, completion: @escaping (Result<SystemClient.Blockchain,SystemClientError>) -> Void) {
         /*var blockchain : String = "test"
         if(blockchainId == "whatsonchain-mainnet") {
             blockchain = "main"
@@ -1087,9 +1088,10 @@ public class WhatsOnChainSystemClient: SystemClient {
             })
         }*/
         
-        let session_ = URLSession (configuration: .default)
+        //let session_ = URLSession (configuration: .default)
         //var request = URLRequest(url: URL(string: "http://bitcoin:local321@127.0.0.1:18332/")!);
         var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/test/chain/info")!);
+        //var request = URLRequest(url: URL(string: "https://api.whatsonchain.com/v1/bsv/test/chain/info")!);
         //var request = URLRequest(url: URL(string: "https://api.whatsonchain.com/v1/bsv/test/tx/decode")!);
         //request.httpMethod = "POST"
         request.httpMethod = "GET"
@@ -1117,14 +1119,15 @@ public class WhatsOnChainSystemClient: SystemClient {
             
         let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
             //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-        let task = BitcoinRPCSystemClient.defaultDataTaskFuncSetJSON (session_, request, data_) { (data, res, error) in
+        //let task = BitcoinRPCSystemClient.defaultDataTaskFuncSetJSON (session, request, data_) { (data, res, error) in
+        let task = WhatsOnChainSystemClient.defaultDataTaskFunc (session, request) { (data, res, error) in
                 do {
                     if(data != nil) {
                         let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
                         print("Stop")
-                        data_ = json
+                        //data_ = json
                     } else {
-                        data_ = nil
+                        //data_ = nil
                     }
                 } catch let error as NSError {
                     print(error.localizedDescription)

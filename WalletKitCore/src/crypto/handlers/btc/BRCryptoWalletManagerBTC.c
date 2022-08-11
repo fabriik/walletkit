@@ -274,7 +274,7 @@ cryptoWalletManagerCreateWalletRPC (BRCryptoWalletManager manager,
     // Since the BRWallet callbacks are not set, none of these transactions generate callbacks.
     // And, in fact, looking at BRWalletNew(), there is not even an attempt to generate callbacks
     // even if they could have been specified.
-    BRWallet *btcWallet = BRWalletNew (btcChainParams->addrParams, transactions, array_count(transactions), btcMPK);
+    BRWallet *btcWallet = BRWalletNewRPC (btcChainParams->addrParams, transactions, array_count(transactions), btcMPK);
     assert (NULL != btcWallet);
 
     // The btcWallet now should include *all* the transactions

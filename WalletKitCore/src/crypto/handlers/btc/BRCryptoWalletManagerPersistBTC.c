@@ -108,12 +108,12 @@ static void fileServiceLoadRPC(const char* path, BRSet *transactionSet) {
     for(unsigned long index = 0; index < numTransactions; index++) {
         BRTransaction* tx = BRTransactionNewRPC();
         char *txHash = fileServiceLoadRPCGetTxHash(index, path);
-        unsigned int version = fileServiceLoadRPCGetVersion(index, path);
-        unsigned long inCount = fileServiceLoadRPCGetInCount(index, path);
-        unsigned long outCount = fileServiceLoadRPCGetOutCount(index, path);
-        unsigned int lockTime = fileServiceLoadRPCGetLockTime(index, path);
+        long long version = fileServiceLoadRPCGetVersion(index, path);
+        unsigned long inCount = (unsigned long) fileServiceLoadRPCGetInCount(index, path);
+        unsigned long outCount = (unsigned long) fileServiceLoadRPCGetOutCount(index, path);
+        long long lockTime = fileServiceLoadRPCGetLockTime(index, path);
         long long blockHeight = fileServiceLoadRPCGetBlockHeight(index, path);
-        unsigned int timestamp = fileServiceLoadRPCGetTimestamp(index, path);
+        long long timestamp = fileServiceLoadRPCGetTimestamp(index, path);
         char *type = fileServiceLoadRPCGetType(index, path);
         unsigned long long receiveAmount = fileServiceLoadRPCGetReceiveAmount(index, path);
         char *mintId = fileServiceLoadRPCGetMintId(index, path);
@@ -163,27 +163,21 @@ static void fileServiceLoadRPC(const char* path, BRSet *transactionSet) {
             array_add_array(tx->inputs[i].witness, (uint8_t *) inputTxHash, tx->inputs[i].witLen);
             
             tx->inputs[i].sequence = (uint32_t) inputSequence;
-            
-            printf("Debugging\n");
         }
         
+        for(unsigned long i = 0; i < outCount; i++) {
+            long long outputAmount = fileServiceLoadRPCGetOutputAmount(i, txHash, path);
+            char *outputScript = fileServiceLoadRPCGetOutputScript(i, txHash, path);
+            
+            tx->outputs[i].amount = (uint64_t) outputAmount;
+            tx->outputs[i].scriptLen = strlen(outputScript);
+            //tx->outputs[i].script = (uint8_t *) bundle->outputs[i]->script;
+            array_new(tx->outputs[i].script, tx->outputs[i].scriptLen);
+            array_add_array(tx->outputs[i].script, (uint8_t *) outputScript, tx->outputs[i].scriptLen);
+        }
         
-        //UInt256 txHash;
-        //UInt256 wtxHash;
-        //uint32_t version;
-        //BRTxInput *inputs;
-        //size_t inCount;
-        //BRTxOutput *outputs;
-        //size_t outCount;
-        //uint32_t lockTime;
-        //uint32_t blockHeight;
-        //uint32_t timestamp; // time interval since unix epoch
-        //uint64_t receiveAmount; // Token protocols
-        //BRCryptoTransferDirection direction;
-        //char *mintId; //RUN
-        //char *fromAddress; //RUN
-        //char *senderAddress;
-        
+        //void *oldEntity = BRSetAdd (transactionSet, tx);
+        BRSetAdd (transactionSet, tx);
     }
 }
 
