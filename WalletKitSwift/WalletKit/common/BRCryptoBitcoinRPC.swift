@@ -771,13 +771,13 @@ public class BitcoinRPCSystemClient: SystemClient {
                 return nil
             }
             
-            let storagePath = FileManager.default
+            /*let storagePath = FileManager.default
                 .urls(for: .documentDirectory, in: .userDomainMask)[0]
                .appendingPathComponent("Core").path
             
             let hex = BitcoinRPCSystemClient.getTransactionHex (hash: result)
             
-            authorizerAddUtxo(hex, storagePath)
+            authorizerAddUtxo(hex, storagePath)*/
 
             //let hash = json.asString (name: "hash")
 
@@ -1592,6 +1592,143 @@ public class BitcoinRPCSystemClient: SystemClient {
          }
      }
      */
+    
+    public func createTransaction(blockchainId: String, transaction: Data, identifier: String?, exchangeId: String?, completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
+        /*let size = MemoryLayout<UInt8>.stride
+        
+        let transactionBytes = transaction.withUnsafeBytes { (bytes: UnsafePointer<UInt8>?) in
+            Array(UnsafeBufferPointer(start: bytes, count: transaction.count / size))
+        }
+        let tx = cryptoTransferParseToken(transactionBytes, transaction.count)
+
+        var transAddrBuf = [Int8](repeating: 0, count: 200) // Buffer for C string
+        cryptoTransferGetSendAddress(&transAddrBuf, transAddrBuf.count, tx)
+        let toAddress = String(cString: transAddrBuf)
+        
+        var txHashBuf = [Int8](repeating: 0, count: 200) // Buffer for C string
+        cryptoTransferGetTxHash(&txHashBuf, txHashBuf.count, tx)
+        let txHash = String(cString: txHashBuf)*/
+        
+        //let toAddress = String("moyZRWuEXttPgJ84NaUesjHQTR4fC2Q4gQ")
+        
+        //let txHash = String("3d5eb86b889942127b469425327f7753fb7ff3900f2db3e63d9ee8e0d9023239")
+        
+        let storagePath = FileManager.default
+            .urls(for: .documentDirectory, in: .userDomainMask)[0]
+           .appendingPathComponent("Core").path
+        
+        var numTxns : Int64 = 1
+        authorizerGetNumTxnsForTransfer(&numTxns, storagePath)
+        
+        if(numTxns >= 2) {
+            for index in 0...(numTxns - 2) {
+                
+                var authorizerHexBuf0 = [Int8](repeating: 0, count: 5000) // Buffer for C string
+                authorizerCreateSerialization(index, &authorizerHexBuf0, Int32(authorizerHexBuf0.count), storagePath)
+                let authorizerHex0 = String(cString: authorizerHexBuf0)
+                
+                guard var urlBuilder = URLComponents (string: bdbBaseURL)
+                    else { completion (Result.failure(SystemClientError.url("URLComponents.url"))); return }
+
+                guard let url = urlBuilder.url
+                    else { completion (Result.failure (SystemClientError.url("URLComponents.url"))); return }
+
+                var request = URLRequest (url: url)
+                decorateRequest(&request, httpMethod: "POST")
+                
+                let data: JSON.Dict = [
+                    "jsonrpc"  : "1.0",
+                    "id" : 1644337268902,
+                    "method" : "sendrawtransaction",
+                    //"method" : "decoderawtransaction",
+                    "params" : ["\(authorizerHex0)"]
+                ]
+                
+               //if let data = data {
+                    do { request.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
+                    catch let jsonError as NSError {
+                        let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(data.description)'"
+                        completion (Result.failure (SystemClientError.model(warnString)))
+                    }
+               //}
+                    
+                let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+                    //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+                //let task = BitcoinRPCSystemClient.defaultDataTaskFuncSetJSON (session, request, data_) { (data, res, error) in
+                let task = BitcoinRPCSystemClient.defaultDataTaskFunc (session, request) { (data, res, error) in
+                        do {
+                            if(data != nil) {
+                                let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                                if(json != nil) {
+                                    let result = json!["result"] as! String?
+                                    let hex = BitcoinRPCSystemClient.getTransactionHex (hash: result!)
+                                    
+                                    authorizerAddUtxo(hex, storagePath)
+                                }
+                            } else {
+                                //data_ = nil
+                            }
+                        } catch let error as NSError {
+                            print(error.localizedDescription)
+                        }
+                        semaphore.signal()
+                    }
+                    task.resume()
+                    semaphore.wait()
+            }
+        }
+        
+        var authorizerHexBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
+        authorizerCreateSerialization(numTxns - 1, &authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
+        //authorizerCreateSerialization(0, &authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
+        let authorizerHex = String(cString: authorizerHexBuf)
+        
+        /*let data            = transaction.base64EncodedString()
+        let json: JSON.Dict = [
+            "blockchain_id"  : blockchainId,
+            "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
+            "data"           : transaction.base64EncodedString()
+        ]
+
+        makeRequest (bdbDataTaskFunc, bdbBaseURL,
+                     path: "/transactions",
+                     data: json,
+                     httpMethod: "POST") {
+            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+                (more: URL?, res: Result<[JSON], SystemClientError>) in
+                precondition(nil == more)
+                completion (res.flatMap {
+                    BitcoinRPCSystemClient.getOneExpected (id: "POST /transactions",
+                                                         data: $0,
+                                                         transform: Model.asTransactionIdentifier)
+                })
+            }
+        }*/
+        
+         let json: JSON.Dict = [
+             "jsonrpc"  : "1.0",
+             "id" : 1644337268902,
+             "method" : "sendrawtransaction",
+             //"method" : "decoderawtransaction",
+             "params" : ["\(authorizerHex)"]
+             //"params" : ["0100000002393202d9e0e89e3de6b32d0f90f37ffb53777f322594467b124299886bb85e3d000000001601000100010001000773667040302e33010001000100ffffffff393202d9e0e89e3de6b32d0f90f37ffb53777f322594467b124299886bb85e3d01000000020000ffffffff023502000000000000fd9801610773667040302e33243136363264386235323832322e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a9145cc9252c3823f0e87d4cfe035bf8e384aa9983e7143417e66193cde6c4c2b4c3ca39ba8675dbb0e66b473045022100f1ff7b7186602eb832412501cd87b9d777bd960a965f912c8d7efd6baf0d10e202205e25aa0b46287da1a6ec370cbd4174b5be0180971f80b9b33d67ce1499ec45a224393202d9e0e89e3de6b32d0f90f37ffb53777f322594467b124299886bb85e3d00000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b01000000000000000800000cdbf505000000001976a91478e51b3421fec4f8d7422f1fbbe6ca880745689588ac00000000"]
+         ]
+        
+        makeRequest (bdbDataTaskFunc, bdbBaseURL,
+                     path: "",
+                     data: json,
+                     httpMethod: "POST") {
+            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+                (more: URL?, res: Result<[JSON], SystemClientError>) in
+                precondition(nil == more)
+                completion (res.flatMap {
+                    BitcoinRPCSystemClient.getOneExpected (id: blockchainId,
+                                                         data: $0,
+                                                         transform: Model.asTransactionIdentifierRPC)
+                })
+            }
+        }
+    }
 
     public func createTransaction (blockchainId: String,
                                    transaction: Data,

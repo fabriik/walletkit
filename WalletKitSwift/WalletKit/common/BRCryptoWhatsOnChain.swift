@@ -1623,6 +1623,105 @@ public class WhatsOnChainSystemClient: SystemClient {
             })
         }
     }
+    
+    public func createTransaction(blockchainId: String, transaction: Data, identifier: String?, exchangeId: String?, completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
+        let storagePath = FileManager.default
+            .urls(for: .documentDirectory, in: .userDomainMask)[0]
+           .appendingPathComponent("Core").path
+        
+        var txnIdList : String = String("")
+        var mintIdList : String = String("")
+        var privkeyList : String = String("")
+        var addressList : String = String("")
+        var amountList : String = String("")
+        
+        var numTxns : Int64 = 1
+        authorizerGetNumTxnsForTransferRUN(&numTxns, storagePath)
+        for index in 0...(numTxns - 1) {
+            if(index != 0) {
+                txnIdList = txnIdList + String(",")
+                mintIdList = mintIdList + String(",")
+                privkeyList = privkeyList + String(",")
+                addressList = addressList + String(",")
+                amountList = amountList + String(",")
+            }
+            var txnIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+            var addressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+            var mintIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+            var fromAddressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+            var amount : Int64 = 1
+            
+            authorizerGetTransferDataRun(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, storagePath)
+            let txnIdHex = String(cString: txnIdHexBuf)
+            let addressHex = String(cString: addressHexBuf)
+            let mintIdHex = String(cString: mintIdHexBuf)
+            let fromAddressHex = String(cString: fromAddressHexBuf)
+            
+            var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
+            authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+            let privkeyHex = String(cString: privkeyHexBuf)
+            
+            txnIdList = txnIdList + txnIdHex
+            mintIdList = mintIdList + mintIdHex
+            privkeyList = privkeyList + privkeyHex
+            addressList = addressList + addressHex
+            amountList = amountList + String(amount)
+        }
+        
+        
+        /*let data            = transaction.base64EncodedString()
+        let json: JSON.Dict = [
+            "blockchain_id"  : blockchainId,
+            "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
+            "data"           : transaction.base64EncodedString()
+        ]
+
+        makeRequest (bdbDataTaskFunc, bdbBaseURL,
+                     path: "/transactions",
+                     data: json,
+                     httpMethod: "POST") {
+            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+                (more: URL?, res: Result<[JSON], SystemClientError>) in
+                precondition(nil == more)
+                completion (res.flatMap {
+                    WhatsOnChainSystemClient.getOneExpected (id: "POST /transactions",
+                                                         data: $0,
+                                                         transform: Model.asTransactionIdentifier)
+                })
+            }
+        }*/
+        
+        var blockchain : String = "test"
+        if(blockchainId == "whatsonchain-mainnet") {
+            blockchain = "main"
+        }
+        
+        let json: JSON.Dict = [
+            //"txid"  : "\(txnIdHex)",
+            "txid"  : "\(txnIdList)",
+            "mintId"  : "\(mintIdList)",
+            "privkey"  : "\(privkeyList)",
+            "address"  : "\(addressList)",
+            "amount" : "\(amountList)",
+            "network" : blockchain
+        ]
+        
+        //makeRequest (bdbDataTaskFunc, bdbBaseURL,
+        makeRequest (bdbDataTaskFunc, "http://localhost:8000",
+                     path: "/transfer",
+                     data: json,
+                     httpMethod: "POST") {
+            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+                (more: URL?, res: Result<[JSON], SystemClientError>) in
+                precondition(nil == more)
+                completion (res.flatMap {
+                    WhatsOnChainSystemClient.getOneExpected (id: blockchainId,
+                                                         data: $0,
+                                                         transform: Model.asTransactionIdentifierWOC)
+                })
+            }
+        }
+    }
 
     public func createTransaction (blockchainId: String,
                                    transaction: Data,
