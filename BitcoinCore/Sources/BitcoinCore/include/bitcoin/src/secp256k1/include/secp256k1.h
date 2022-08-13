@@ -213,7 +213,7 @@ typedef int (*secp256k1_nonce_function)(
  *  API consistency, but currently do not require expensive precomputations or dynamic
  *  allocations.
  */
-SECP256K1_API extern const secp256k1_context *secp256k1_context_no_precomp;
+SECP256K1_API extern const secp256k1_context *secp256k1_bitcoin_context_no_precomp;
 
 /** Create a secp256k1 context object (in dynamically allocated memory).
  *
@@ -226,7 +226,7 @@ SECP256K1_API extern const secp256k1_context *secp256k1_context_no_precomp;
  *
  *  See also secp256k1_context_randomize.
  */
-SECP256K1_API secp256k1_context* secp256k1_context_create(
+SECP256K1_API secp256k1_context* secp256k1_bitcoin_context_create(
     unsigned int flags
 ) SECP256K1_WARN_UNUSED_RESULT;
 
@@ -239,7 +239,7 @@ SECP256K1_API secp256k1_context* secp256k1_context_create(
  *  Returns: a newly created context object.
  *  Args:    ctx: an existing context to copy
  */
-SECP256K1_API secp256k1_context* secp256k1_context_clone(
+SECP256K1_API secp256k1_context* secp256k1_bitcoin_context_clone(
     const secp256k1_context* ctx
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_WARN_UNUSED_RESULT;
 
@@ -256,7 +256,7 @@ SECP256K1_API secp256k1_context* secp256k1_context_clone(
  *  Args:   ctx: an existing context to destroy, constructed using
  *               secp256k1_context_create or secp256k1_context_clone
  */
-SECP256K1_API void secp256k1_context_destroy(
+SECP256K1_API void secp256k1_bitcoin_context_destroy(
     secp256k1_context* ctx
 ) SECP256K1_ARG_NONNULL(1);
 
@@ -297,7 +297,7 @@ SECP256K1_API void secp256k1_context_destroy(
  *
  *  See also secp256k1_context_set_error_callback.
  */
-SECP256K1_API void secp256k1_context_set_illegal_callback(
+SECP256K1_API void secp256k1_bitcoin_context_set_illegal_callback(
     secp256k1_context* ctx,
     void (*fun)(const char* message, void* data),
     const void* data
@@ -322,7 +322,7 @@ SECP256K1_API void secp256k1_context_set_illegal_callback(
  *
  *  See also secp256k1_context_set_illegal_callback.
  */
-SECP256K1_API void secp256k1_context_set_error_callback(
+SECP256K1_API void secp256k1_bitcoin_context_set_error_callback(
     secp256k1_context* ctx,
     void (*fun)(const char* message, void* data),
     const void* data
@@ -335,7 +335,7 @@ SECP256K1_API void secp256k1_context_set_error_callback(
  *  In:   size: amount of memory to be available as scratch space. Some extra
  *              (<100 bytes) will be allocated for extra accounting.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT secp256k1_scratch_space* secp256k1_scratch_space_create(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT secp256k1_scratch_space* secp256k1_bitcoin_scratch_space_create(
     const secp256k1_context* ctx,
     size_t size
 ) SECP256K1_ARG_NONNULL(1);
@@ -346,7 +346,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT secp256k1_scratch_space* secp256k1_sc
  *  Args:       ctx: a secp256k1 context object.
  *          scratch: space to destroy
  */
-SECP256K1_API void secp256k1_scratch_space_destroy(
+SECP256K1_API void secp256k1_bitcoin_scratch_space_destroy(
     const secp256k1_context* ctx,
     secp256k1_scratch_space* scratch
 ) SECP256K1_ARG_NONNULL(1);
@@ -365,7 +365,7 @@ SECP256K1_API void secp256k1_scratch_space_destroy(
  *  0x03), uncompressed (65 bytes, header byte 0x04), or hybrid (65 bytes, header
  *  byte 0x06 or 0x07) format public keys.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_pubkey_parse(
     const secp256k1_context* ctx,
     secp256k1_pubkey* pubkey,
     const unsigned char *input,
@@ -387,7 +387,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
  *          flags:      SECP256K1_EC_COMPRESSED if serialization should be in
  *                      compressed format, otherwise SECP256K1_EC_UNCOMPRESSED.
  */
-SECP256K1_API int secp256k1_ec_pubkey_serialize(
+SECP256K1_API int secp256k1_bitcoin_ec_pubkey_serialize(
     const secp256k1_context* ctx,
     unsigned char *output,
     size_t *outputlen,
@@ -425,7 +425,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_cmp(
  *  S are zero, the resulting sig value is guaranteed to fail validation for any
  *  message and public key.
  */
-SECP256K1_API int secp256k1_ecdsa_signature_parse_compact(
+SECP256K1_API int secp256k1_bitcoin_ecdsa_signature_parse_compact(
     const secp256k1_context* ctx,
     secp256k1_ecdsa_signature* sig,
     const unsigned char *input64
@@ -446,7 +446,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_parse_compact(
  *  encoded numbers are out of range, signature validation with it is
  *  guaranteed to fail for every message and public key.
  */
-SECP256K1_API int secp256k1_ecdsa_signature_parse_der(
+SECP256K1_API int secp256k1_bitcoin_ecdsa_signature_parse_der(
     const secp256k1_context* ctx,
     secp256k1_ecdsa_signature* sig,
     const unsigned char *input,
@@ -464,7 +464,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_parse_der(
  *                     if 0 was returned).
  *  In:     sig:       a pointer to an initialized signature object
  */
-SECP256K1_API int secp256k1_ecdsa_signature_serialize_der(
+SECP256K1_API int secp256k1_bitcoin_ecdsa_signature_serialize_der(
     const secp256k1_context* ctx,
     unsigned char *output,
     size_t *outputlen,
@@ -480,7 +480,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_der(
  *
  *  See secp256k1_ecdsa_signature_parse_compact for details about the encoding.
  */
-SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
+SECP256K1_API int secp256k1_bitcoin_ecdsa_signature_serialize_compact(
     const secp256k1_context* ctx,
     unsigned char *output64,
     const secp256k1_ecdsa_signature* sig
@@ -511,7 +511,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
  *
  * For details, see the comments for that function.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ecdsa_verify(
     const secp256k1_context* ctx,
     const secp256k1_ecdsa_signature *sig,
     const unsigned char *msghash32,
@@ -555,11 +555,11 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
  *  property is required for an application.
  *
  *  The secp256k1_ecdsa_sign function will by default create signatures in the
- *  lower-S form, and secp256k1_ecdsa_verify will not accept others. In case
+ *  lower-S form, and secp256k1_bitcoin_ecdsa_verify will not accept others. In case
  *  signatures come from a system that cannot enforce this property,
  *  secp256k1_ecdsa_signature_normalize must be called before verification.
  */
-SECP256K1_API int secp256k1_ecdsa_signature_normalize(
+SECP256K1_API int secp256k1_bitcoin_ecdsa_signature_normalize(
     const secp256k1_context* ctx,
     secp256k1_ecdsa_signature *sigout,
     const secp256k1_ecdsa_signature *sigin
@@ -592,7 +592,7 @@ SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_def
  * The created signature is always in lower-S form. See
  * secp256k1_ecdsa_signature_normalize for more details.
  */
-SECP256K1_API int secp256k1_ecdsa_sign(
+SECP256K1_API int secp256k1_bitcoin_ecdsa_sign(
     const secp256k1_context* ctx,
     secp256k1_ecdsa_signature *sig,
     const unsigned char *msghash32,
@@ -624,7 +624,7 @@ SECP256K1_API int secp256k1_ecdsa_sign_(
  *  Args:    ctx: pointer to a context object.
  *  In:      seckey: pointer to a 32-byte secret key.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_seckey_verify(
     const secp256k1_context* ctx,
     const unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
@@ -637,7 +637,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(
  *  Out:     pubkey: pointer to the created public key.
  *  In:      seckey: pointer to a 32-byte secret key.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_pubkey_create(
     const secp256k1_context* ctx,
     secp256k1_pubkey *pubkey,
     const unsigned char *seckey
@@ -653,14 +653,14 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
  *                  secp256k1_ec_seckey_verify, this function returns 0 and
  *                  seckey will be set to some unspecified value.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_negate(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_seckey_negate(
     const secp256k1_context* ctx,
     unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
 
 /** Same as secp256k1_ec_seckey_negate, but DEPRECATED. Will be removed in
  *  future versions. */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_negate(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_privkey_negate(
     const secp256k1_context* ctx,
     unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2)
@@ -672,7 +672,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_negate(
  *  Args:   ctx:        pointer to a context object
  *  In/Out: pubkey:     pointer to the public key to be negated.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_negate(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_pubkey_negate(
     const secp256k1_context* ctx,
     secp256k1_pubkey *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
@@ -692,7 +692,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_negate(
  *                  uniformly random 32-byte arrays the chance of being invalid
  *                  is negligible (around 1 in 2^128).
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_tweak_add(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_seckey_tweak_add(
     const secp256k1_context* ctx,
     unsigned char *seckey,
     const unsigned char *tweak32
@@ -700,7 +700,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_tweak_add(
 
 /** Same as secp256k1_ec_seckey_tweak_add, but DEPRECATED. Will be removed in
  *  future versions. */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_add(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_privkey_tweak_add(
     const secp256k1_context* ctx,
     unsigned char *seckey,
     const unsigned char *tweak32
@@ -720,7 +720,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_add(
  *                  uniformly random 32-byte arrays the chance of being invalid
  *                  is negligible (around 1 in 2^128).
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_add(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_pubkey_tweak_add(
     const secp256k1_context* ctx,
     secp256k1_pubkey *pubkey,
     const unsigned char *tweak32
@@ -739,7 +739,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_add(
  *                  uniformly random 32-byte arrays the chance of being invalid
  *                  is negligible (around 1 in 2^128).
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_tweak_mul(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_seckey_tweak_mul(
     const secp256k1_context* ctx,
     unsigned char *seckey,
     const unsigned char *tweak32
@@ -747,7 +747,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_tweak_mul(
 
 /** Same as secp256k1_ec_seckey_tweak_mul, but DEPRECATED. Will be removed in
  *  future versions. */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_privkey_tweak_mul(
     const secp256k1_context* ctx,
     unsigned char *seckey,
     const unsigned char *tweak32
@@ -765,7 +765,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
  *                  uniformly random 32-byte arrays the chance of being invalid
  *                  is negligible (around 1 in 2^128).
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_pubkey_tweak_mul(
     const secp256k1_context* ctx,
     secp256k1_pubkey *pubkey,
     const unsigned char *tweak32
@@ -796,7 +796,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
  * secp256k1_context_clone (and secp256k1_context_preallocated_create or
  * secp256k1_context_clone, resp.), and you may call this repeatedly afterwards.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_context_randomize(
     secp256k1_context* ctx,
     const unsigned char *seed32
 ) SECP256K1_ARG_NONNULL(1);
@@ -810,7 +810,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
  *  In:     ins:        pointer to array of pointers to public keys.
  *          n:          the number of public keys to add together (must be at least 1).
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_combine(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bitcoin_ec_pubkey_combine(
     const secp256k1_context* ctx,
     secp256k1_pubkey *out,
     const secp256k1_pubkey * const * ins,

@@ -32,14 +32,14 @@ extern "C" {
  *  Returns: the required size of the caller-provided memory block
  *  In:      flags:    which parts of the context to initialize.
  */
-SECP256K1_API size_t secp256k1_context_preallocated_size(
+SECP256K1_API size_t secp256k1_bitcoin_context_preallocated_size(
     unsigned int flags
 ) SECP256K1_WARN_UNUSED_RESULT;
 
 /** Create a secp256k1 context object in caller-provided memory.
  *
  *  The caller must provide a pointer to a rewritable contiguous block of memory
- *  of size at least secp256k1_context_preallocated_size(flags) bytes, suitably
+ *  of size at least secp256k1_bitcoin_context_preallocated_size(flags) bytes, suitably
  *  aligned to hold an object of any type.
  *
  *  The block of memory is exclusively owned by the created context object during
@@ -54,14 +54,14 @@ SECP256K1_API size_t secp256k1_context_preallocated_size(
  *
  *  Returns: a newly created context object.
  *  In:      prealloc: a pointer to a rewritable contiguous block of memory of
- *                     size at least secp256k1_context_preallocated_size(flags)
+ *                     size at least secp256k1_bitcoin_context_preallocated_size(flags)
  *                     bytes, as detailed above.
  *           flags:    which parts of the context to initialize.
  *
  *  See also secp256k1_context_randomize (in secp256k1.h)
  *  and secp256k1_context_preallocated_destroy.
  */
-SECP256K1_API secp256k1_context* secp256k1_context_preallocated_create(
+SECP256K1_API secp256k1_context* secp256k1_bitcoin_context_preallocated_create(
     void* prealloc,
     unsigned int flags
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_WARN_UNUSED_RESULT;
@@ -72,14 +72,14 @@ SECP256K1_API secp256k1_context* secp256k1_context_preallocated_create(
  *  Returns: the required size of the caller-provided memory block.
  *  In:      ctx: an existing context to copy.
  */
-SECP256K1_API size_t secp256k1_context_preallocated_clone_size(
+SECP256K1_API size_t secp256k1_bitcoin_context_preallocated_clone_size(
     const secp256k1_context* ctx
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_WARN_UNUSED_RESULT;
 
 /** Copy a secp256k1 context object into caller-provided memory.
  *
  *  The caller must provide a pointer to a rewritable contiguous block of memory
- *  of size at least secp256k1_context_preallocated_size(flags) bytes, suitably
+ *  of size at least secp256k1_bitcoin_context_preallocated_size(flags) bytes, suitably
  *  aligned to hold an object of any type.
  *
  *  The block of memory is exclusively owned by the created context object during
@@ -89,10 +89,10 @@ SECP256K1_API size_t secp256k1_context_preallocated_clone_size(
  *  Returns: a newly created context object.
  *  Args:    ctx:      an existing context to copy.
  *  In:      prealloc: a pointer to a rewritable contiguous block of memory of
- *                     size at least secp256k1_context_preallocated_size(flags)
+ *                     size at least secp256k1_bitcoin_context_preallocated_size(flags)
  *                     bytes, as detailed above.
  */
-SECP256K1_API secp256k1_context* secp256k1_context_preallocated_clone(
+SECP256K1_API secp256k1_context* secp256k1_bitcoin_context_preallocated_clone(
     const secp256k1_context* ctx,
     void* prealloc
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_WARN_UNUSED_RESULT;
@@ -117,7 +117,7 @@ SECP256K1_API secp256k1_context* secp256k1_context_preallocated_clone(
  *               secp256k1_context_preallocated_create or
  *               secp256k1_context_preallocated_clone.
  */
-SECP256K1_API void secp256k1_context_preallocated_destroy(
+SECP256K1_API void secp256k1_bitcoin_context_preallocated_destroy(
     secp256k1_context* ctx
 ) SECP256K1_ARG_NONNULL(1);
 

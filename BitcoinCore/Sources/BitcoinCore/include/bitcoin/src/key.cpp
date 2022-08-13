@@ -78,7 +78,7 @@ int ec_seckey_import_der(const secp256k1_context* ctx, unsigned char *out32, con
         return 0;
     }
     memcpy(out32 + (32 - oslen), seckey, oslen);
-    if (!secp256k1_ec_seckey_verify(ctx, out32)) {
+    if (!secp256k1_bitcoin_ec_seckey_verify(ctx, out32)) {
         memset(out32, 0, 32);
         return 0;
     }
@@ -99,7 +99,7 @@ int ec_seckey_export_der(const secp256k1_context *ctx, unsigned char *seckey, si
     assert(*seckeylen >= CKey::SIZE);
     secp256k1_pubkey pubkey;
     size_t pubkeylen = 0;
-    if (!secp256k1_ec_pubkey_create(ctx, &pubkey, key32)) {
+    if (!secp256k1_bitcoin_ec_pubkey_create(ctx, &pubkey, key32)) {
         *seckeylen = 0;
         return 0;
     }
@@ -123,7 +123,7 @@ int ec_seckey_export_der(const secp256k1_context *ctx, unsigned char *seckey, si
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
         pubkeylen = CPubKey::COMPRESSED_SIZE;
-        secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED);
+        secp256k1_bitcoin_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED);
         ptr += pubkeylen;
         *seckeylen = ptr - seckey;
         assert(*seckeylen == CKey::COMPRESSED_SIZE);
@@ -149,7 +149,7 @@ int ec_seckey_export_der(const secp256k1_context *ctx, unsigned char *seckey, si
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
         pubkeylen = CPubKey::SIZE;
-        secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+        secp256k1_bitcoin_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
         ptr += pubkeylen;
         *seckeylen = ptr - seckey;
         assert(*seckeylen == CKey::SIZE);
@@ -158,7 +158,7 @@ int ec_seckey_export_der(const secp256k1_context *ctx, unsigned char *seckey, si
 }
 
 bool CKey::Check(const unsigned char *vch) {
-    return secp256k1_ec_seckey_verify(secp256k1_context_sign, vch);
+    return secp256k1_bitcoin_ec_seckey_verify(secp256k1_context_sign, vch);
 }
 
 void CKey::MakeNewKey(bool fCompressedIn) {
@@ -172,7 +172,7 @@ void CKey::MakeNewKey(bool fCompressedIn) {
 bool CKey::Negate()
 {
     assert(fValid);
-    return secp256k1_ec_seckey_negate(secp256k1_context_sign, keydata.data());
+    return secp256k1_bitcoin_ec_seckey_negate(secp256k1_context_sign, keydata.data());
 }
 
 CPrivKey CKey::GetPrivKey() const {
@@ -193,9 +193,9 @@ CPubKey CKey::GetPubKey() const {
     secp256k1_pubkey pubkey;
     size_t clen = CPubKey::SIZE;
     CPubKey result;
-    int ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pubkey, begin());
+    int ret = secp256k1_bitcoin_ec_pubkey_create(secp256k1_context_sign, &pubkey, begin());
     assert(ret);
-    secp256k1_ec_pubkey_serialize(secp256k1_context_sign, (unsigned char*)result.begin(), &clen, &pubkey, fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+    secp256k1_bitcoin_ec_pubkey_serialize(secp256k1_context_sign, (unsigned char*)result.begin(), &clen, &pubkey, fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
     assert(result.size() == clen);
     assert(result.IsValid());
     return result;
@@ -205,7 +205,7 @@ CPubKey CKey::GetPubKey() const {
 bool SigHasLowR(const secp256k1_ecdsa_signature* sig)
 {
     unsigned char compact_sig[64];
-    secp256k1_ecdsa_signature_serialize_compact(secp256k1_context_sign, compact_sig, sig);
+    secp256k1_bitcoin_ecdsa_signature_serialize_compact(secp256k1_context_sign, compact_sig, sig);
 
     // In DER serialization, all values are interpreted as big-endian, signed integers. The highest bit in the integer indicates
     // its signed-ness; 0 is positive, 1 is negative. When the value is interpreted as a negative integer, it must be converted
@@ -223,22 +223,22 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool gr
     WriteLE32(extra_entropy, test_case);
     secp256k1_ecdsa_signature sig;
     uint32_t counter = 0;
-    int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, (!grind && test_case) ? extra_entropy : nullptr);
+    int ret = secp256k1_bitcoin_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, (!grind && test_case) ? extra_entropy : nullptr);
 
     // Grind for low R
     while (ret && !SigHasLowR(&sig) && grind) {
         WriteLE32(extra_entropy, ++counter);
-        ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, extra_entropy);
+        ret = secp256k1_bitcoin_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, extra_entropy);
     }
     assert(ret);
-    secp256k1_ecdsa_signature_serialize_der(secp256k1_context_sign, vchSig.data(), &nSigLen, &sig);
+    secp256k1_bitcoin_ecdsa_signature_serialize_der(secp256k1_context_sign, vchSig.data(), &nSigLen, &sig);
     vchSig.resize(nSigLen);
     // Additional verification step to prevent using a potentially corrupted signature
     secp256k1_pubkey pk;
-    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, begin());
+    ret = secp256k1_bitcoin_ec_pubkey_create(secp256k1_context_sign, &pk, begin());
     assert(ret);
-    //ret = secp256k1_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
-    ret = secp256k1_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
+    //ret = secp256k1_bitcoin_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
+    ret = secp256k1_bitcoin_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
     assert(ret);
     return true;
 }
@@ -259,16 +259,16 @@ bool CKey::Sign_(const uint256 &hash, std::vector<unsigned char>& vchSig, std::v
     // Grind for low R
     while (ret && !SigHasLowR(&sig) && grind) {
         WriteLE32(extra_entropy, ++counter);
-        ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, extra_entropy);
+        ret = secp256k1_bitcoin_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, extra_entropy);
     }
     assert(ret);
-    secp256k1_ecdsa_signature_serialize_der(secp256k1_context_sign, vchSig.data(), &nSigLen, &sig);
+    secp256k1_bitcoin_ecdsa_signature_serialize_der(secp256k1_context_sign, vchSig.data(), &nSigLen, &sig);
     vchSig.resize(nSigLen);
     // Additional verification step to prevent using a potentially corrupted signature
     secp256k1_pubkey pk;
-    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, begin());
+    ret = secp256k1_bitcoin_ec_pubkey_create(secp256k1_context_sign, &pk, begin());
     assert(ret);
-    ret = secp256k1_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
+    ret = secp256k1_bitcoin_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
     assert(ret);
     return true;
 }
@@ -301,7 +301,7 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     vchSig[0] = 27 + rec + (fCompressed ? 4 : 0);
     // Additional verification step to prevent using a potentially corrupted signature
     secp256k1_pubkey epk, rpk;
-    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &epk, begin());
+    ret = secp256k1_bitcoin_ec_pubkey_create(secp256k1_context_sign, &epk, begin());
     assert(ret);
     ret = secp256k1_ecdsa_recover(GetVerifyContext(), &rpk, &rsig, hash.begin());
     assert(ret);
@@ -361,7 +361,7 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     }
     memcpy(ccChild.begin(), vout.data()+32, 32);
     memcpy((unsigned char*)keyChild.begin(), begin(), 32);
-    bool ret = secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), vout.data());
+    bool ret = secp256k1_bitcoin_ec_seckey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), vout.data());
     keyChild.fCompressed = true;
     keyChild.fValid = ret;
     return ret;
@@ -426,14 +426,14 @@ bool ECC_InitSanityCheck() {
 void ECC_Start() {
     assert(secp256k1_context_sign == nullptr);
 
-    secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    secp256k1_context *ctx = secp256k1_bitcoin_context_create(SECP256K1_CONTEXT_SIGN);
     assert(ctx != nullptr);
 
     {
         // Pass in a random blinding seed to the secp256k1 context.
         std::vector<unsigned char, secure_allocator<unsigned char>> vseed(32);
         GetRandBytes(vseed);
-        bool ret = secp256k1_context_randomize(ctx, vseed.data());
+        bool ret = secp256k1_bitcoin_context_randomize(ctx, vseed.data());
         assert(ret);
     }
 
@@ -445,6 +445,6 @@ void ECC_Stop() {
     secp256k1_context_sign = nullptr;
 
     if (ctx) {
-        secp256k1_context_destroy(ctx);
+        secp256k1_bitcoin_context_destroy(ctx);
     }
 }
