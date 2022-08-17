@@ -192,7 +192,7 @@ DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_RPC,  "bitcoinrpc-mainnet", NETWORK_NAME, "m
 DEFINE_NETWORK_FEE_ESTIMATE ("bitcoinrpc-mainnet", "18", "10m", 10 * 60 * 1000)
 DEFINE_CURRENCY ("bitcoinrpc-mainnet",     "bitcoinrpc-mainnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_RPC,  "native",   NULL,   true)
     DEFINE_UNIT ("bitcoinrpc-mainnet:__native__",      "Satoshi",    "sat",      0,      "SAT")
-    DEFINE_UNIT ("bitcoinrpc-mainnet:__native__",      NETWORK_NAME, "btc",      8,      "₿")
+    DEFINE_UNIT ("bitcoinrpc-mainnet:__native__",      "sfp", "sfp",      8,      "SFP")
 DEFINE_ADDRESS_SCHEMES  ("bitcoinrpc-mainnet", CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT,   CRYPTO_ADDRESS_SCHEME_BTC_LEGACY)
 DEFINE_MODES            ("bitcoinrpc-mainnet", CRYPTO_SYNC_MODE_API_ONLY,          CRYPTO_SYNC_MODE_P2P_ONLY)
 

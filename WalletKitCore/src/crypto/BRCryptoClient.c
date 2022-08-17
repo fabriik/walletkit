@@ -348,6 +348,11 @@ cryptoClientQRYRequestSync (BRCryptoClientQRYManager qry, bool needLock) {
     // Whether or not we completed , update the `endBlockNumber` to the current block height.
     qry->sync.endBlockNumber = MAX (cryptoClientQRYGetNetworkBlockHeight (qry),
                                     qry->sync.begBlockNumber);
+    
+    if(strcmp(qry->manager->network->name, "BitcoinRPC") == 0 || strcmp(qry->manager->network->name, "WhatsOnChain") == 0) {
+        printf("BlockHeight %llu\n", cryptoClientQRYGetNetworkBlockHeight (qry));
+        printf("Debugging\n");
+    }
 
     // We'll update transactions if there are more blocks to examine and if the prior sync
     // completed (successfully or not).

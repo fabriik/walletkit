@@ -28,6 +28,8 @@
 
 #include "BRCryptoTransferP.h"
 
+#include <math.h>
+
 //#include "BRCryptoAmount.h"
 
 //#include "support/BRInt.h"
@@ -1052,7 +1054,7 @@ cryptoWalletSaveTransferWOC (BRCryptoWallet  wallet,
     size_t index0 = 0;
     bool exact = false;
     for(size_t i = 0; i < array_count(wid->transactions); i++) {
-        if(wid->transactions[i]->receiveAmount == ((uint64_t) val/100000000) * 100000000 + 100000000) {
+        if(wid->transactions[i]->receiveAmount == (uint64_t) ceil((double) val/100000000) * 100000000) {
             index0 = i;
             exact = true;
             break;
@@ -1088,15 +1090,15 @@ cryptoWalletSaveTransferWOC (BRCryptoWallet  wallet,
             uint64_t receiveAmount = wid->transactions[sorted[index]]->receiveAmount;
             balance = balance + receiveAmount;
             
-            if(balance == ((uint64_t) val/100000000) * 100000000 + 100000000) {
+            if(balance == (uint64_t) ceil((double) val/100000000) * 100000000) {
                 if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
                     authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount,  wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
                 } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
                     authorizerSaveTransfer((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount, index + 1, path_);
                 }
                 break;
-            } else if (balance > ((uint64_t) val/100000000) * 100000000 + 100000000) {
-                uint64_t remainder = ((uint64_t) val/100000000) * 100000000 + 100000000 - (balance - receiveAmount);
+            } else if (balance > (uint64_t) ceil((double) val/100000000) * 100000000) {
+                uint64_t remainder = ((uint64_t) ceil((double) val/100000000) * 100000000) - (balance - receiveAmount);
                 if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
                     authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, remainder, wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
                 } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {

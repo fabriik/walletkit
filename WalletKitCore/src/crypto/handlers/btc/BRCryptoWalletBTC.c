@@ -183,7 +183,8 @@ cryptoWalletGetAddressBTC (BRCryptoWallet wallet,
     assert (CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT != addressScheme ||
             //CRYPTO_NETWORK_TYPE_BTC == wallet->type);
             CRYPTO_NETWORK_TYPE_BTC == wallet->type ||
-            CRYPTO_NETWORK_TYPE_RPC == wallet->type);
+            CRYPTO_NETWORK_TYPE_RPC == wallet->type ||
+            CRYPTO_NETWORK_TYPE_WOC == wallet->type);
 
     BRCryptoWalletBTC walletBTC = cryptoWalletCoerceBTC(wallet);
 
