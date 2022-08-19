@@ -199,9 +199,9 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
                                                                     tid->timestamp,
                                                                     feeBasisEstimated);
     
-    if(strcmp(listener.manager->network->name, "WhatsOnChain") == 0 ) {
+    if(strcmp(listener.manager->network->name, "BitcoinRPC") == 0 || strcmp(listener.manager->network->name, "WhatsOnChain") == 0 ) {
         if(direction == CRYPTO_TRANSFER_RECEIVED) {
-            targetAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->fromAddress);
+            targetAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->receiverAddress);
             sourceAddress = cryptoAddressCreateFromStringAsWOC (addressParams, tid->senderAddress);
             if(tid->blockHeight == TX_UNCONFIRMED) {
                 state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;

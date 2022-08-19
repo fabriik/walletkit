@@ -523,8 +523,9 @@ public class BitcoinRPCSystemClient: SystemClient {
                      type: nil,
                      receiveAmount: nil,
                      mintId: nil,
-                     fromAddress: nil,
-                     senderAddress: nil
+                     receiverAddress: nil,
+                     senderAddress: nil,
+                     jigId: nil
                      )
         }
         
@@ -568,11 +569,15 @@ public class BitcoinRPCSystemClient: SystemClient {
             let vout       = result["vout"] as! [NSDictionary]?*/
             //let hex        = result["hex"] as! String
             
+            let someDate = Date()
+            // convert Date to TimeInterval (typealias for Double)
+            let timeInterval = someDate.timeIntervalSince1970
+            
             //REMOVE
             let blockHeight = UInt64(0)
             let blockHash = ""
             let confirmations = UInt64(0)
-            let time = Int64(0) as Int64?
+            let time = Int64(timeInterval) as Int64?
             let data_ : Data? = hex.data(using: .utf8) as! Data?
             //let data_ : Data? = [] as! Data?
             
@@ -608,6 +613,10 @@ public class BitcoinRPCSystemClient: SystemClient {
             
             var receiveAmount : UInt64? = 1 //FIXME!!!
             
+            var receiverAddress : String = String("")
+            
+            var senderAddress : String = String("")
+            
             var outputs : [SystemClient.Outputs] = []
             for anItem in vout {
                 //let value = anItem.asString (name: "value")
@@ -623,7 +632,12 @@ public class BitcoinRPCSystemClient: SystemClient {
                 if(isTokenSFP(script: script)) {
                     type = "sfp"
                     receiveAmount = getAmount(script: script)
+                    receiverAddress = getReceiverAddress(script: script)
+                } else {
+                    let senderAddressArray = scriptPubKey["addresses"] as! [String]
+                    senderAddress = senderAddressArray[0]
                 }
+                
                 
                 //let output : SystemClient.Outputs = (script: script, amount: value!)
                 let output : SystemClient.Outputs = (script: script, amount: value ?? 0)
@@ -634,6 +648,7 @@ public class BitcoinRPCSystemClient: SystemClient {
             let inCount = inputs.count
             
             let outCount = outputs.count
+            
             
             
             
@@ -728,8 +743,9 @@ public class BitcoinRPCSystemClient: SystemClient {
                      type: type,
                      receiveAmount: receiveAmount,
                      mintId: String(""),
-                     fromAddress: String(""),
-                     senderAddress: String("")
+                     receiverAddress: receiverAddress,
+                     senderAddress: senderAddress,
+                     jigId: String("")
             )
             /*return (id: identifier, blockchainId: "test",
                      hash: hash, identifier: identifier,
@@ -1294,6 +1310,15 @@ public class BitcoinRPCSystemClient: SystemClient {
         return ret;
     }
     
+    static internal func getReceiverAddress (script: String) -> String {
+       
+        var addressHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
+        authorizerGetAddress(&addressHexBuf, addressHexBuf.count, script);
+        let addressHex = String(cString: addressHexBuf)
+        
+        return addressHex;
+    }
+    
     static internal func getTransactionHex (hash: String) -> String {
        
         let urlBuilder = URLComponents (string: "http://bitcoin:local321@127.0.0.1:18332/")
@@ -1367,16 +1392,14 @@ public class BitcoinRPCSystemClient: SystemClient {
         let chunkedAddresses = canonicalAddresses(addresses, blockchainId)
             .chunked(into: BlocksetSystemClient.ADDRESS_COUNT)
         
-        //for addresses in chunkedAddresses {
-        //    print("addresses: \(addresses)")
-        //}
+        for addresses in chunkedAddresses {
+            print("addresses: \(addresses)")
+        }
         
         //let walletId: Int64 = 2 //FIX LATER
         //let walletId: Int64 = 3 //FIX LATER
         
-        let storagePath = FileManager.default
-            .urls(for: .documentDirectory, in: .userDomainMask)[0]
-           .appendingPathComponent("Core").path
+        let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
         
         let walletId : Int64 = getWalletIdByPrimaryAddress(chunkedAddresses[0][0], storagePath)
 
@@ -1613,9 +1636,7 @@ public class BitcoinRPCSystemClient: SystemClient {
         
         //let txHash = String("3d5eb86b889942127b469425327f7753fb7ff3900f2db3e63d9ee8e0d9023239")
         
-        let storagePath = FileManager.default
-            .urls(for: .documentDirectory, in: .userDomainMask)[0]
-           .appendingPathComponent("Core").path
+        let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
         
         var numTxns : Int64 = 1
         authorizerGetNumTxnsForTransfer(&numTxns, storagePath)
@@ -1660,10 +1681,10 @@ public class BitcoinRPCSystemClient: SystemClient {
                             if(data != nil) {
                                 let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
                                 if(json != nil) {
-                                    let result = json!["result"] as! String?
-                                    let hex = BitcoinRPCSystemClient.getTransactionHex (hash: result!)
-                                    
-                                    authorizerAddUtxo(hex, storagePath)
+                                    if let result = json!["result"] as? String? {
+                                        let hex = BitcoinRPCSystemClient.getTransactionHex (hash: result!)
+                                        authorizerAddUtxo(hex, storagePath)
+                                    }
                                 }
                             } else {
                                 //data_ = nil
@@ -1753,9 +1774,7 @@ public class BitcoinRPCSystemClient: SystemClient {
         
         //let txHash = String("3d5eb86b889942127b469425327f7753fb7ff3900f2db3e63d9ee8e0d9023239")
         
-        let storagePath = FileManager.default
-            .urls(for: .documentDirectory, in: .userDomainMask)[0]
-           .appendingPathComponent("Core").path
+        let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
         
         var numTxns : Int64 = 1
         authorizerGetNumTxnsForTransfer(&numTxns, storagePath)

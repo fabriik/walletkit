@@ -117,8 +117,10 @@ static void fileServiceLoadRPC(const char* path, BRSet *transactionSet) {
         char *type = fileServiceLoadRPCGetType(index, path);
         unsigned long long receiveAmount = fileServiceLoadRPCGetReceiveAmount(index, path);
         char *mintId = fileServiceLoadRPCGetMintId(index, path);
-        char *fromAddress = fileServiceLoadRPCGetReceiverAdddress(index, path);
+        char *receiverAddress = fileServiceLoadRPCGetReceiverAdddress(index, path);
         char *senderAddress = fileServiceLoadRPCGetSenderAdddress(index, path);
+        
+        if(txHash == NULL) return;
         
         tx->txHash = uint256(txHash);
         tx->wtxHash = uint256(txHash);
@@ -136,8 +138,9 @@ static void fileServiceLoadRPC(const char* path, BRSet *transactionSet) {
         tx->receiveAmount = 100000000 * receiveAmount;
         tx->direction = CRYPTO_TRANSFER_RECEIVED;
         tx->mintId = mintId;
-        tx->fromAddress = fromAddress;
+        tx->receiverAddress = receiverAddress;
         tx->senderAddress = senderAddress;
+        tx->status = "RECEIVED";
         
         for(unsigned long i = 0; i < inCount; i++) {
             char *inputTxHash = fileServiceLoadRPCGetInputTxHash(i, txHash, path);

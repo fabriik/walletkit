@@ -215,9 +215,7 @@ public final class Wallet: Equatable {
         var coreAttributes: [BRCryptoTransferAttribute?] = attributes?.map { $0.core } ?? []
         
         if(self.manager.network.name == "BitcoinRPC") {
-            let storagePath = FileManager.default
-                .urls(for: .documentDirectory, in: .userDomainMask)[0]
-               .appendingPathComponent("Core").path
+            let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
             
             //cryptoWalletSaveTransferRPC (core,
             cryptoWalletSaveTransferWOC (core,
@@ -226,9 +224,7 @@ public final class Wallet: Equatable {
                                          storagePath)
             
         } else if(self.manager.network.name == "WhatsOnChain") {
-            let storagePath = FileManager.default
-                .urls(for: .documentDirectory, in: .userDomainMask)[0]
-               .appendingPathComponent("Core").path
+            let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
             
             cryptoWalletSaveTransferWOC (core,
                                          target.core,

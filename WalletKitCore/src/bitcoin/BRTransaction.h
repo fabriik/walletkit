@@ -98,8 +98,10 @@ typedef struct {
     uint64_t receiveAmount; // Token protocols
     BRCryptoTransferDirection direction;
     char *mintId; //RUN
-    char *fromAddress; //RUN
+    char *receiverAddress; //RUN
     char *senderAddress; //RUN
+    char *jigId;
+    char *status;
 } BRTransaction;
 
 // returns a newly allocated empty transaction that must be freed by calling BRTransactionFree()

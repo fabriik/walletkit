@@ -545,6 +545,30 @@ cryptoWalletComputeBalance (BRCryptoWallet wallet, bool needLock) {
     return balance;
 }
 
+static BRCryptoAmount
+cryptoWalletComputeBalanceRPC (BRCryptoWallet wallet, bool needLock) {
+    if (needLock) pthread_mutex_lock (&wallet->lock);
+    BRCryptoAmount balance = cryptoAmountCreateInteger (0, wallet->unit);
+
+    for (size_t index = 0; index < array_count(wallet->transfers); index++) {
+        // If the transfer has ERRORED, ignore it immediately
+        //if (CRYPTO_TRANSFER_STATE_ERRORED != cryptoTransferGetStateType (wallet->transfers[index])) {
+        //if (CRYPTO_TRANSFER_STATE_INCLUDED == cryptoTransferGetStateType (wallet->transfers[index])) {
+        if (CRYPTO_TRANSFER_STATE_INCLUDED == wallet->transfers[index]->state->type) {
+            BRCryptoAmount amount     = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[index]);
+            BRCryptoAmount newBalance = cryptoAmountAdd (balance, amount);
+
+            cryptoAmountGive(amount);
+            cryptoAmountGive(balance);
+
+            balance = newBalance;
+        }
+    }
+    if (needLock) pthread_mutex_unlock (&wallet->lock);
+
+    return balance;
+}
+
 private_extern void
 cryptoWalletUpdBalance (BRCryptoWallet wallet, bool needLock) {
     if (needLock) pthread_mutex_lock (&wallet->lock);
@@ -554,8 +578,10 @@ cryptoWalletUpdBalance (BRCryptoWallet wallet, bool needLock) {
 
 private_extern void
 cryptoWalletUpdBalanceRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer, bool needLock) {
+    if(transfer->state->type == CRYPTO_TRANSFER_STATE_ERRORED) return;
+    
     if (needLock) pthread_mutex_lock (&wallet->lock);
-    BRCryptoAmount prevAmount = cryptoWalletComputeBalance (wallet, false);
+    BRCryptoAmount prevAmount = cryptoWalletComputeBalanceRPC (wallet, false);
     BRCryptoAmount newBalance;
     //direction = CRYPTO_TRANSFER_RECEIVED;
     if(transfer->direction == CRYPTO_TRANSFER_SENT)
@@ -572,28 +598,36 @@ cryptoWalletUpdBalanceRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer, boo
 private_extern void
 cryptoWalletUpdTransferRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer) {
     
+    if(transfer->state->type == CRYPTO_TRANSFER_STATE_ERRORED) return;
+    
+    //BRWallet *btcWallet = cryptoWalletAsBTC(wallet);
+    
     size_t index0 = 0;
     bool exact = false;
     for(size_t i = 0; i < array_count(wallet->transfers); i++) {
-        BRCryptoAmount a1    = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[i]);
-        BRCryptoComparison compare = cryptoAmountCompare (a1, transfer->amount);
-        if(compare == CRYPTO_COMPARE_EQ) {
-            index0 = i;
-            exact = true;
-            break;
+        printf("Transfer Type index %lu: %u\n", i, wallet->transfers[i]->state->type);
+        if(wallet->transfers[i]->state->type == CRYPTO_TRANSFER_STATE_INCLUDED) {
+            BRCryptoAmount a1    = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[i]);
+            BRCryptoComparison compare = cryptoAmountCompare (a1, transfer->amount);
+            if(compare == CRYPTO_COMPARE_EQ) {
+                index0 = i;
+                exact = true;
+                break;
+            }
         }
     }
     
     if(exact) {
-        cryptoTransferSetState (wallet->transfers[index0], cryptoTransferStateInit (CRYPTO_TRANSFER_STATE_SUBMITTED));
+        //cryptoTransferSetState (wallet->transfers[index0], cryptoTransferStateInit (CRYPTO_TRANSFER_STATE_SUBMITTED));
+        wallet->transfers[index0]->state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
     } else {
         size_t sorted[array_count(wallet->transfers)];
         for(size_t i = 0; i < array_count(wallet->transfers); i++) sorted[i] = i;
         //Sort using sorted
         for(size_t i = 0; i < array_count(wallet->transfers) - 1; i++) {
             for(size_t j = 0; j < array_count(wallet->transfers) - i - 1; j++) {
-                BRCryptoAmount a1    = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[j]);
-                BRCryptoAmount a2    = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[j + 1]);
+                BRCryptoAmount a1    = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[sorted[j]]);
+                BRCryptoAmount a2    = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[sorted[j + 1]]);
                 BRCryptoComparison compare = cryptoAmountCompare (a1, a2);
                 if(compare == CRYPTO_COMPARE_LT) {
                     size_t temp = sorted[j];
@@ -605,19 +639,20 @@ cryptoWalletUpdTransferRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer) {
         
         BRCryptoAmount balance = cryptoAmountCreateInteger (0, wallet->unit);
         for(size_t index = 0; index < array_count(wallet->transfers); index++) {
-            
-            BRCryptoAmount amount     = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[sorted[index]]);
-            balance = cryptoAmountAdd (balance, amount);
-            BRCryptoAmount diff = cryptoAmountSub (transfer->amount, balance);
-            
-            cryptoTransferSetState (wallet->transfers[sorted[index]], cryptoTransferStateInit (CRYPTO_TRANSFER_STATE_SUBMITTED));
-            
-            if(cryptoAmountIsZero(diff) == CRYPTO_TRUE || cryptoAmountIsNegative(diff) == CRYPTO_TRUE) {
-                break;
+            if(wallet->transfers[sorted[index]]->state->type == CRYPTO_TRANSFER_STATE_INCLUDED) {
+                BRCryptoAmount amount     = cryptoWalletGetTransferAmountDirectedNet (wallet, wallet->transfers[sorted[index]]);
+                balance = cryptoAmountAdd (balance, amount);
+                BRCryptoAmount diff = cryptoAmountSub (transfer->amount, balance);
+                
+                //cryptoTransferSetState (wallet->transfers[sorted[index]], cryptoTransferStateInit (CRYPTO_TRANSFER_STATE_SUBMITTED));
+                wallet->transfers[sorted[index]]->state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
+                
+                if(cryptoAmountIsZero(diff) == CRYPTO_TRUE || cryptoAmountIsNegative(diff) == CRYPTO_TRUE) {
+                    break;
+                }
             }
         }
     }
-    
     
     //cryptoTransferSetState (wallet->transfers[0], cryptoTransferStateInit (CRYPTO_TRANSFER_STATE_SUBMITTED));
 }
@@ -1054,19 +1089,22 @@ cryptoWalletSaveTransferWOC (BRCryptoWallet  wallet,
     size_t index0 = 0;
     bool exact = false;
     for(size_t i = 0; i < array_count(wid->transactions); i++) {
-        if(wid->transactions[i]->receiveAmount == (uint64_t) ceil((double) val/100000000) * 100000000) {
-            index0 = i;
-            exact = true;
-            break;
+        if(strcmp(wid->transactions[i]->status, "RECEIVED") == 0) {
+            if(wid->transactions[i]->receiveAmount == (uint64_t) ceil((double) val/100000000) * 100000000) {
+                index0 = i;
+                exact = true;
+                break;
+            }
         }
     }
     
     if(exact) {
         if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
-            authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[index0]->txHash), address.s, val,  wid->transactions[index0]->mintId, wid->transactions[index0]->fromAddress, 1, path_);
+            authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[index0]->txHash), address.s, val,  wid->transactions[index0]->mintId, wid->transactions[index0]->receiverAddress, 1, wid->transactions[index0]->jigId, path_);
         } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
             authorizerSaveTransfer((const char *) u256hex(wid->transactions[index0]->txHash), address.s, val, 1, path_);
         }
+        wid->transactions[index0]->status = "SUBMITTED";
     } else {
         //We need to find out which transactions to involve in the transfer
         size_t sorted[array_count(wid->transactions)];
@@ -1074,8 +1112,8 @@ cryptoWalletSaveTransferWOC (BRCryptoWallet  wallet,
         //Sort using sorted
         for(size_t i = 0; i < array_count(wid->transactions) - 1; i++) {
             for(size_t j = 0; j < array_count(wid->transactions) - i - 1; j++) {
-                uint64_t a1    = wid->transactions[j]->receiveAmount;
-                uint64_t a2    = wid->transactions[j + 1]->receiveAmount;
+                uint64_t a1    = wid->transactions[sorted[j]]->receiveAmount;
+                uint64_t a2    = wid->transactions[sorted[j + 1]]->receiveAmount;
                 if(a1 < a2) {
                     size_t temp = sorted[j];
                     sorted[j] = sorted[j + 1];
@@ -1084,34 +1122,44 @@ cryptoWalletSaveTransferWOC (BRCryptoWallet  wallet,
             }
         }
         
+        //for(size_t i = 0; i < array_count(wid->transactions); i++) {
+        //    uint64_t a1    = wid->transactions[sorted[i]]->receiveAmount;
+        //    printf("a1 = %llu\n", a1);
+        //}
+        
         uint64_t balance = 0;
         for(size_t index = 0; index < array_count(wid->transactions); index++) {
             
-            uint64_t receiveAmount = wid->transactions[sorted[index]]->receiveAmount;
-            balance = balance + receiveAmount;
+            //if(strcmp(wid->transactions[sorted[index]]->status, "RECEIVED") == 0) {
             
-            if(balance == (uint64_t) ceil((double) val/100000000) * 100000000) {
-                if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
-                    authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount,  wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
-                } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
-                    authorizerSaveTransfer((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount, index + 1, path_);
+                uint64_t receiveAmount = wid->transactions[sorted[index]]->receiveAmount;
+                balance = balance + receiveAmount;
+                
+                if(balance == (uint64_t) ceil((double) val/100000000) * 100000000) {
+                    if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
+                        authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount,  wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->receiverAddress, index + 1, wid->transactions[sorted[index]]->jigId, path_);
+                    } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
+                        authorizerSaveTransfer((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount, index + 1, path_);
+                    }
+                    wid->transactions[sorted[index]]->status = "SUBMITTED";
+                    break;
+                } else if (balance > (uint64_t) ceil((double) val/100000000) * 100000000) {
+                    uint64_t remainder = ((uint64_t) ceil((double) val/100000000) * 100000000) - (balance - receiveAmount);
+                    if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
+                        authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, remainder, wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->receiverAddress, index + 1, wid->transactions[sorted[index]]->jigId, path_);
+                    } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
+                        authorizerSaveTransfer((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, remainder, index + 1, path_);
+                    }
+                    break;
+                } else {
+                    if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
+                        authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount,  wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->receiverAddress, index + 1, wid->transactions[sorted[index]]->jigId, path_);
+                    } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
+                        authorizerSaveTransfer((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount, index + 1, path_);
+                    }
+                    wid->transactions[sorted[index]]->status = "SUBMITTED";
                 }
-                break;
-            } else if (balance > (uint64_t) ceil((double) val/100000000) * 100000000) {
-                uint64_t remainder = ((uint64_t) ceil((double) val/100000000) * 100000000) - (balance - receiveAmount);
-                if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
-                    authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, remainder, wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
-                } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
-                    authorizerSaveTransfer((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, remainder, index + 1, path_);
-                }
-                break;
-            } else {
-                if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
-                    authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount,  wid->transactions[sorted[index]]->mintId, wid->transactions[sorted[index]]->fromAddress, index + 1, path_);
-                } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
-                    authorizerSaveTransfer((const char *) u256hex(wid->transactions[sorted[index]]->txHash), address.s, wid->transactions[sorted[index]]->receiveAmount, index + 1, path_);
-                }
-            }
+            //}
         }
         
     }

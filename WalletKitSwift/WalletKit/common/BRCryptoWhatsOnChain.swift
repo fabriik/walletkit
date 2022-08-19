@@ -486,8 +486,9 @@ public class WhatsOnChainSystemClient: SystemClient {
                      type: nil,
                      receiveAmount: nil,
                      mintId: nil,
-                     fromAddress: nil,
-                     senderAddress: nil
+                     receiverAddress: nil,
+                     senderAddress: nil,
+                     jigId: nil
                      )
         }
         
@@ -587,11 +588,16 @@ public class WhatsOnChainSystemClient: SystemClient {
                 time = json.asInt64 (name: "time")
             }
             
+            var jigId : String? = String("")
+            if(json.asString(name: "jigId") != nil) {
+                jigId = json.asString(name: "jigId")
+            }
+            
             //var count = 0
             //var json_array : [JSON.Dict] = []
             var type : String?
             var mintId : String?
-            var fromAddress : String?
+            var receiverAddress : String?
             var receiveAmount : UInt64? = 1
 
             var inputs : [SystemClient.Inputs] = []
@@ -645,12 +651,14 @@ public class WhatsOnChainSystemClient: SystemClient {
                     let endIndexAmount = str.index(endOfAmount, offsetBy: -4)
                     let substringAmount = str[firstIndexAmount...endIndexAmount]
                     let amount = String(substringAmount)
-                    
                     receiveAmount = UInt64(amount) //FIXME!!!
+                    
+                    
+                    
                 } else if (count == 1) {
                     let addresses : [String] = scriptPubKey!["addresses"] as! [String]
                     if(addresses.count != 0) {
-                        fromAddress = addresses[0]
+                        receiverAddress = addresses[0]
                         print("Debugging")
                     }
                 }
@@ -740,8 +748,9 @@ public class WhatsOnChainSystemClient: SystemClient {
                      type: type,
                      receiveAmount: receiveAmount,
                      mintId: mintId,
-                     fromAddress: fromAddress,
-                     senderAddress: senderAddress
+                     receiverAddress: receiverAddress,
+                     senderAddress: senderAddress,
+                     jigId: jigId
             
             )
             /*return (id: identifier, blockchainId: "test",
@@ -1404,6 +1413,11 @@ public class WhatsOnChainSystemClient: SystemClient {
         
         return txid
     }
+    
+    static internal func getJigId (json: JSON.Dict) -> String {
+        
+        return String("")
+    }
 
     // Transactions
 
@@ -1420,9 +1434,7 @@ public class WhatsOnChainSystemClient: SystemClient {
         let chunkedAddresses = canonicalAddresses(addresses, blockchainId)
             .chunked(into: BlocksetSystemClient.ADDRESS_COUNT)
         
-        let storagePath = FileManager.default
-            .urls(for: .documentDirectory, in: .userDomainMask)[0]
-           .appendingPathComponent("Core").path
+        let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
         
         let walletId : Int64 = getWalletIdByPrimaryAddress(chunkedAddresses[0][0], storagePath)
         
@@ -1501,6 +1513,10 @@ public class WhatsOnChainSystemClient: SystemClient {
                                 "network" : "\(blockchain)"
                             ]
                             
+                            if(hash == "1e3ad69c477fb2660c6395c11258b818805389e6e3167b61c761c944e2737d8f") {
+                                print("Debugging")
+                            }
+                            
                            //if let data = data {
                                 do { request0.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
                                 catch let jsonError as NSError {
@@ -1529,9 +1545,10 @@ public class WhatsOnChainSystemClient: SystemClient {
                             
                             if(data0_ != nil) {
                                 let txid : String = data0_!["txid"] as! String
-                                
                                 print("TXID: \(txid)")
                                 if(txid != "") {
+                                    let jigId : String = data0_!["jigId"] as! String
+                                    data_!["jigId"] = jigId
                                     data_array.append(data_!)
                                 }
                             }
@@ -1625,15 +1642,14 @@ public class WhatsOnChainSystemClient: SystemClient {
     }
     
     public func createTransaction(blockchainId: String, transaction: Data, identifier: String?, exchangeId: String?, completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
-        let storagePath = FileManager.default
-            .urls(for: .documentDirectory, in: .userDomainMask)[0]
-           .appendingPathComponent("Core").path
+        let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
         
         var txnIdList : String = String("")
         var mintIdList : String = String("")
         var privkeyList : String = String("")
         var addressList : String = String("")
         var amountList : String = String("")
+        var jigIdList : String = String("")
         
         var numTxns : Int64 = 1
         authorizerGetNumTxnsForTransferRUN(&numTxns, storagePath)
@@ -1644,18 +1660,21 @@ public class WhatsOnChainSystemClient: SystemClient {
                 privkeyList = privkeyList + String(",")
                 addressList = addressList + String(",")
                 amountList = amountList + String(",")
+                jigIdList = jigIdList + String(",")
             }
             var txnIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             var addressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             var mintIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             var fromAddressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             var amount : Int64 = 1
+            var jigIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             
-            authorizerGetTransferDataRun(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, storagePath)
+            authorizerGetTransferDataRun(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, &jigIdHexBuf, Int32(jigIdHexBuf.count), storagePath)
             let txnIdHex = String(cString: txnIdHexBuf)
             let addressHex = String(cString: addressHexBuf)
             let mintIdHex = String(cString: mintIdHexBuf)
             let fromAddressHex = String(cString: fromAddressHexBuf)
+            let jigIdHex = String(cString: jigIdHexBuf)
             
             var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
             authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
@@ -1666,6 +1685,7 @@ public class WhatsOnChainSystemClient: SystemClient {
             privkeyList = privkeyList + privkeyHex
             addressList = addressList + addressHex
             amountList = amountList + String(amount)
+            jigIdList = jigIdList + jigIdHex
         }
         
         
@@ -1703,6 +1723,7 @@ public class WhatsOnChainSystemClient: SystemClient {
             "privkey"  : "\(privkeyList)",
             "address"  : "\(addressList)",
             "amount" : "\(amountList)",
+            "jigId"  : "\(jigIdList)",
             "network" : blockchain
         ]
         
@@ -1728,15 +1749,14 @@ public class WhatsOnChainSystemClient: SystemClient {
                                    identifier: String?,
                                    completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
         
-        let storagePath = FileManager.default
-            .urls(for: .documentDirectory, in: .userDomainMask)[0]
-           .appendingPathComponent("Core").path
+        let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
         
         var txnIdList : String = String("")
         var mintIdList : String = String("")
         var privkeyList : String = String("")
         var addressList : String = String("")
         var amountList : String = String("")
+        var jigIdList : String = String("")
         
         var numTxns : Int64 = 1
         authorizerGetNumTxnsForTransferRUN(&numTxns, storagePath)
@@ -1747,18 +1767,21 @@ public class WhatsOnChainSystemClient: SystemClient {
                 privkeyList = privkeyList + String(",")
                 addressList = addressList + String(",")
                 amountList = amountList + String(",")
+                jigIdList = amountList + String(",")
             }
             var txnIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             var addressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             var mintIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             var fromAddressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             var amount : Int64 = 1
+            var jigIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             
-            authorizerGetTransferDataRun(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, storagePath)
+            authorizerGetTransferDataRun(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, &jigIdHexBuf, Int32(jigIdHexBuf.count), storagePath)
             let txnIdHex = String(cString: txnIdHexBuf)
             let addressHex = String(cString: addressHexBuf)
             let mintIdHex = String(cString: mintIdHexBuf)
             let fromAddressHex = String(cString: fromAddressHexBuf)
+            let jigIdHex = String(cString: jigIdHexBuf)
             
             var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
             authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
@@ -1769,6 +1792,7 @@ public class WhatsOnChainSystemClient: SystemClient {
             privkeyList = privkeyList + privkeyHex
             addressList = addressList + addressHex
             amountList = amountList + String(amount)
+            jigIdList = jigIdList + jigIdHex
         }
         
         

@@ -437,8 +437,9 @@ public class BlocksetSystemClient: SystemClient {
                      type: nil,
                      receiveAmount: nil,
                      mintId: nil,
-                     fromAddress: nil,
-                     senderAddress: nil
+                     receiverAddress: nil,
+                     senderAddress: nil,
+                     jigId: nil
                      )
         }
 

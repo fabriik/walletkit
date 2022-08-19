@@ -457,7 +457,7 @@ static void saveBundle(const char* path, OwnershipKept BRCryptoClientTransaction
                             bundle->receiveAmount,
                             bundle->type,
                             bundle->mintId,
-                            bundle->fromAddress,
+                            bundle->receiverAddress,
                             bundle->senderAddress,
                             path);
     
@@ -519,8 +519,10 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
     //tx->fromAddress = (char *) malloc(strlen(bundle->fromAddress) * sizeof(char));
     //memcpy(tx->fromAddress, bundle->fromAddress, strlen(bundle->fromAddress) * sizeof(char));
     tx->mintId = bundle->mintId;
-    tx->fromAddress = bundle->fromAddress;
+    tx->receiverAddress = bundle->receiverAddress;
     tx->senderAddress = bundle->senderAddress;
+    tx->jigId = bundle->jigId;
+    tx->status = "RECEIVED";
 
     for(size_t i = 0; i < tx->inCount; i++) {
         tx->inputs[i].txHash = uint256(bundle->inputs[i]->txHash);

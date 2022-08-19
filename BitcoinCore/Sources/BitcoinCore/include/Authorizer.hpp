@@ -18,7 +18,7 @@ extern bool authorizerCheckSFP(const char *script);
 
 extern unsigned long long authorizerGetAmount(const char *script);
 
-extern bool isTxidUnspentSFPToken (long long walletId, const char *txid, const char *path);
+extern bool isTxidUnspentSFPToken (long long walletId, const char *txid_, const char *path);
 
 extern void authorizerInitializeTables(const char *path_);
 
@@ -32,9 +32,9 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
 
 extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsigned long long amount_, unsigned long numTxns, const char *path_);
 
-extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, unsigned long numTxns, const char *path_);
+extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, unsigned long numTxns, const char * jigId, const char *path_);
 
-extern void authorizerGetTransferDataRun(long long index, char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, const char *path_);
+extern void authorizerGetTransferDataRun(long long index, char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, char *jigIdHexStr, int jigIdSize, const char *path_);
 
 extern void authorizerGetNumTxnsForTransfer(long long *numTxns, const char *path_);
 

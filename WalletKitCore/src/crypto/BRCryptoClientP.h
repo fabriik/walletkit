@@ -72,8 +72,9 @@ struct BRCryptoClientTransactionBundleRecord {
     char *type;
     uint64_t receiveAmount;
     char *mintId;
-    char *fromAddress;
+    char *receiverAddress;
     char *senderAddress;
+    char *jigId;
 };
 
 
