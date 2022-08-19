@@ -73,8 +73,8 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
 
         let testConfiguration     = TestConfiguration.loadFrom (bundle: appBundle, resource: "WalletKitTestsConfig")!
         let accountSpecifications = testConfiguration.accountSpecifications
-        let accountIdentifier     = (CommandLine.argc >= 2 ? CommandLine.arguments[1] : "ginger")
-        //let accountIdentifier     = "tape"
+        //let accountIdentifier     = (CommandLine.argc >= 2 ? CommandLine.arguments[1] : "ginger")
+        let accountIdentifier     = "tape"
 
         guard let accountSpecification = accountSpecifications.first (where: { $0.identifier == accountIdentifier })
             ?? (accountSpecifications.count > 0 ? accountSpecifications[0] : nil)
