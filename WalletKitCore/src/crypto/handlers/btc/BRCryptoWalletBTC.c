@@ -12,6 +12,8 @@
 
 #include "bitcoin/BRWallet.h"
 
+#include <math.h>
+
 #define DEFAULT_FEE_BASIS_SIZE_IN_BYTES     (200)
 #define DEFAULT_TIDS_UNRESOLVED_COUNT         (2)
 
@@ -315,18 +317,48 @@ cryptoWalletCreateTransferRPC (BRCryptoWallet  wallet,
     BRTransaction *tid = BRTransactionNew();
     
     if(wid->transactions != NULL) {
-        tid->txHash = wid->transactions[0]->txHash;
+        
+        //First check if there is a transaction with the exact amount
+        size_t index0 = 0;
+        bool exact = false;
+        for(size_t i = 0; i < array_count(wid->transactions); i++) {
+            if(strcmp(wid->transactions[i]->status, "RECEIVED") == 0) {
+                if(wid->transactions[i]->receiveAmount == (uint64_t) ceil((double) value/100000000) * 100000000) {
+                    index0 = i;
+                    exact = true;
+                    break;
+                }
+            }
+        }
+        if(!exact) {
+            size_t sorted[array_count(wid->transactions)];
+            for(size_t i = 0; i < array_count(wid->transactions); i++) sorted[i] = i;
+            //Sort using sorted
+            for(size_t i = 0; i < array_count(wid->transactions) - 1; i++) {
+                for(size_t j = 0; j < array_count(wid->transactions) - i - 1; j++) {
+                    uint64_t a1    = wid->transactions[sorted[j]]->receiveAmount;
+                    uint64_t a2    = wid->transactions[sorted[j + 1]]->receiveAmount;
+                    if(a1 < a2) {
+                        size_t temp = sorted[j];
+                        sorted[j] = sorted[j + 1];
+                        sorted[j + 1] = temp;
+                    }
+                }
+            }
+            index0 = sorted[0];
+        }
+        
+        tid->txHash = wid->transactions[index0]->txHash;
         //tid->wtxHash = wid->transactions[0]->wtxHash;
         //tid->version = wid->transactions[0]->version;
         
-        if(value%100000000 != 0) {
-            tid->receiveAmount = ((uint64_t) value/100000000) * 100000000 + 100000000;
-        } else {
-            tid->receiveAmount = value;
-        }
-        tid->blockHeight = wid->transactions[0]->blockHeight;
+        tid->receiveAmount = (uint64_t) ceil((double) value/100000000) * 100000000;
+        
+        tid->blockHeight = wid->transactions[index0]->blockHeight;
         tid->direction = CRYPTO_TRANSFER_SENT;
         //tid->fromAddress = wid->transactions[0]->fromAddress;
+        tid->receiverAddress = wid->transactions[index0]->receiverAddress;
+        tid->senderAddress = wid->transactions[index0]->senderAddress;
     }
 
     return (NULL == tid

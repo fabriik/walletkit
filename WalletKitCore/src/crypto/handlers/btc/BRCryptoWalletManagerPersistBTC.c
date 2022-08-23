@@ -11,6 +11,8 @@
 #include "BRCryptoBTC.h"
 #include "crypto/BRCryptoFileService.h"
 
+#include "crypto/BRCryptoAccountP.h"
+
 #include "../../../../../BitcoinCore/Sources/BitcoinCore/include/Authorizer.hpp"
 
 /// MARK: - Transaction File Service
@@ -102,12 +104,27 @@ initialTransactionsLoadBTC (BRCryptoWalletManager manager) {
     return transactions;
 }
 
-static void fileServiceLoadRPC(const char* path, BRSet *transactionSet) {
+static void fileServiceLoadRPC(const char* path, BRSet *transactionSet, unsigned int fingerPrint) {
     unsigned long numTransactions = fileServiceLoadRPCGetSize(path);
     
     for(unsigned long index = 0; index < numTransactions; index++) {
-        BRTransaction* tx = BRTransactionNewRPC();
+        
         char *txHash = fileServiceLoadRPCGetTxHash(index, path);
+        if(txHash == NULL) return;
+        
+        unsigned int txFingerPrint = (unsigned int) fileServiceLoadRPCGetFingerPrint(index, path);
+        if(txFingerPrint != fingerPrint) continue;
+        
+        char *sfpOutputScript = fileServiceLoadRPCGetOutputScript(0, txHash, path);
+        
+        unsigned long long amount = fileServiceGetAmount(sfpOutputScript, path);
+        
+        //if(authorizerGetAmount(sfpOutputScript, path) <= 0) {
+        if(amount <= 0) {
+            //DELETE TX
+            continue;
+        }
+        
         long long version = fileServiceLoadRPCGetVersion(index, path);
         unsigned long inCount = (unsigned long) fileServiceLoadRPCGetInCount(index, path);
         unsigned long outCount = (unsigned long) fileServiceLoadRPCGetOutCount(index, path);
@@ -120,8 +137,7 @@ static void fileServiceLoadRPC(const char* path, BRSet *transactionSet) {
         char *receiverAddress = fileServiceLoadRPCGetReceiverAdddress(index, path);
         char *senderAddress = fileServiceLoadRPCGetSenderAdddress(index, path);
         
-        if(txHash == NULL) return;
-        
+        BRTransaction* tx = BRTransactionNewRPC();
         tx->txHash = uint256(txHash);
         tx->wtxHash = uint256(txHash);
         tx->version = (uint32_t) version;
@@ -193,8 +209,32 @@ initialTransactionsLoadRPC (BRCryptoWalletManager manager) {
         return NULL;
     }*/
     
-    initializePersistDB(fileServiceGetSdbPath(manager->fileService));
-    fileServiceLoadRPC(fileServiceGetSdbPath(manager->fileService), transactionSet);
+    initializePersistRPC(fileServiceGetSdbPath(manager->fileService));
+    fileServiceLoadRPC(fileServiceGetSdbPath(manager->fileService), transactionSet, manager->account->btc.fingerPrint);
+
+    size_t transactionsCount = BRSetCount(transactionSet);
+
+    BRArrayOf(BRTransaction*) transactions;
+    array_new (transactions, transactionsCount);
+    array_set_count(transactions, transactionsCount);
+
+    BRSetAll(transactionSet, (void**) transactions, transactionsCount);
+    BRSetFree(transactionSet);
+
+    _peer_log ("BWM: %4s: loaded %4zu transactions\n",
+               cryptoBlockChainTypeGetCurrencyCode (manager->type),
+               transactionsCount);
+    return transactions;
+}
+
+extern BRArrayOf(BRTransaction*)
+initialTransactionsLoadWOC (BRCryptoWalletManager manager) {
+    BRSetOf(BRTransaction*) transactionSet = BRSetNew(BRTransactionHash, BRTransactionEq, 100);
+    /*if (1 != fileServiceLoad (manager->fileService, transactionSet, FILE_SERVICE_TYPE_TRANSACTION, 1)) {
+        BRSetFreeAll(transactionSet, (void (*) (void*)) BRTransactionFree);
+        _peer_log ("BWM: failed to load transactions");
+        return NULL;
+    }*/
 
     size_t transactionsCount = BRSetCount(transactionSet);
 

@@ -645,11 +645,15 @@ cryptoWalletUpdTransferRPC (BRCryptoWallet wallet, BRCryptoTransfer transfer) {
                 BRCryptoAmount diff = cryptoAmountSub (transfer->amount, balance);
                 
                 //cryptoTransferSetState (wallet->transfers[sorted[index]], cryptoTransferStateInit (CRYPTO_TRANSFER_STATE_SUBMITTED));
-                wallet->transfers[sorted[index]]->state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
-                
-                if(cryptoAmountIsZero(diff) == CRYPTO_TRUE || cryptoAmountIsNegative(diff) == CRYPTO_TRUE) {
+                if(cryptoAmountIsZero(diff) == CRYPTO_TRUE) {
+                    wallet->transfers[sorted[index]]->state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
+                    break;
+                } else if(cryptoAmountIsNegative(diff) == CRYPTO_TRUE) {
+                    wallet->transfers[sorted[index]]->amount = cryptoAmountSub (balance, transfer->amount);
                     break;
                 }
+                
+                wallet->transfers[sorted[index]]->state->type = CRYPTO_TRANSFER_STATE_SUBMITTED;
             }
         }
     }

@@ -267,7 +267,15 @@ cryptoWalletManagerCreateWalletRPC (BRCryptoWalletManager manager,
     assert (NULL == initialTransactionsBundles || 0 == array_count (initialTransactionsBundles));
     assert (NULL == initialTransferBundles     || 0 == array_count (initialTransferBundles));
 
-    BRArrayOf(BRTransaction*) transactions = initialTransactionsLoadRPC(manager);
+    BRArrayOf(BRTransaction*) transactions;    
+    array_new (transactions, 0);
+    array_set_count(transactions, 0);
+    
+    if(strcmp(manager->network->name, "BitcoinRPC") == 0) {
+        transactions = initialTransactionsLoadRPC(manager);
+    } else if (strcmp(manager->network->name, "WhatsOnChain") == 0) {
+        transactions = initialTransactionsLoadWOC(manager);
+    }
 
     // Create the BTC wallet
     //
@@ -439,7 +447,7 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleBTC (BRCryptoWalletManag
     }
 }
 
-static void saveBundle(const char* path, OwnershipKept BRCryptoClientTransactionBundle bundle) {
+static void saveBundleRPC(const char* path, OwnershipKept BRCryptoClientTransactionBundle bundle, unsigned int fingerPrint) {
     uint32_t blockHeight = 0;
     if(bundle->blockHeight == UINT64_MAX) {
         blockHeight = TX_UNCONFIRMED;
@@ -459,6 +467,7 @@ static void saveBundle(const char* path, OwnershipKept BRCryptoClientTransaction
                             bundle->mintId,
                             bundle->receiverAddress,
                             bundle->senderAddress,
+                            fingerPrint,
                             path);
     
     for(size_t i = 0; i < bundle->inCount; i++) {
@@ -475,7 +484,9 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
                                                              OwnershipKept BRCryptoClientTransactionBundle bundle) {
     //BRTransaction *btcTransaction = BRTransactionParse (bundle->serialization, bundle->serializationCount);
     
-    saveBundle(fileServiceGetSdbPath(manager->fileService), bundle);
+    if(strcmp(manager->network->name, "BitcoinRPC") == 0) {
+        saveBundleRPC(fileServiceGetSdbPath(manager->fileService), bundle, manager->account->btc.fingerPrint);
+    }
     
     BRTransaction *btcTransaction;
     

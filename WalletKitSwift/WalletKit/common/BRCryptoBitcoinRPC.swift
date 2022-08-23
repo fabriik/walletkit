@@ -533,6 +533,8 @@ public class BitcoinRPCSystemClient: SystemClient {
            
             let result : [String : Any] = json.dict["result"] as! [String : Any]
             
+            let walletId : Int64 = json.dict["walletId"] as! Int64
+            
             guard let hash = result["hash"] as! String?,
                   //let hash = json.asString(name: "hash"),
                   //let blockHeight = json.asUInt64 (name: "blockheight"),
@@ -630,9 +632,15 @@ public class BitcoinRPCSystemClient: SystemClient {
                 let script = scriptPubKey["hex"] as! String
                 
                 if(isTokenSFP(script: script)) {
-                    type = "sfp"
-                    receiveAmount = getAmount(script: script)
-                    receiverAddress = getReceiverAddress(script: script)
+                        type = "sfp"
+                        
+                        let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
+                    var amount = getAmount(script: script, walletId: walletId, path: storagePath)
+                    if(amount > 0) {
+                        receiveAmount = amount
+                        receiverAddress = getReceiverAddress(script: script)
+                    }
+                    
                 } else {
                     let senderAddressArray = scriptPubKey["addresses"] as! [String]
                     senderAddress = senderAddressArray[0]
@@ -787,13 +795,11 @@ public class BitcoinRPCSystemClient: SystemClient {
                 return nil
             }
             
-            /*let storagePath = FileManager.default
-                .urls(for: .documentDirectory, in: .userDomainMask)[0]
-               .appendingPathComponent("Core").path
+            let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
             
             let hex = BitcoinRPCSystemClient.getTransactionHex (hash: result)
+            authorizerAddUtxo(hex, storagePath)
             
-            authorizerAddUtxo(hex, storagePath)*/
 
             //let hash = json.asString (name: "hash")
 
@@ -1303,9 +1309,9 @@ public class BitcoinRPCSystemClient: SystemClient {
         return false;
     }
     
-    static internal func getAmount (script: String) -> UInt64 {
+    static internal func getAmount (script: String, walletId: Int64, path: String) -> UInt64 {
        
-        let ret : UInt64 = authorizerGetAmount(script);
+        let ret : UInt64 = authorizerGetAmount(script, walletId, path);
         
         return ret;
     }
@@ -1497,6 +1503,7 @@ public class BitcoinRPCSystemClient: SystemClient {
                             let ret : Bool = isTxidUnspentSFPToken (walletId, txn_hash_array[i], storagePath);
                             
                             if(ret) {
+                                response_array[i]["walletId"] = walletId
                                 data_array.append(response_array[i])
                             }
                         }

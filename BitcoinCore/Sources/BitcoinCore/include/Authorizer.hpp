@@ -16,7 +16,9 @@ extern bool authorizerCheckAddress(const char *address, const char *script);
 
 extern bool authorizerCheckSFP(const char *script);
 
-extern unsigned long long authorizerGetAmount(const char *script);
+extern unsigned long long authorizerGetAmount(const char *script_, long long walletId, const char *path_);
+
+extern unsigned long long fileServiceGetAmount(const char *script_, const char *path_);
 
 extern bool isTxidUnspentSFPToken (long long walletId, const char *txid_, const char *path);
 
@@ -46,17 +48,19 @@ extern long long getWalletIdByPrimaryAddress(const char *address_, const char *p
 
 extern void getRUNAddressByWalletId(long long walletId, char *addressHexStr, int addressSize, const char *path_);
 
-extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, unsigned long inCount, unsigned long outCount, unsigned int lockTime, unsigned int blockHeight, unsigned int timestamp, unsigned long long receiveAmount, const char *type, const char *mintId, const char *fromAddress, const char *senderAddress, const char *path_);
+extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, unsigned long inCount, unsigned long outCount, unsigned int lockTime, unsigned int blockHeight, unsigned int timestamp, unsigned long long receiveAmount, const char *type, const char *mintId, const char *fromAddress, const char *senderAddress, unsigned int fingerPrint, const char *path_);
 
 extern void authorizerSaveBundleInputRPC(int inCount, const char *txHash, const char *inputTxHash, const char *inputScript, const char *inputSignature, long long inputSequence, const char *path_);
 
 extern void authorizerSaveBundleOutputRPC(int outCount, const char *txHash, unsigned long long outputAmount, const char *outputScript, const char *path_);
 
-extern void initializePersistDB(const char* path_);
+extern void initializePersistRPC(const char* path_);
 
 extern unsigned long fileServiceLoadRPCGetSize(const char *path_);
 
 extern char* fileServiceLoadRPCGetTxHash(unsigned long index, const char *path_);
+
+extern long long fileServiceLoadRPCGetFingerPrint(unsigned long index, const char *path_);
 
 extern long long fileServiceLoadRPCGetVersion(unsigned long index, const char *path_);
 
