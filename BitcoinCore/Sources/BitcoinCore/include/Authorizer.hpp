@@ -18,7 +18,9 @@ extern bool authorizerCheckSFP(const char *script);
 
 extern unsigned long long authorizerGetAmount(const char *script_, long long walletId, const char *path_);
 
-extern unsigned long long fileServiceGetAmount(const char *script_, const char *path_);
+extern unsigned long long fileServiceGetAmount(const char *script_, long long walletId, const char *path_);
+
+extern long long fileServiceLoadRPCGetWalletId(unsigned long index, const char *path_);
 
 extern bool isTxidUnspentSFPToken (long long walletId, const char *txid_, const char *path);
 
@@ -32,13 +34,17 @@ extern void authorizerAddUtxoTest(const char* path_);
 //extern void authorizerCreateSerialization(const char *toAddress, const char *fromAddress, const char *txid, long long vout, long long satoshis, const char *script_, const char *txid0, long long vout0, long long satoshis0, const char *script0, const char *address0, const char *path);
 extern void authorizerCreateSerialization(long long index, char *authHexStr, int authHexSize, const char *path_);
 
-extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsigned long long amount_, unsigned long numTxns, const char *path_);
+extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsigned long long amount_, unsigned long numTxns, const char *fromAddress_, const char *path_);
 
 extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, unsigned long numTxns, const char * jigId, const char *path_);
 
 extern void authorizerGetTransferDataRun(long long index, char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, char *jigIdHexStr, int jigIdSize, const char *path_);
 
+extern void authorizerGetTransferData(long long index, char *txnIdHexStr, int txnIdSize, const char *path_);
+
 extern void authorizerGetNumTxnsForTransfer(long long *numTxns, const char *path_);
+
+extern void fileServiceGetNumTxnsForTransfer(long long *numTxns, const char *path_);
 
 extern void authorizerGetNumTxnsForTransferRUN(long long *numTxns, const char *path_);
 
@@ -93,6 +99,8 @@ extern char* fileServiceLoadRPCGetInputSignature(unsigned long index, const char
 extern long long fileServiceLoadRPCGetInputSequence(unsigned long index, const char *txHash, const char *path_);
 
 extern long long fileServiceLoadRPCGetOutputAmount(unsigned long index, const char *txHash, const char *path_);
+
+extern char* fileServiceLoadRPCGetScript(const char *txHash, long long walletId, const char *path_);
 
 extern char* fileServiceLoadRPCGetOutputScript(unsigned long index, const char *txHash, const char *path_);
 

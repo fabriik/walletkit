@@ -108,20 +108,24 @@ static void fileServiceLoadRPC(const char* path, BRSet *transactionSet, unsigned
     unsigned long numTransactions = fileServiceLoadRPCGetSize(path);
     
     for(unsigned long index = 0; index < numTransactions; index++) {
-        
         char *txHash = fileServiceLoadRPCGetTxHash(index, path);
-        if(txHash == NULL) return;
+        if(txHash == NULL) continue;
         
         unsigned int txFingerPrint = (unsigned int) fileServiceLoadRPCGetFingerPrint(index, path);
         if(txFingerPrint != fingerPrint) continue;
         
-        char *sfpOutputScript = fileServiceLoadRPCGetOutputScript(0, txHash, path);
+        long long walletId = fileServiceLoadRPCGetWalletId(index, path);
         
-        unsigned long long amount = fileServiceGetAmount(sfpOutputScript, path);
-        
-        //if(authorizerGetAmount(sfpOutputScript, path) <= 0) {
-        if(amount <= 0) {
-            //DELETE TX
+        if(walletId != 0) {
+            char *sfpOutputScript = fileServiceLoadRPCGetScript(txHash, walletId, path);
+            unsigned long long amount = fileServiceGetAmount(sfpOutputScript, walletId, path);
+            
+            //if(authorizerGetAmount(sfpOutputScript, path) <= 0) {
+            if(amount <= 0) {
+                //DELETE TX
+                continue;
+            }
+        } else {
             continue;
         }
         

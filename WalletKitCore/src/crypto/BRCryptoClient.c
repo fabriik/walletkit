@@ -1016,9 +1016,14 @@ cryptoClientHandleSubmit (OwnershipKept BRCryptoWalletManager manager,
         cryptoWalletUpdBalance (manager->wallet, true);
     }
     
-    if(strcmp(manager->network->name, "BitcoinRPC") == 0 || strcmp(manager->network->name, "WhatsOnChain") == 0) {
-        cryptoWalletUpdBalanceRPC (manager->wallet, transfer, true);
+    //if(strcmp(manager->network->name, "BitcoinRPC") == 0 || strcmp(manager->network->name, "WhatsOnChain") == 0) {
+    if(strcmp(manager->network->name, "BitcoinRPC") == 0) {
         cryptoWalletUpdTransferRPC (manager->wallet, transfer);
+        cryptoWalletUpdBalanceRPC (manager->wallet, transfer, true);
+    }
+    else if(strcmp(manager->network->name, "WhatsOnChain") == 0) {
+        cryptoWalletUpdBalanceWOC (manager->wallet, transfer, true);
+        cryptoWalletUpdTransferWOC (manager->wallet, transfer);
     }
 
     cryptoTransferStateGive(transferState);

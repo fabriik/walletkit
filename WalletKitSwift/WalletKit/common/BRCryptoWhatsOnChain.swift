@@ -593,12 +593,22 @@ public class WhatsOnChainSystemClient: SystemClient {
                 jigId = json.asString(name: "jigId")
             }
             
+            var receiveAmount : UInt64? = 1
+            if(json.asUInt64(name: "amount") != nil) {
+                receiveAmount = json.asUInt64(name: "amount")
+            }
+            
+            var receiverAddress : String? = String("")
+            if(json.asString(name: "owner") != nil) {
+                receiverAddress = json.asString(name: "owner")
+            }
+            
             //var count = 0
             //var json_array : [JSON.Dict] = []
             var type : String?
             var mintId : String?
-            var receiverAddress : String?
-            var receiveAmount : UInt64? = 1
+            
+            
 
             var inputs : [SystemClient.Inputs] = []
             for anItem in vin {
@@ -645,7 +655,7 @@ public class WhatsOnChainSystemClient: SystemClient {
                     let substring = str[firstIndexMintId...lastIndexMintId]
                     mintId = String(substring)
                     
-                    let beginOfAmount = str.lastIndex(of: ",")!
+                    /*let beginOfAmount = str.lastIndex(of: ",")!
                     let firstIndexAmount = str.index(beginOfAmount, offsetBy: 1)
                     let endOfAmount = str.lastIndex(of: "]")!
                     let endIndexAmount = str.index(endOfAmount, offsetBy: -4)
@@ -653,15 +663,21 @@ public class WhatsOnChainSystemClient: SystemClient {
                     let amount = String(substringAmount)
                     receiveAmount = UInt64(amount) //FIXME!!!
                     
+                    let beginOfReceive = str.lastIndex(of: "[")!
+                    let firstIndexReceive = str.index(beginOfReceive, offsetBy: 2)
+                    let endOfReceive = str.lastIndex(of: ",")!
+                    let endIndexReceive = str.index(endOfReceive, offsetBy: -2)
+                    let substringReceive = str[firstIndexReceive...endIndexReceive]
+                    receiverAddress = String(substringReceive)*/
+
                     
-                    
-                } else if (count == 1) {
+                } /*else if (count == 1) {
                     let addresses : [String] = scriptPubKey!["addresses"] as! [String]
                     if(addresses.count != 0) {
                         receiverAddress = addresses[0]
                         print("Debugging")
                     }
-                }
+                }*/
                 
                 //let script = anItem.asString ()
                 count = count + 1
@@ -1513,7 +1529,7 @@ public class WhatsOnChainSystemClient: SystemClient {
                                 "network" : "\(blockchain)"
                             ]
                             
-                            if(hash == "1e3ad69c477fb2660c6395c11258b818805389e6e3167b61c761c944e2737d8f") {
+                            if(hash == "1ce49b150b24afe1db4df4ae4da378840355db0269bf39f79e7e9861b7926f6d") {
                                 print("Debugging")
                             }
                             
@@ -1548,7 +1564,11 @@ public class WhatsOnChainSystemClient: SystemClient {
                                 print("TXID: \(txid)")
                                 if(txid != "") {
                                     let jigId : String = data0_!["jigId"] as! String
+                                    let amount : UInt64 = data0_!["amount"] as! UInt64
+                                    let owner : String = data0_!["owner"] as! String
                                     data_!["jigId"] = jigId
+                                    data_!["amount"] = amount
+                                    data_!["owner"] = owner
                                     data_array.append(data_!)
                                 }
                             }
