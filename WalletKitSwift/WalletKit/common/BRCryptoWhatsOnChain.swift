@@ -1689,7 +1689,7 @@ public class WhatsOnChainSystemClient: SystemClient {
             var amount : Int64 = 1
             var jigIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             
-            authorizerGetTransferDataRun(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, &jigIdHexBuf, Int32(jigIdHexBuf.count), storagePath)
+            authorizerGetTransferDataRUN(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, &jigIdHexBuf, Int32(jigIdHexBuf.count), storagePath)
             let txnIdHex = String(cString: txnIdHexBuf)
             let addressHex = String(cString: addressHexBuf)
             let mintIdHex = String(cString: mintIdHexBuf)
@@ -1796,7 +1796,7 @@ public class WhatsOnChainSystemClient: SystemClient {
             var amount : Int64 = 1
             var jigIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
             
-            authorizerGetTransferDataRun(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, &jigIdHexBuf, Int32(jigIdHexBuf.count), storagePath)
+            authorizerGetTransferDataRUN(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, &jigIdHexBuf, Int32(jigIdHexBuf.count), storagePath)
             let txnIdHex = String(cString: txnIdHexBuf)
             let addressHex = String(cString: addressHexBuf)
             let mintIdHex = String(cString: mintIdHexBuf)

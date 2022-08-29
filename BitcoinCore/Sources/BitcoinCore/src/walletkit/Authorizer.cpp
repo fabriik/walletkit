@@ -25,6 +25,9 @@
 
 #define WIPE 0
 
+//#define ZEROBSV 1
+#define ZEROBSV 0
+
 #define MAINNET 0
 
 #define BIP_44_ADDRESS_GAP_LIMIT 20
@@ -2610,6 +2613,11 @@ bool TxBuilder::build(bool useAllInputs) {
         changeAmountBn = inAmountBn - outAmountBn;
         changeTxOut.nValue = changeAmountBn;
         tx.vout.push_back(changeTxOut); //not sure if this is correct
+        
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+        changeTxOut.Serialize(ssTx);
+          std::string hex_str = HexStr(ssTx);
+          printf("changeTxOut: %s\n", hex_str.c_str());
 
         //printf("changeAmountBn: %lld\n", changeAmountBn);
 
@@ -3939,16 +3947,35 @@ BuildTokenStruct buildTokenTx(Sfp sfp, std::string hex, std::vector<TokenDataStr
     //std::map<std::string, UTxOutData*> uTxOutMap = sfp.recoverUtxosMap(tx.vin);
     std::map<std::string, CTxOut> uTxOutMap = sfp.recoverUtxosMap(tx.vin);
     bsvTxBuilder->importPartiallySignedTx(tx, uTxOutMap);
+    
+    CDataStream ssTx00(SER_NETWORK, PROTOCOL_VERSION | 0);
+    bsvTxBuilder->tx.Serialize(ssTx00);
+    std::string hex_str00 = HexStr(ssTx00);
+    printf("hex_str00: %s\n", hex_str00.c_str());
+    
     tokenTx->importInputs(bsvTxBuilder);
+    
+    CDataStream ssTx01(SER_NETWORK, PROTOCOL_VERSION | 0);
+    bsvTxBuilder->tx.Serialize(ssTx01);
+    std::string hex_str01 = HexStr(ssTx01);
+    printf("hex_str01: %s\n", hex_str01.c_str());
+    
     tokenTx->importOutputs(bsvTxBuilder);
     /*for(int i = 0; i < bsvTxBuilder->tx.vout.size(); i++) {
         OutputData data = sfp.parseOutput(bsvTxBuilder->tx.vout[i].scriptPubKey);
     }*/
+    
+    
+    CDataStream ssTx02(SER_NETWORK, PROTOCOL_VERSION | 0);
+    bsvTxBuilder->tx.Serialize(ssTx02);
+    std::string hex_str02 = HexStr(ssTx02);
+    printf("hex_str02: %s\n", hex_str02.c_str());
+    
     tokenTx->createOutputs(bsvTxBuilder, outputs);
     CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx0);
     std::string hex_str0 = HexStr(ssTx0);
-    //printf("CREATE OUTPUTS: %s\n", hex_str0.c_str());
+    printf("CREATE OUTPUTS: %s\n", hex_str0.c_str());
 
     BuildTokenStruct tokenData;
     tokenData.bsvTxBuilder = bsvTxBuilder;
@@ -3965,17 +3992,17 @@ static BuildActionStruct sendSfpBuildAction(std::string hex, std::vector<TokenDa
 
     BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
 
-    /*CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
+    CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
     tokenData.bsvTxBuilder->tx.Serialize(ssTx0);
     std::string hex_str0 = HexStr(ssTx0);
-    printf("bsvTxBuilder.tx.toHex(): %s\n", hex_str0.c_str());*/
+    printf("bsvTxBuilder.tx.toHex(): %s\n", hex_str0.c_str());
 
     sfp.validate(tokenData.tokenTx);
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
     tokenData.bsvTxBuilder->tx.Serialize(ssTx);
     std::string hex_str = HexStr(ssTx);
-    //printf("hex_str: %s\n", hex_str.c_str());
+    printf("hex_str: %s\n", hex_str.c_str());
 
     buildAction.hex = hex_str;
     buildAction.sigOperations = tokenData.bsvTxBuilder->sigOperations;
@@ -3987,10 +4014,10 @@ static void build(TxBuilder *bsvTxBuilder, std::vector<TokenDataStruct> outputs,
     std::map<std::string, std::vector<TokenDataStruct>> outputsByAuthorizer;
   //const failedRequests = []
 
-    /*CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
+    CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx0);
     std::string hex_str0 = HexStr(ssTx0);
-    printf("hex_str0: %s\n", hex_str0.c_str());*/
+    printf("hex_str0: %s\n", hex_str0.c_str());
 
   for (size_t i = 0; i < outputs.size(); i++) {
         TokenDataStruct output = outputs[i];
@@ -4027,13 +4054,13 @@ static void build(TxBuilder *bsvTxBuilder, std::vector<TokenDataStruct> outputs,
         }
     }
 
-    bsvTxBuilder->buildInputs(0, bsvTxBuilder->tx.vin.size() - 1);
-    //bsvTxBuilder->buildInputs(0, bsvTxBuilder->vin.size() - 1);
+    //bsvTxBuilder->buildInputs(0, bsvTxBuilder->tx.vin.size() - 1);
+    bsvTxBuilder->buildInputs(0, bsvTxBuilder->vin.size() - 1);
 
-    /*CDataStream ssTx1(SER_NETWORK, PROTOCOL_VERSION | 0);
+    CDataStream ssTx1(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx1);
     std::string hex_str1 = HexStr(ssTx1);
-    printf("hex_str1: %s\n", hex_str1.c_str());*/
+    printf("hex_str1: %s\n", hex_str1.c_str());
 
     for(std::map<std::string, std::vector<TokenDataStruct>>::iterator it = outputsByAuthorizer.begin(); it != outputsByAuthorizer.end(); it++) {
         std::string authorizer = it->first;
@@ -4042,7 +4069,7 @@ static void build(TxBuilder *bsvTxBuilder, std::vector<TokenDataStruct> outputs,
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
         bsvTxBuilder->tx.Serialize(ssTx);
         std::string hex_str = HexStr(ssTx);
-        //printf("hex_str: %s\n", hex_str.c_str());
+        printf("hex_str: %s\n", hex_str.c_str());
 
         BuildActionStruct response = sendSfpBuildAction(hex_str, outputs_, path);
 
@@ -4058,25 +4085,25 @@ static void build(TxBuilder *bsvTxBuilder, std::vector<TokenDataStruct> outputs,
         bsvTxBuilder->vin = bsvTxBuilder->tx.vin;
         bsvTxBuilder->vout = bsvTxBuilder->tx.vout;
 
-        /*CDataStream ssTx1(SER_NETWORK, PROTOCOL_VERSION | 0);
-        bsvTxBuilder->tx.Serialize(ssTx1);
-        std::string hex_str1 = HexStr(ssTx1);
-        printf("hex_str1: %s\n", hex_str1.c_str());*/
-
-        /*for(size_t i = 0; i < bsvTxBuilder->tx.vin.size(); i++) {
-            CDataStream ssTx_(SER_NETWORK, PROTOCOL_VERSION | 0);
-            bsvTxBuilder->tx.vin[i].Serialize(ssTx_);
-            std::string hex_ = HexStr(ssTx_);
-            printf("hex_ = %s\n", hex_.c_str());
+        for(size_t i = 0; i < bsvTxBuilder->tx.vin.size(); i++) {
+            CDataStream ssTx_in(SER_NETWORK, PROTOCOL_VERSION | 0);
+            bsvTxBuilder->tx.vin[i].Serialize(ssTx_in);
+            std::string hex_in = HexStr(ssTx_in);
+            printf("hex_in = %s\n", hex_in.c_str());
         }
-
         for(size_t i = 0; i < bsvTxBuilder->tx.vout.size(); i++) {
-            CDataStream ssTx_(SER_NETWORK, PROTOCOL_VERSION | 0);
-            bsvTxBuilder->tx.vout[i].Serialize(ssTx_);
-            std::string hex_ = HexStr(ssTx_);
-            printf("hex_ = %s\n", hex_.c_str());
-        }*/
-
+            CDataStream ssTx_out(SER_NETWORK, PROTOCOL_VERSION | 0);
+            bsvTxBuilder->tx.vout[i].Serialize(ssTx_out);
+            std::string hex_out = HexStr(ssTx_out);
+            printf("hex_out = %s\n", hex_out.c_str());
+        }
+        
+        CDataStream ssTx2(SER_NETWORK, PROTOCOL_VERSION | 0);
+        bsvTxBuilder->tx.Serialize(ssTx2);
+        std::string hex_str2 = HexStr(ssTx2);
+        printf("hex_str2: %s\n", hex_str2.c_str());
+        
+        printf("Debug\n");
     }
 
 }
@@ -4094,16 +4121,39 @@ void TxBuilder::inputFromScript (uint256 txHashBuf, uint32_t txOutNum, CTxOut tx
     txIn.nSequence = nSequence;
 
     //printf("INPUT FROM SCRIPT PUSHBACK VIN\n");
-    //tx.vin.push_back(txIn);
+    vin.push_back(txIn);
 
     //Input from script needs to go first
-    if(vin.size() == 0) {
+    /*if(vin.size() == 0) {
         vin.push_back(txIn);
     } else {
         CTxIn tmp = vin[vin.size() - 1]; //Should be vin[0]
         vin[vin.size() - 1] = txIn;
         vin.push_back(tmp);
-    }
+    }*/
+    
+    
+    /*if(vin.size() == 0) {
+        vin.push_back(txIn);
+    } else if(vin.size() == 2) {
+        CTxIn tmp = vin[vin.size() - 1]; //Should be vin[0]
+        vin[vin.size() - 1] = txIn;
+        vin.push_back(tmp);
+    } else {
+        vin.push_back(txIn);
+    }*/
+    
+    
+    /*if(vin.size() == 0) {
+        vin.push_back(txIn);
+    } else if (!isPubKeyHashOut(vin[vin.size() - 1].scriptSig)){
+        vin.push_back(txIn);
+    } else {
+        CTxIn tmp = vin[vin.size() - 1]; //Should be vin[0]
+        vin[vin.size() - 1] = txIn;
+        vin.push_back(tmp);
+    }*/
+    
     //std::vector<Chunks> chunks0 = getChunks(tx.vin[tx.vin.size() - 1].scriptSig);
     //printf("CHUNKS tx.vin[] = %lu\n", chunks0.size());
     //std::vector<Chunks> chunks1 = getChunks(vin[vin.size() - 1].scriptSig);
@@ -4659,11 +4709,21 @@ void TokenTransaction::createOutputs (TxBuilder *bsvTxBuilder, std::vector<Token
         if(bsvTxBuilder->tx.vin.size() > 0) {
               std::string script = sfp.createOutput(output, bsvTxBuilder->tx.vin[0].prevout);
               CTxOut txOut;
+              #if ZEROBSV
+              txOut.nValue = 0;
+              #else
               txOut.nValue = (int64_t) sfp.calculateMinimumOutputAmount(script);
+              #endif
               printf("sfp.calculateMinimumOutputAmount = %lld\n", txOut.nValue);
               setScript(txOut, script);
 
               addOutput(new TokenOutput(bsvTxBuilder->tx.vout.size(), output, txOut));
+            
+            CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
+            txOut.Serialize(ssTx0);
+            std::string hex_str0 = HexStr(ssTx0);
+            printf("txOut: %s\n", hex_str0.c_str());
+            
               bsvTxBuilder->tx.vout.push_back(txOut);
         }
     }
@@ -4757,12 +4817,29 @@ void TxBuilder::inputFromPubKeyHash (uint256 txHashBuf, uint32_t txOutNum, CTxOu
     txIn.nSequence = nSequence;
     fromPubKeyHashTxOut(txIn, txHashBuf, txOutNum, txOut, pubKey);
     //printf("INPUT FROM PUB KEY HASH PUSHBACK VIN\n");
-    vin.push_back(txIn);
+    
+    //vin.push_back(txIn);
+    
+    
+    if(vin.size() == 0) {
+        vin.push_back(txIn);
+    } else {
+        CTxIn tmp = vin[vin.size() - 1]; //Should be vin[0]
+        vin[vin.size() - 1] = txIn;
+        vin.push_back(tmp);
+    }
+    
     //tx.vin.push_back(txIn);
     //std::vector<Chunks> chunks0 = getChunks(tx.vin[tx.vin.size() - 1].scriptSig);
     //printf("CHUNKS tx.vin[] = %lu\n", chunks0.size());
     //std::vector<Chunks> chunks1 = getChunks(vin[vin.size() - 1].scriptSig);
     //printf("CHUNKS vin[] = %lu\n", chunks1.size());
+    
+    
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+    txIn.Serialize(ssTx);
+      std::string hex_str = HexStr(ssTx);
+      printf("txIn: %s\n", hex_str.c_str());
 
     uTxOutMapSet(uTxOutMap, txHashBuf.GetHex(), txOutNum, txOut);
     //std::string address = fromTxOutScript(txOut.scriptPubKey);
@@ -4831,9 +4908,10 @@ static void addTxBuilderInputs (TxBuilder *bsvTxBuilder, int64_t walletId, std::
 
     for (int count = 0; count < TRANSACTION_MAX_INPUTS; ++count) {
     //for (int count = 0; count < 2; ++count) {
+        
         if (bsvTxBuilder->vin.size() && hasEnoughInputs(bsvTxBuilder)) {
-      break;
-    }
+          break;
+        }
 
         sqlite3 *db;
         char *zErrMsg = 0;
@@ -4901,6 +4979,11 @@ static void addTxBuilderInputs (TxBuilder *bsvTxBuilder, int64_t walletId, std::
             }
             std::vector<Utxo> utxos;
             utxos.push_back(utxo);
+            
+            CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+            bsvTxBuilder->tx.Serialize(ssTx);
+            std::string hex_str = HexStr(ssTx);
+            printf("hex_str: %s\n", hex_str.c_str());
 
             importUtxosIntoTxBuilder (bsvTxBuilder, utxos);
 
@@ -5025,7 +5108,7 @@ static void initializeAddresses(std::string path) {
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     
 
-
+    
   if( rc != SQLITE_OK ){
      fprintf(stderr, "SQL error: %s\n", zErrMsg);
      sqlite3_free(zErrMsg);
@@ -5453,7 +5536,7 @@ static void extractUtxoFromBsvjsTx(std::map<std::string,Utxo>& utxos, std::strin
     int64_t fromWalletId = 0;
     std::string txid = tx.GetHash().GetHex();
 
-    //printf("txid: %s\n", txid.c_str());
+    printf("txid: %s\n", txid.c_str());
     
     sqlite3 *db;
     char *zErrMsg = 0;
@@ -6129,9 +6212,9 @@ static void initializeWallet (std::string path) {
     }
 
     sql = (char *) "INSERT INTO WALLETS (ID,USER_ID,MNEMONIC,XPUB,LAST_USED_ADDRESS_INDEX,NEXT_ADDRESS_INDEX) "  \
-            "VALUES (2, 5, 'broom satoshi spice cliff bread defy light hire soldier degree casino foil'," \
+            "VALUES (2, 5, 'curious rule sadness often cancel uncle burger pull gesture more used measure'," \
                    "'tpubDDwJhj826NEjRUdqkH7q2Vtd96Q4bcdQecPyQyxJDZFh6dPUNdr4rGLupWPpsE3su6vDo19QZxDabeyV2TcZCM6h3GhQFHrMMQ3D9HTGCbE'," \
-                   "-1, 23); ";
+                   "-1, 19); ";
 
       rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
@@ -6143,9 +6226,9 @@ static void initializeWallet (std::string path) {
       }
 
       sql = (char *) "INSERT INTO WALLETS (ID,USER_ID,MNEMONIC,XPUB,LAST_USED_ADDRESS_INDEX,NEXT_ADDRESS_INDEX) "  \
-            "VALUES (3, 6, 'quote noodle timber agree essay still crash guard grant category sick cave'," \
+            "VALUES (3, 6, 'shiver fashion woman faith vote avoid mail tissue satisfy turkey bring floor'," \
                    "'tpubDE9Fpioyf5WBUHWaG5ZfHRCsEuySFdztFPxfY3GAE87v8RLAahtAzB5viFSK3dv7UKst2H37gn7Ywz3XTWgfpG3HFxmkkpZg26h97o3NSUd'," \
-                   "-1, 8); ";
+                   "-1, 13); ";
 
       rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
@@ -6204,10 +6287,10 @@ static void initializeRunWallet (std::string path) {
       fprintf(stderr, "Opened database successfully\n");
     }
 
-#if WIPE
+//#if WIPE
     sql = (char *) "DROP TABLE RUN_WALLETS;"; //NEED TO DROP FOR SOME REASON
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-#endif
+//#endif
 
     /* Create SQL statement */
     sql = (char *) "CREATE TABLE RUN_WALLETS("  \
@@ -6232,9 +6315,9 @@ static void initializeRunWallet (std::string path) {
                "'n44HTiHtFQ1hdMHBZPfsiVUUwYep5V3Yq1'); ";
     
     sql = (char *) "INSERT INTO RUN_WALLETS (ID,PRIVKEY,PUBKEY,ADDRESS) "  \
-          "VALUES (4, 'cSLxGecY2EAH19VZvFX4xB8nfTLRYTc6dCgbCPrFH5HUThyfZhbW'," \
-                 "'030633f9961260423bafb6bff036a84cbb464b78bf50c41e5abd16abf2ca844194'," \
-                 "'n1y8BPd7EoNqs4y7bfmrsh29EGRsmo9rqz'); ";
+          "VALUES (4, 'cNgeHQBoy1qoz3iuzvgMFNKaBT4VpytjU7zoFNfNkcJbfBBPohgF'," \
+                 "'03963ff545acb08a58640308989043d91fcc534c9d5cec4179adfe4de517a3cdd9'," \
+                 "'n22U6SStMNhr3QGT4k7D9oKUiDypBEmx4X'); ";
 
  /* Execute SQL statement */
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -6252,9 +6335,9 @@ static void initializeRunWallet (std::string path) {
                  "'n2DXd5qGBnNGHQ2jtd162RjwgBRYdxxYiq'); ";
     
     sql = (char *) "INSERT INTO RUN_WALLETS (ID,PRIVKEY,PUBKEY,ADDRESS) "  \
-          "VALUES (5, 'cQL5qzpWAusCTh67mksuprvFwE9pywLA9K9hwQw2N6gQpxtidapH'," \
-                 "'02b6f06f51166578e3a107df355523a92a050c883eacdd2396e323e8e4bcf624c8'," \
-                 "'mkQ13ZiXaK8pqGdgZ4jTdHTFDCWATUfWuM'); ";
+          "VALUES (5, 'cTL4GU4Dae6aBhEagPooUaobC8ju1C4GiyTwxHt9BuBbmQkAhg9T'," \
+                 "'028639937a664a7efee7f38a5305aca86c6c1c3206d1b2897cb1372e20239b3fef'," \
+                 "'mmjuAZZ8EWFjWsab6Vc8Lsi2FT8cbM5EUc'); ";
 
  /* Execute SQL statement */
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -7089,10 +7172,10 @@ extern void initializePersistRPC(const char* path_) {
       fprintf(stderr, "Opened database successfully\n");
     }
 
-    #if WIPE
+    //#if WIPE
     sql = (char *) "DROP TABLE RPC_BUNDLES;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    #endif
+    //#endif
 
     sql = (char *) "CREATE TABLE RPC_BUNDLES("  \
       "ID INT PRIMARY KEY     NOT NULL," \
@@ -7119,10 +7202,10 @@ extern void initializePersistRPC(const char* path_) {
       fprintf(stdout, "RPC_BUNDLES Table created successfully\n");
     }
 
-    #if WIPE
+    //#if WIPE
     sql = (char *) "DROP TABLE RPC_BUNDLES_INPUTS;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    #endif
+    //#endif
 
     sql = (char *) "CREATE TABLE RPC_BUNDLES_INPUTS("  \
       "ID INT PRIMARY KEY     NOT NULL," \
@@ -7141,10 +7224,10 @@ extern void initializePersistRPC(const char* path_) {
       fprintf(stdout, "RPC_BUNDLES_INPUTS Table created successfully\n");
     }
 
-    #if WIPE
+    //#if WIPE
     sql = (char *) "DROP TABLE RPC_BUNDLES_OUTPUTS;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    #endif
+    //#endif
 
     sql = (char *) "CREATE TABLE RPC_BUNDLES_OUTPUTS("  \
       "ID INT PRIMARY KEY     NOT NULL," \
@@ -8594,8 +8677,9 @@ void createSFPUtxos(std::string path) {
     for(size_t i = 0; i < records.size(); i++) {
 
       Records records0;
-      std::string sql_query0 = std::string("SELECT * FROM SFP_UTXOS WHERE TXID = '") + records[i][7] + std::string("';");
+      std::string sql_query0 = std::string("SELECT * FROM SFP_UTXOS WHERE TXID = '") + records[i][7] + std::string("' AND VOUT = ") + records[i][8] + std::string(";");
       sql = (char *) sql_query0.c_str();
+        printf("sql_query0 = %s\n", sql_query0.c_str());
 
       rc = sqlite3_exec(db, sql, select_callback, &records0, &zErrMsg);
 
@@ -8912,6 +8996,103 @@ extern bool isTxidUnspentSFPToken (long long walletId, const char *txid_, const 
   return res;
 }
 
+
+extern bool fileServiceIsTxidUnspentSFPToken (const char *txid_, const char *fromAddress_, const char *path_) {
+  sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    //const char* data = "Callback function called";
+
+    bool res = false;
+    
+    std::string txid(txid_);
+    
+    std::string fromAddress(fromAddress_);
+
+    std::vector<Utxo> utxos;
+
+    //std::string path = std::string(path_) + std::string("/tokens.db");
+    std::string delimiter = "Documents/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 9) + std::string("/tokens.db");
+    printf("path: %s\n", path.c_str());
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return false;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+
+    printf("PRINTING UTXOS TABLE\n");
+    sql = (char *) "SELECT * FROM UTXOS";
+
+    sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    } else {
+        fprintf(stdout, "Operation done successfully\n");
+    }
+    
+    long long walletId;
+    
+    Records records0;
+
+    std::string sql_query0 = std::string("SELECT * FROM ADDRESSES WHERE ADDRESS = '") + fromAddress + \
+      std::string("';");
+
+    sql = (char *) sql_query0.c_str();
+    printf("sql_query = %s\n", sql_query0.c_str());
+
+    rc = sqlite3_exec(db, sql, select_callback, &records0, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records0.size());
+        
+        if(records0.size() > 0) {
+            walletId = std::stoll(records0[0][1]);
+        }
+    }
+
+  Records records;
+
+  std::string sql_query = std::string("SELECT * FROM UTXOS WHERE WALLET_ID = ") + std::to_string(walletId) + \
+    std::string(" AND TXID = '") + txid + std::string("' AND SPENT_TXID = '' AND ASSET_ID != 0;");
+    //std::string(" AND TXID = '") + txid + std::string("' AND ASSET_ID != 0;");
+
+  sql = (char *) sql_query.c_str();
+  printf("sql_query = %s\n", sql_query.c_str());
+
+  rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+  //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+  if( rc != SQLITE_OK ) {
+    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    sqlite3_free(zErrMsg);
+  } else {
+    fprintf(stdout, "Operation done successfully\n");
+    printf("%lu records returned\n", records.size());
+
+    if(records.size() > 0) {
+      //res = true;
+        if(strcmp(records[0][10].c_str(), "") == 0) {
+            res = true;
+        }
+    }
+  }
+  sqlite3_close(db);
+
+  return res;
+}
+
 std::string getMnemonic(int64_t walletId, std::string path) {
   sqlite3 *db;
     char *zErrMsg = 0;
@@ -9182,6 +9363,99 @@ static PaymentOutput getPaymentOutputByTxid(std::string txid, int64_t walletId, 
         //std::vector<Chunks> chunks = getChunks(script);
         //output.asset.alias = hexToString(chunks[Sfp::PAYMAIL].buf);
 
+        output.asset.id = std::stoi(records[0][12]);
+
+        Records records0;
+
+        std::string sql_query0 = std::string("SELECT * FROM ASSETS WHERE ID = ") + std::to_string(output.asset.id) + std::string(";");
+
+        sql = (char *) sql_query0.c_str();
+
+        rc = sqlite3_exec(db, sql, select_callback, &records0, &zErrMsg);
+        //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+        if( rc != SQLITE_OK ) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        } else {
+            fprintf(stdout, "Operation done successfully\n");
+            printf("%lu records returned\n", records0.size());
+
+            if(records0.size() > 0) {
+                output.asset.alias = records0[0][2] + std::string("@buttonofmoney.com");
+                //output.asset.alias = std::string("1662d8b52822.asset@buttonofmoney.com");
+            }
+        }
+          
+          int amount = 0;
+          
+          Records records1;
+
+          std::string sql_query1 = std::string("SELECT * FROM UTXOS WHERE WALLET_ID = ") +
+          std::to_string(walletId) + std::string(" AND ASSET_ID = ") + std::to_string(output.asset.id) + (" AND SPENT_TXID = '';");
+
+          sql = (char *) sql_query1.c_str();
+
+          rc = sqlite3_exec(db, sql, select_callback, &records1, &zErrMsg);
+          //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+          if( rc != SQLITE_OK ) {
+              fprintf(stderr, "SQL error: %s\n", zErrMsg);
+              sqlite3_free(zErrMsg);
+          } else {
+              fprintf(stdout, "Operation done successfully\n");
+              printf("%lu records returned\n", records1.size());
+
+              for(size_t i = 0; i < records1.size(); i++) {
+                  amount = amount + std::stoi(records1[i][11]);
+              }
+              output.amount = amount;
+          }
+      }
+    }
+    sqlite3_close(db);
+    return output;
+}
+
+/*static PaymentOutput getPaymentOutputByTxid(std::string txid, int64_t walletId, std::string path) {
+    sqlite3 *db;
+      char *zErrMsg = 0;
+      int rc;
+      char *sql;
+
+    PaymentOutput output;
+
+      rc = sqlite3_open(path.c_str(), &db);
+
+      if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return output;
+      } else {
+        fprintf(stderr, "Opened database successfully\n");
+      }
+
+    Records records;
+
+    std::string sql_query = std::string("SELECT * FROM UTXOS WHERE TXID = '") + txid + \
+    std::string("' AND WALLET_ID = ") + std::to_string(walletId) + \
+    std::string(" AND ASSET_ID != 0 AND SPENT_TXID = '';");
+
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+
+      if(records.size() > 0) {
+
+        //std::vector<unsigned char> utxo_script = hexToUchBuffer(records[0][9]);
+        //CScript script(utxo_script.begin(), utxo_script.end());
+        //std::vector<Chunks> chunks = getChunks(script);
+        //output.asset.alias = hexToString(chunks[Sfp::PAYMAIL].buf);
+
         output.amount = std::stoi(records[0][11]);
         output.asset.id = std::stoi(records[0][12]);
 
@@ -9209,7 +9483,8 @@ static PaymentOutput getPaymentOutputByTxid(std::string txid, int64_t walletId, 
     }
     sqlite3_close(db);
     return output;
-}
+}*/
+
 
 static std::string getSfpAddressByReceiveAddress(const char* address_, const char *path_) {
     std::string path = std::string(path_) + std::string("/tokens.db");
@@ -9657,8 +9932,9 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
     //output.asset.id = 1;
     //output.asset.alias = std::string("1662d8b52822.asset@buttonofmoney.com");
     std::vector<PaymentOutput> paymentOutputs;
-    //paymentOutputs.push_back(output);
-    //addressArray.push_back(toAddress);
+    paymentOutputs.push_back(output);
+    addressArray.push_back(toAddress);
+    
     
     if((startAmount - rec.amount) > 0) {
         PaymentOutput outputRemainder;
@@ -9668,8 +9944,8 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
         paymentOutputs.push_back(outputRemainder);
         addressArray.push_back(getNewReceiveAddressById(walletId, path));
     }
-    paymentOutputs.push_back(output);
-    addressArray.push_back(toAddress);
+    //paymentOutputs.push_back(output);
+    //addressArray.push_back(toAddress);
 
     TxBuilder *bsvTxBuilder = new TxBuilder;
 
@@ -9677,8 +9953,18 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
     bsvTxBuilder->setFeePerKbNum(TRANSACTION_FEE_PER_BYTE * 1000);
     bsvTxBuilder->setChangeAddress(fromAddress);
     bsvTxBuilder->sendDustChangeToFees(true);
+    
+    CDataStream ssTx00(SER_NETWORK, PROTOCOL_VERSION | 0);
+    bsvTxBuilder->tx.Serialize(ssTx00);
+    std::string hex_str00 = HexStr(ssTx00);
+    printf("hex_str00: %s\n", hex_str00.c_str());
 
     TxBuilderOutputsStruct outputsStruct = addTxBuilderOutputs(bsvTxBuilder, paymentOutputs, addressArray, walletId, path);
+    
+    CDataStream ssTx01(SER_NETWORK, PROTOCOL_VERSION | 0);
+    bsvTxBuilder->tx.Serialize(ssTx01);
+    std::string hex_str01 = HexStr(ssTx01);
+    printf("hex_str01: %s\n", hex_str01.c_str());
 
     int totalOutputAmount = outputsStruct.totalOutputAmount;
     std::vector<TokenDataStruct> tokenOutputs = outputsStruct.tokenOutputs;
@@ -9697,6 +9983,11 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
     addTxBuilderInputs(bsvTxBuilder, walletId, path);
 
     bsvTxBuilder->build(true);
+    
+    CDataStream ssTx03(SER_NETWORK, PROTOCOL_VERSION | 0);
+    bsvTxBuilder->tx.Serialize(ssTx03);
+    std::string hex_str03 = HexStr(ssTx03);
+    printf("hex_str03: %s\n", hex_str03.c_str());
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx);
@@ -9918,9 +10209,21 @@ extern void authorizerGetNumTxnsForTransferRUN(long long *numTxns, const char *p
     *numTxns = rec.numTxns;
 }
 
+extern void fileServiceGetNumTxnsForTransferRUN(long long *numTxns, const char *path_) {
+    std::string delimiter = "Documents/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 9) + std::string("/tokens.db");
+    
+    printf("path: %s\n", path.c_str());
+
+    TransferRecordRun rec = getTransferRun(0, path);
+
+    *numTxns = rec.numTxns;
+}
 
 
-extern void authorizerGetTransferDataRun(long long index, char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, char *jigIdHexStr, int jigIdSize, const char *path_) {
+
+extern void authorizerGetTransferDataRUN(long long index, char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, char *jigIdHexStr, int jigIdSize, const char *path_) {
 
     std::string path = std::string(path_) + std::string("/tokens.db");
     printf("path: %s\n", path.c_str());
@@ -9940,7 +10243,19 @@ extern void authorizerGetTransferDataRun(long long index, char *txnIdHexStr, int
     snprintf(jigIdHexStr, jigIdSize, "%s", rec.jigId.c_str());
 }
 
-extern void authorizerGetTransferData(long long index, char *txnIdHexStr, int txnIdSize, const char *path_) {
+extern void fileServiceGetTransferDataRUN(long long index, char *txnIdHexStr, int txnIdSize, const char *path_) {
+
+    std::string delimiter = "Documents/";
+    std::string pathStr(path_);
+    std::string path = pathStr.substr(0, pathStr.find(delimiter) + 9) + std::string("/tokens.db");
+
+    TransferRecordRun rec = getTransferRun(index, path);
+
+    snprintf(txnIdHexStr, txnIdSize, "%s", rec.txid.c_str());
+
+}
+
+extern void fileServiceGetTransferData(long long index, char *txnIdHexStr, int txnIdSize, char *fromAddressHexStr, int fromAddressSize, const char *path_) {
 
     std::string delimiter = "Documents/";
     std::string pathStr(path_);
@@ -9949,6 +10264,8 @@ extern void authorizerGetTransferData(long long index, char *txnIdHexStr, int tx
     TransferRecord rec = getTransfer(index, path);
 
     snprintf(txnIdHexStr, txnIdSize, "%s", rec.txid.c_str());
+    
+    snprintf(fromAddressHexStr, fromAddressSize, "%s", rec.fromAddress.c_str());
 
 }
 

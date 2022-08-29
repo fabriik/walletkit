@@ -1018,12 +1018,13 @@ cryptoClientHandleSubmit (OwnershipKept BRCryptoWalletManager manager,
     
     //if(strcmp(manager->network->name, "BitcoinRPC") == 0 || strcmp(manager->network->name, "WhatsOnChain") == 0) {
     if(strcmp(manager->network->name, "BitcoinRPC") == 0) {
-        cryptoWalletUpdTransferRPC (manager->wallet, transfer);
+        cryptoWalletUpdTransferRPC (manager->wallet, transfer, true);
         cryptoWalletUpdBalanceRPC (manager->wallet, transfer, true);
     }
     else if(strcmp(manager->network->name, "WhatsOnChain") == 0) {
-        cryptoWalletUpdBalanceWOC (manager->wallet, transfer, true);
-        cryptoWalletUpdTransferWOC (manager->wallet, transfer);
+        cryptoWalletUpdTransferWOC (manager->wallet, transfer, true);
+        //cryptoWalletUpdBalanceWOC (manager->wallet, transfer, true);
+        cryptoWalletUpdBalanceRPC (manager->wallet, transfer, true);
     }
 
     cryptoTransferStateGive(transferState);
@@ -1623,15 +1624,22 @@ cryptoClientTransactionInputCreate (const char* txHash,
                                     int64_t sequence) {
     BRCryptoClientTransactionInput input = calloc (1, sizeof (struct BRCryptoClientTransactionInputRecord));
     
-    //input->txHash = txHash;
-    input->txHash = (char *) malloc(strlen(txHash));
-    memcpy(input->txHash, txHash, strlen(txHash));
-    //input->script = script;
-    input->script = (char *) malloc(strlen(script));
-    memcpy(input->script, script, strlen(script));
-    //input->signature = signature;
-    input->signature = (char *) malloc(strlen(signature));
-    memcpy(input->signature, signature, strlen(signature));
+
+    //input->txHash = (char *) malloc(strlen(txHash));
+    //memcpy(input->txHash, txHash, strlen(txHash));
+    input->txHash = (char *) malloc(strlen(txHash) + 1);
+    snprintf(input->txHash, strlen(txHash) + 1, "%s", txHash);
+
+    //input->script = (char *) malloc(strlen(script));
+    //memcpy(input->script, script, strlen(script));
+    input->script = (char *) malloc(strlen(script) + 1);
+    snprintf(input->script, strlen(script) + 1, "%s", script);
+
+    //input->signature = (char *) malloc(strlen(signature));
+    //memcpy(input->signature, signature, strlen(signature));
+    input->signature = (char *) malloc(strlen(signature) + 1);
+    snprintf(input->signature, strlen(signature) + 1, "%s", signature);
+    
     input->sequence = sequence;
     
     return input;
@@ -1642,8 +1650,11 @@ cryptoClientTransactionOutputCreate (const char *script, double amount) {
     BRCryptoClientTransactionOutput output = calloc (1, sizeof (struct BRCryptoClientTransactionOutputRecord));
     
     //output->script = script;
-    output->script = (char *) malloc(strlen(script));
-    memcpy(output->script, script, strlen(script));
+    //output->script = (char *) malloc(strlen(script));
+    //memcpy(output->script, script, strlen(script));
+    
+    output->script = (char *) malloc(strlen(script) + 1);
+    snprintf(output->script, strlen(script) + 1, "%s", script);
     
     output->amount = (uint64_t) (amount * 100000000);
     

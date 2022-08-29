@@ -24,6 +24,8 @@ extern long long fileServiceLoadRPCGetWalletId(unsigned long index, const char *
 
 extern bool isTxidUnspentSFPToken (long long walletId, const char *txid_, const char *path);
 
+extern bool fileServiceIsTxidUnspentSFPToken (const char *txid_, const char *fromAddress_, const char *path_);
+
 extern void authorizerInitializeTables(const char *path_);
 
 extern void authorizerAddUtxo(const char *hex_, const char* path_);
@@ -38,15 +40,19 @@ extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsi
 
 extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, unsigned long numTxns, const char * jigId, const char *path_);
 
-extern void authorizerGetTransferDataRun(long long index, char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, char *jigIdHexStr, int jigIdSize, const char *path_);
+extern void authorizerGetTransferDataRUN(long long index, char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, char *jigIdHexStr, int jigIdSize, const char *path_);
 
-extern void authorizerGetTransferData(long long index, char *txnIdHexStr, int txnIdSize, const char *path_);
+extern void fileServiceGetTransferDataRUN(long long index, char *txnIdHexStr, int txnIdSize, const char *path_);
+
+extern void fileServiceGetTransferData(long long index, char *txnIdHexStr, int txnIdSize, char *fromAddressHexStr, int fromAddressSize, const char *path_);
 
 extern void authorizerGetNumTxnsForTransfer(long long *numTxns, const char *path_);
 
 extern void fileServiceGetNumTxnsForTransfer(long long *numTxns, const char *path_);
 
 extern void authorizerGetNumTxnsForTransferRUN(long long *numTxns, const char *path_);
+
+extern void fileServiceGetNumTxnsForTransferRUN(long long *numTxns, const char *path_);
 
 extern void authorizerGetPrivKeyRun(const char * address_, char *privkeyHexStr, int privkeySize, const char *path_);
 
