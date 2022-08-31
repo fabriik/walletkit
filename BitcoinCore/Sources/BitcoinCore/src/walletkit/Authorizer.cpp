@@ -6287,10 +6287,10 @@ static void initializeRunWallet (std::string path) {
       fprintf(stderr, "Opened database successfully\n");
     }
 
-//#if WIPE
+#if WIPE
     sql = (char *) "DROP TABLE RUN_WALLETS;"; //NEED TO DROP FOR SOME REASON
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-//#endif
+#endif
 
     /* Create SQL statement */
     sql = (char *) "CREATE TABLE RUN_WALLETS("  \
@@ -9322,7 +9322,7 @@ static int64_t getWalletIdByAddress(std::string address, std::string path) {
     return res;
 }
 
-static PaymentOutput getPaymentOutputByTxid(std::string txid, int64_t walletId, std::string path) {
+static PaymentOutput getPaymentOutputByTxid(long long index, std::string txid, int64_t walletId, std::string path) {
     sqlite3 *db;
       char *zErrMsg = 0;
       int rc;
@@ -9338,12 +9338,25 @@ static PaymentOutput getPaymentOutputByTxid(std::string txid, int64_t walletId, 
       } else {
         fprintf(stderr, "Opened database successfully\n");
       }
+    
+    printf("PRINTING UTXOS TABLE\n");
+        sql = (char *) "SELECT * FROM UTXOS";
+
+        sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+        if( rc != SQLITE_OK ) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        } else {
+            fprintf(stdout, "Operation done successfully\n");
+        }
 
     Records records;
 
     std::string sql_query = std::string("SELECT * FROM UTXOS WHERE TXID = '") + txid + \
     std::string("' AND WALLET_ID = ") + std::to_string(walletId) + \
     std::string(" AND ASSET_ID != 0 AND SPENT_TXID = '';");
+    
+    printf("sql_query = %s\n", sql_query.c_str());
 
     sql = (char *) sql_query.c_str();
 
@@ -9355,6 +9368,46 @@ static PaymentOutput getPaymentOutputByTxid(std::string txid, int64_t walletId, 
     } else {
       fprintf(stdout, "Operation done successfully\n");
       printf("%lu records returned\n", records.size());
+        
+    if (records.size() == 0){
+        Records records2;
+
+        std::string sql_query2 = std::string("SELECT * FROM UTXOS WHERE WALLET_ID = ") + \
+        std::to_string(walletId) + std::string(" AND ASSET_ID != 0 AND SPENT_TXID = '' ORDER BY AMOUNT ASC;");
+        
+        printf("sql_query = %s\n", sql_query2.c_str());
+
+        sql = (char *) sql_query2.c_str();
+
+        rc = sqlite3_exec(db, sql, select_callback, &records2, &zErrMsg);
+        //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+        if( rc != SQLITE_OK ) {
+          fprintf(stderr, "SQL error: %s\n", zErrMsg);
+          sqlite3_free(zErrMsg);
+        } else {
+          fprintf(stdout, "Operation done successfully\n");
+          printf("%lu records returned\n", records2.size());
+
+          if(records2.size() > 0) {
+              std::string sql_query3 = std::string("UPDATE TRANSFERS SET TXID = '") + \
+              records2[0][7] + std::string("' WHERE ID = ") + std::to_string(index) + (";");
+              
+              printf("sql_query3 = %s\n", sql_query3.c_str());
+
+              sql = (char *) sql_query3.c_str();
+              
+              sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+              if( rc != SQLITE_OK ) {
+                  fprintf(stderr, "SQL error: %s\n", zErrMsg);
+                  sqlite3_free(zErrMsg);
+              } else {
+                  fprintf(stdout, "Operation done successfully\n");
+              }
+              records = records2;
+          }
+        }
+        
+    }
 
       if(records.size() > 0) {
 
@@ -9368,6 +9421,8 @@ static PaymentOutput getPaymentOutputByTxid(std::string txid, int64_t walletId, 
         Records records0;
 
         std::string sql_query0 = std::string("SELECT * FROM ASSETS WHERE ID = ") + std::to_string(output.asset.id) + std::string(";");
+          
+          printf("sql_query0 = %s\n", sql_query0.c_str());
 
         sql = (char *) sql_query0.c_str();
 
@@ -9386,7 +9441,7 @@ static PaymentOutput getPaymentOutputByTxid(std::string txid, int64_t walletId, 
             }
         }
           
-          int amount = 0;
+          int64_t amount = 0;
           
           Records records1;
 
@@ -9405,7 +9460,7 @@ static PaymentOutput getPaymentOutputByTxid(std::string txid, int64_t walletId, 
               printf("%lu records returned\n", records1.size());
 
               for(size_t i = 0; i < records1.size(); i++) {
-                  amount = amount + std::stoi(records1[i][11]);
+                  amount = amount + std::stoll(records1[i][11]);
               }
               output.amount = amount;
           }
@@ -9626,7 +9681,8 @@ extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsi
     
     std::string fromAddress = std::string(fromAddress_);
 
-    unsigned long long amount = ceil((double) amount_/100000000);
+    //unsigned long long amount = ceil((double) amount_/100000000);
+    unsigned long long amount = ceil((double) amount_/1000000);
 
     std::string path = std::string(path_) + std::string("/tokens.db");
     printf("path: %s\n", path.c_str());
@@ -9923,10 +9979,10 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
     
     std::vector<std::string> addressArray;
 
-    PaymentOutput output = getPaymentOutputByTxid(txid_, walletId, path);
+    PaymentOutput output = getPaymentOutputByTxid(index, txid_, walletId, path);
     //PaymentOutput output;
     output.type = std::string("TOKEN_TRANSFER");
-    int startAmount = output.amount;
+    int64_t startAmount = output.amount;
     output.amount = rec.amount;
     //output.amount = 1;
     //output.asset.id = 1;

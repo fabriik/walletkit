@@ -155,7 +155,8 @@ static void fileServiceLoadRPC(const char* path, BRSet *transactionSet, unsigned
         tx->timestamp = (uint32_t) timestamp;
         tx->inCount = (size_t) inCount;
         tx->outCount = (size_t) outCount;
-        tx->receiveAmount = 100000000 * receiveAmount;
+        //tx->receiveAmount = 100000000 * receiveAmount;
+        tx->receiveAmount = 1000000 * receiveAmount;
         tx->direction = CRYPTO_TRANSFER_RECEIVED;
         tx->mintId = mintId;
         tx->receiverAddress = receiverAddress;

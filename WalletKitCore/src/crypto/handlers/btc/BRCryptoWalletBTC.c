@@ -323,7 +323,8 @@ cryptoWalletCreateTransferRPC (BRCryptoWallet  wallet,
         bool exact = false;
         for(size_t i = 0; i < array_count(wid->transactions); i++) {
             if(strcmp(wid->transactions[i]->status, "RECEIVED") == 0) {
-                if(wid->transactions[i]->receiveAmount == (uint64_t) ceil((double) value/100000000) * 100000000) {
+                //if(wid->transactions[i]->receiveAmount == (uint64_t) ceil((double) value/100000000) * 100000000) {
+                if(wid->transactions[i]->receiveAmount == value) {
                     index0 = i;
                     exact = true;
                     break;
@@ -352,7 +353,8 @@ cryptoWalletCreateTransferRPC (BRCryptoWallet  wallet,
         //tid->wtxHash = wid->transactions[0]->wtxHash;
         //tid->version = wid->transactions[0]->version;
         
-        tid->receiveAmount = (uint64_t) ceil((double) value/100000000) * 100000000;
+        //tid->receiveAmount = (uint64_t) ceil((double) value/100000000) * 100000000;
+        tid->receiveAmount = value;
         
         tid->blockHeight = wid->transactions[index0]->blockHeight;
         tid->direction = CRYPTO_TRANSFER_SENT;

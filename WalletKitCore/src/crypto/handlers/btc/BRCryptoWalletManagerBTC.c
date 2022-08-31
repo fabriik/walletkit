@@ -522,7 +522,11 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
     tx->timestamp = (uint32_t) bundle->time;
     tx->inCount = (size_t) bundle->inCount;
     tx->outCount = (size_t) bundle->outCount;
-    tx->receiveAmount = 100000000 * bundle->receiveAmount;
+    if(strcmp(manager->network->name, "BitcoinRPC") == 0) {
+        tx->receiveAmount = 1000000 * bundle->receiveAmount;
+    } else {
+        tx->receiveAmount = 100000000 * bundle->receiveAmount;
+    }
     tx->direction = CRYPTO_TRANSFER_RECEIVED;
     //tx->mintId = "189bc8ad3bc44632581ec2701a244e1c23478eda69ab5c123e2bd47caa8666cc"; //FIX LATER
     //tx->mintId = (char *) malloc(strlen(bundle->mintId) * sizeof(char));
