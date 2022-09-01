@@ -160,7 +160,7 @@ DEFINE_UNIT ("ethereum-mainnet:0x558ec3152e2eb2174905cd19aea4e34a23de9ad6",     
 // USDC
 DEFINE_CURRENCY ("ethereum-mainnet",    "ethereum-mainnet:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",  "USD Coin",    "usdc",  "erc20",   "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",   true)
 DEFINE_UNIT ("ethereum-mainnet:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",      "USD Coin Int",             "usdci",       0,     "USDCI")
-DEFINE_UNIT ("ethereum-mainnet:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",      "USD Coin",             "usdc",       18,     "USDC")
+DEFINE_UNIT ("ethereum-mainnet:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",      "USD Coin",             "usdc",       6,     "USDC")
 
 DEFINE_ADDRESS_SCHEMES  ("ethereum-mainnet", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("ethereum-mainnet", CRYPTO_SYNC_MODE_API_ONLY)
