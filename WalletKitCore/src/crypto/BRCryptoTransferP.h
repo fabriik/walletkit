@@ -119,6 +119,8 @@ struct BRCryptoTransferRecord {
     char *exchangeId;
     BRCryptoAddress sourceAddress;
     BRCryptoAddress targetAddress;
+    char *tokenId; //token protocols
+    char *txUrl; //token protocols
 
     /// The state (modifiable)
     BRCryptoTransferState state;

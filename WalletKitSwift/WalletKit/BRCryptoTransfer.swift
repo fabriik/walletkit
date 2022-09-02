@@ -58,6 +58,14 @@ public final class Transfer: Equatable {
         cryptoTransferGetTargetAddress (core)
             .map { Address (core: $0, take: false) }
     }()
+    
+    public private(set) lazy var tokenId: String? = {
+        asUTF8String (cryptoTransferGetTokenId (core))
+    }()
+    
+    public private(set) lazy var txUrl: String? = {
+        asUTF8String (cryptoTransferGetTxUrl (core))
+    }()
 
     /// The amount to transfer - always positive (from source to target)
     public let amount: Amount

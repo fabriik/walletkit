@@ -6809,6 +6809,17 @@ extern void authorizerGetAddress(char *str, long size, const char *script) {
     snprintf(str, size, "%s", addr.c_str());
 }
 
+extern void authorizerGetTokenId(char *str, long size, const char *script) {
+
+    std::string txOut(script);
+    std::vector<unsigned char> txOutBuf = hexToUchBuffer(txOut);
+    CScript txOutScript(txOutBuf.begin(), txOutBuf.end());
+    std::vector<Chunks> chunks = getChunks(txOutScript);
+    std::string paymail = hexToString(chunks[Sfp::PAYMAIL].buf);
+
+    snprintf(str, size, "%s", paymail.c_str());
+}
+
 extern bool authorizerCheckAddress(const char *address, const char *script) {
 
     //std::string txOut("610773667040302e33246164336362313833316165622e617373657440627574746f6e6f666d6f6e65792e636f6d14ac30986d081592ff27a65da9bcf1b31813dc19a914f1f354fceb000dbacb1d665dbf285d355d771f9a142ca3d8061b9c7171c5ae7c4c0bc10781916139a746304402202653e382fe17b7c95f81fd36edee5f4fd1cb1a84777a5d83cb76e521359b4af50220622d1e452615cc7b0eb32af9d1a3d7b40915645cdd76290330927b74171e4afe24405a644b436819e24c2770231c4498fba7eba40b051f073655daddf58155939100000000000000000000005d79577a75567a567a567a567a567a567a5c79567a75557a557a557a557a557a5b79557a75547a547a547a547a5a79547a75537a537a537a5979537a75527a527a5779527a75517a5879517a75615f7901008791635e79a9537987695f795f79ac696851790087916900790087916956795e798769011479a954798769011579011579ac69011279a955798769011379011379ac777777777777777777777777777777777777777777776a0b0100000000000000080000");
@@ -7172,10 +7183,10 @@ extern void initializePersistRPC(const char* path_) {
       fprintf(stderr, "Opened database successfully\n");
     }
 
-    //#if WIPE
+    #if WIPE
     sql = (char *) "DROP TABLE RPC_BUNDLES;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    //#endif
+    #endif
 
     sql = (char *) "CREATE TABLE RPC_BUNDLES("  \
       "ID INT PRIMARY KEY     NOT NULL," \
@@ -7202,10 +7213,10 @@ extern void initializePersistRPC(const char* path_) {
       fprintf(stdout, "RPC_BUNDLES Table created successfully\n");
     }
 
-    //#if WIPE
+    #if WIPE
     sql = (char *) "DROP TABLE RPC_BUNDLES_INPUTS;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    //#endif
+    #endif
 
     sql = (char *) "CREATE TABLE RPC_BUNDLES_INPUTS("  \
       "ID INT PRIMARY KEY     NOT NULL," \
@@ -7224,10 +7235,10 @@ extern void initializePersistRPC(const char* path_) {
       fprintf(stdout, "RPC_BUNDLES_INPUTS Table created successfully\n");
     }
 
-    //#if WIPE
+    #if WIPE
     sql = (char *) "DROP TABLE RPC_BUNDLES_OUTPUTS;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    //#endif
+    #endif
 
     sql = (char *) "CREATE TABLE RPC_BUNDLES_OUTPUTS("  \
       "ID INT PRIMARY KEY     NOT NULL," \
@@ -7270,7 +7281,7 @@ extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, un
       fprintf(stderr, "Opened database successfully\n");
     }
 
-    Records records;
+    /*Records records;
 
     std::string sql_query = std::string("SELECT * FROM RPC_BUNDLES WHERE TXHASH = '") + std::string(txHash) + std::string("';");
 
@@ -7285,7 +7296,7 @@ extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, un
       fprintf(stdout, "Operation done successfully\n");
       printf("%lu records returned\n", records.size());
 
-        if(records.size() == 0) {
+        if(records.size() == 0) {*/
             size_t id = 0;
 
             Records records0;
@@ -7319,8 +7330,8 @@ extern void authorizerSaveBundleRPC(const char *txHash, unsigned int version, un
             } else {
                 fprintf(stdout, "Bundle created successfully\n");
             }
-        }
-    }
+        //}
+    //}
 
     sqlite3_close(db);
 

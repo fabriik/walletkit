@@ -108,6 +108,12 @@ extern "C" {
     extern BRCryptoAmount
     cryptoTransferGetAmountDirected (BRCryptoTransfer transfer);
 
+    extern const char *
+    cryptoTransferGetTokenId (BRCryptoTransfer transfer);
+
+    extern const char *
+    cryptoTransferGetTxUrl (BRCryptoTransfer transfer);
+
     /**
      * Returns the transfer's fee.  Note that the `fee` and the `amount` may be in different
      * currencies.

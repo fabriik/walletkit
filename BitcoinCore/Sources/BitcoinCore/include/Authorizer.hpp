@@ -12,6 +12,8 @@
 
 extern void authorizerGetAddress(char *str, long size, const char *script);
 
+extern void authorizerGetTokenId(char *str, long size, const char *script);
+
 extern bool authorizerCheckAddress(const char *address, const char *script);
 
 extern bool authorizerCheckSFP(const char *script);

@@ -525,7 +525,8 @@ public class BitcoinRPCSystemClient: SystemClient {
                      mintId: nil,
                      receiverAddress: nil,
                      senderAddress: nil,
-                     jigId: nil
+                     jigId: nil,
+                     name: nil
                      )
         }
         
@@ -753,7 +754,8 @@ public class BitcoinRPCSystemClient: SystemClient {
                      mintId: String(""),
                      receiverAddress: receiverAddress,
                      senderAddress: senderAddress,
-                     jigId: String("")
+                     jigId: String(""),
+                     name: String("")
             )
             /*return (id: identifier, blockchainId: "test",
                      hash: hash, identifier: identifier,

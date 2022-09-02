@@ -12,6 +12,8 @@
 #include "crypto/BRCryptoAmountP.h"
 #include "ethereum/util/BRUtilMath.h"
 
+#include "../../../../../BitcoinCore/Sources/BitcoinCore/include/Authorizer.hpp"
+
 static BRCryptoTransferDirection
 cryptoTransferDirectionFromBTC (uint64_t send, uint64_t recv, uint64_t fee);
 
@@ -226,6 +228,23 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
                                                             state,
                                                             &contextBTC,
                                                             cryptoTransferCreateCallbackBTC);
+    
+    if(strcmp(listener.manager->network->name, "BitcoinRPC") == 0) {
+    
+        for(size_t i = 0; i < tid->outCount; i++) {
+            if(authorizerCheckSFP((const char *) tid->outputs[i].script)) {
+                char *tokenIdStr = (char*) malloc(100);
+                authorizerGetTokenId(tokenIdStr,100,(const char *) tid->outputs[i].script);
+                transfer->tokenId = tokenIdStr;
+                break;
+            }
+        }
+        transfer->txUrl = "";
+    } else if(strcmp(listener.manager->network->name, "WhatsOnChain") == 0) {
+        transfer->tokenId = tid->name;
+        transfer->txUrl = (char*) malloc(255);
+        snprintf(transfer->txUrl, 255, "https://testnet.jig.city/jig/%s_o1", tid->mintId);
+    }
 
     cryptoTransferStateGive (state);
     cryptoFeeBasisGive (feeBasisEstimated);
@@ -393,7 +412,7 @@ BRCryptoTransferHandlers cryptoTransferHandlersBSV = {
 };
 
 BRCryptoTransferHandlers cryptoTransferHandlersRPC = {
-    cryptoTransferReleaseRPC,
+    cryptoTransferReleaseBTC,
     cryptoTransferGetHashBTC,
     NULL, // setHash
     NULL, // updateIdentifier

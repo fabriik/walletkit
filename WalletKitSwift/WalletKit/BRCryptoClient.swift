@@ -174,7 +174,8 @@ public protocol SystemClient {
         mintId: String?,
         receiverAddress: String?,
         senderAddress: String?,
-        jigId: String?
+        jigId: String?,
+        name: String?
     )
 
 

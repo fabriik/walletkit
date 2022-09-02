@@ -537,6 +537,7 @@ cryptoWalletManagerRecoverTransfersFromTransactionBundleRPC (BRCryptoWalletManag
     tx->receiverAddress = bundle->receiverAddress;
     tx->senderAddress = bundle->senderAddress;
     tx->jigId = bundle->jigId;
+    tx->name = bundle->name;
     tx->status = "RECEIVED";
 
     for(size_t i = 0; i < tx->inCount; i++) {

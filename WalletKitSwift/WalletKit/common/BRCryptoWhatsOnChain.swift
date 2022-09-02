@@ -488,7 +488,8 @@ public class WhatsOnChainSystemClient: SystemClient {
                      mintId: nil,
                      receiverAddress: nil,
                      senderAddress: nil,
-                     jigId: nil
+                     jigId: nil,
+                     name: nil
                      )
         }
         
@@ -601,6 +602,11 @@ public class WhatsOnChainSystemClient: SystemClient {
             var receiverAddress : String? = String("")
             if(json.asString(name: "owner") != nil) {
                 receiverAddress = json.asString(name: "owner")
+            }
+            
+            var name : String? = String("")
+            if(json.asString(name: "name") != nil) {
+                name = json.asString(name: "name")
             }
             
             //var count = 0
@@ -766,7 +772,8 @@ public class WhatsOnChainSystemClient: SystemClient {
                      mintId: mintId,
                      receiverAddress: receiverAddress,
                      senderAddress: senderAddress,
-                     jigId: jigId
+                     jigId: jigId,
+                     name: name
             
             )
             /*return (id: identifier, blockchainId: "test",
@@ -1529,9 +1536,9 @@ public class WhatsOnChainSystemClient: SystemClient {
                                 "network" : "\(blockchain)"
                             ]
                             
-                            if(hash == "1ce49b150b24afe1db4df4ae4da378840355db0269bf39f79e7e9861b7926f6d") {
+                            /*if(hash == "1ce49b150b24afe1db4df4ae4da378840355db0269bf39f79e7e9861b7926f6d") {
                                 print("Debugging")
-                            }
+                            }*/
                             
                            //if let data = data {
                                 do { request0.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
@@ -1564,11 +1571,16 @@ public class WhatsOnChainSystemClient: SystemClient {
                                 print("TXID: \(txid)")
                                 if(txid != "") {
                                     let jigId : String = data0_!["jigId"] as! String
-                                    let amount : UInt64 = data0_!["amount"] as! UInt64
+                                    if let amount = data0_!["amount"] as? UInt64? {
+                                        data_!["amount"] = amount
+                                    } else {
+                                        data_!["amount"] = 1
+                                    }
                                     let owner : String = data0_!["owner"] as! String
+                                    let name : String = data0_!["name"] as! String
                                     data_!["jigId"] = jigId
-                                    data_!["amount"] = amount
                                     data_!["owner"] = owner
+                                    data_!["name"] = name
                                     data_array.append(data_!)
                                 }
                             }

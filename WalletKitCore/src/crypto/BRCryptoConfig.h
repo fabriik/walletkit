@@ -196,7 +196,8 @@ DEFINE_CURRENCY ("bitcoinrpc-mainnet",     "bitcoinrpc-mainnet:__native__",   NE
 DEFINE_ADDRESS_SCHEMES  ("bitcoinrpc-mainnet", CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT,   CRYPTO_ADDRESS_SCHEME_BTC_LEGACY)
 DEFINE_MODES            ("bitcoinrpc-mainnet", CRYPTO_SYNC_MODE_API_ONLY,          CRYPTO_SYNC_MODE_P2P_ONLY)
 
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_RPC,  "bitcoinrpc-testnet", NETWORK_NAME, "testnet", false, 100, 6, 10 * 60)
+//DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_RPC,  "bitcoinrpc-testnet", NETWORK_NAME, "testnet", false, 100, 6, 10 * 60)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_RPC,  "bitcoinrpc-testnet", NETWORK_NAME, "testnet", false, 100, 1, 10 * 60)
 DEFINE_NETWORK_FEE_ESTIMATE ("bitcoinrpc-testnet", "18", "10m", 10 * 60 * 1000)
 DEFINE_CURRENCY ("bitcoinrpc-testnet",     "bitcoinrpc-testnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_RPC,  "native",   NULL,   true)
     DEFINE_UNIT ("bitcoinrpc-testnet:__native__",      "Satoshi",    "sat",      0,      "SAT")
@@ -221,7 +222,8 @@ DEFINE_CURRENCY ("whatsonchain-mainnet",     "whatsonchain-mainnet:__native__", 
 DEFINE_ADDRESS_SCHEMES  ("whatsonchain-mainnet", CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT,   CRYPTO_ADDRESS_SCHEME_BTC_LEGACY)
 DEFINE_MODES            ("whatsonchain-mainnet", CRYPTO_SYNC_MODE_API_ONLY,          CRYPTO_SYNC_MODE_P2P_ONLY)
 
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_WOC,  "whatsonchain-testnet", NETWORK_NAME, "testnet", false, 1931985, 6, 10 * 60)
+//DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_WOC,  "whatsonchain-testnet", NETWORK_NAME, "testnet", false, 1931985, 6, 10 * 60)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_WOC,  "whatsonchain-testnet", NETWORK_NAME, "testnet", false, 1931985, 1, 10 * 60)
 DEFINE_NETWORK_FEE_ESTIMATE ("whatsonchain-testnet", "18", "10m", 10 * 60 * 1000)
 DEFINE_CURRENCY ("whatsonchain-testnet",     "whatsonchain-testnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_WOC,  "native",   NULL,   true)
     DEFINE_UNIT ("whatsonchain-testnet:__native__",      "Satoshi",    "sat",      0,      "SAT")

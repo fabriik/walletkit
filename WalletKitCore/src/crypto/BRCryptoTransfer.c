@@ -270,6 +270,16 @@ cryptoTransferGetAmountAsSign (BRCryptoTransfer transfer, BRCryptoBoolean isNega
 }
 
 extern const char *
+cryptoTransferGetTokenId (BRCryptoTransfer transfer) {
+    return transfer->tokenId;
+}
+
+extern const char *
+cryptoTransferGetTxUrl (BRCryptoTransfer transfer) {
+    return transfer->txUrl;
+}
+
+extern const char *
 cryptoTransferGetExchangeId (BRCryptoTransfer transfer) {
     return transfer->exchangeId;
 }

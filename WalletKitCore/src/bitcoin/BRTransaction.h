@@ -101,6 +101,7 @@ typedef struct {
     char *receiverAddress; //RUN
     char *senderAddress; //RUN
     char *jigId;
+    char *name;
     char *status;
 } BRTransaction;
 
