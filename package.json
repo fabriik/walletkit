@@ -1,0 +1,11 @@
+{
+  "name": "WalletKit",
+  "version": "0.1,0",
+  "description": "WalletKit is a kit for your wallet.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fabriik/walletkit.git"
+  },
+  "author": "r.cresnik@nchain.com>",
+  "license": "mit"
+}
