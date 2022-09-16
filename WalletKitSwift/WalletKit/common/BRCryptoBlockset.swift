@@ -62,6 +62,9 @@ public class BlocksetSystemClient: SystemClient {
     /// Base URL (String) for BRD API Services
     let apiBaseURL: String
     
+    // The session to use for DataTaskFunc as in `session.dataTask (with: request, ...)`.
+    private var sessions: [URLSession] = []
+    
     /// A DispatchQueue Used for certain queries that can't be accomplished in the session's data
     /// task.  Such as when multiple request are needed in getTransactions().
     let queue = DispatchQueue.init(label: "BlocksetSystemClient")
@@ -222,12 +225,12 @@ public class BlocksetSystemClient: SystemClient {
     public static func createForTest (blocksetAccess: BlocksetAccess) -> BlocksetSystemClient {
         return createForTest(bdbBaseURL: blocksetAccess.baseURL, bdbToken: blocksetAccess.token)
     }
-    
+
     public func cancelAll () {
         print ("SYS: BDB: Cancel All")
         sessions.forEach { $0.getAllTasks(completionHandler: { $0.forEach { $0.cancel () } }) }
     }
-    
+
     ///
     /// The BlocksetSystemClient Model (aka Schema-ish)
     ///
@@ -1369,7 +1372,6 @@ public class BlocksetSystemClient: SystemClient {
         }
     }
     
-    private var sessions: [URLSession] = []
     private func sendRequest<T> (_ request: URLRequest,
                                  _ dataTaskFunc: DataTaskFunc,
                                  _ responseSuccess: [Int],
