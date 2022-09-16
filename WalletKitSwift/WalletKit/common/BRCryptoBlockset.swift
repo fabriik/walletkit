@@ -223,6 +223,11 @@ public class BlocksetSystemClient: SystemClient {
         return createForTest(bdbBaseURL: blocksetAccess.baseURL, bdbToken: blocksetAccess.token)
     }
     
+    public func cancelAll () {
+        print ("SYS: BDB: Cancel All")
+        sessions.forEach { $0.getAllTasks(completionHandler: { $0.forEach { $0.cancel () } }) }
+    }
+    
     ///
     /// The BlocksetSystemClient Model (aka Schema-ish)
     ///
@@ -1363,13 +1368,16 @@ public class BlocksetSystemClient: SystemClient {
             return Result.failure (SystemClientError.jsonParse (jsonError))
         }
     }
-
+    
+    private var sessions: [URLSession] = []
     private func sendRequest<T> (_ request: URLRequest,
                                  _ dataTaskFunc: DataTaskFunc,
                                  _ responseSuccess: [Int],
                                  deserializer: @escaping (_ data: Data?) -> Result<T, SystemClientError>,
                                  completion: @escaping (Result<T, SystemClientError>) -> Void) {
         let session = URLSession(configuration: .default)
+        sessions.append(session)
+        
         dataTaskFunc (session, request) { (data, res, error) in
             guard nil == error else {
                 completion (Result.failure(SystemClientError.submission (error!))) // NSURLErrorDomain

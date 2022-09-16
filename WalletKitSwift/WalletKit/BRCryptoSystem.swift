@@ -743,6 +743,7 @@ public final class System {
     public func pause () {
         print ("SYS: Pause")
         managers.forEach { $0.disconnect() }
+        client.cancelAll()
     }
 
     ///
