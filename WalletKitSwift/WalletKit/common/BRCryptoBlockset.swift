@@ -1381,8 +1381,8 @@ public class BlocksetSystemClient: SystemClient {
         let session = URLSession(configuration: .default)
         sessions.append(session)
         
-        dataTaskFunc (session, request) { (data, res, error) in
-            self.sessions.removeAll(where: { $0 === session })
+        dataTaskFunc (session, request) { [weak self] (data, res, error) in
+            self?.sessions.removeAll(where: { $0 === session })
             
             guard nil == error else {
                 completion (Result.failure(SystemClientError.submission (error!))) // NSURLErrorDomain
