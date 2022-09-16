@@ -34,11 +34,6 @@ public enum SystemClientError: Error {
 }
 
 public protocol SystemClient {
-
-    // pause, resume, cancel, ...
-    func cancelAll ()
-
-    
     // Blockchain
     
     typealias BlockchainFee = (amount: String, tier: String, confirmationTimeInMilliseconds: UInt64) // currency?

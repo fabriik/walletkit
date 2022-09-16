@@ -61,10 +61,7 @@ public class BlocksetSystemClient: SystemClient {
 
     /// Base URL (String) for BRD API Services
     let apiBaseURL: String
-
-    // The session to use for DataTaskFunc as in `session.dataTask (with: request, ...)`.
-    let session = URLSession (configuration: .default)
-
+    
     /// A DispatchQueue Used for certain queries that can't be accomplished in the session's data
     /// task.  Such as when multiple request are needed in getTransactions().
     let queue = DispatchQueue.init(label: "BlocksetSystemClient")
@@ -225,12 +222,7 @@ public class BlocksetSystemClient: SystemClient {
     public static func createForTest (blocksetAccess: BlocksetAccess) -> BlocksetSystemClient {
         return createForTest(bdbBaseURL: blocksetAccess.baseURL, bdbToken: blocksetAccess.token)
     }
-
-    public func cancelAll () {
-        print ("SYS: BDB: Cancel All")
-        session.getAllTasks(completionHandler: { $0.forEach { $0.cancel () } })
-    }
-
+    
     ///
     /// The BlocksetSystemClient Model (aka Schema-ish)
     ///
@@ -1377,30 +1369,31 @@ public class BlocksetSystemClient: SystemClient {
                                  _ responseSuccess: [Int],
                                  deserializer: @escaping (_ data: Data?) -> Result<T, SystemClientError>,
                                  completion: @escaping (Result<T, SystemClientError>) -> Void) {
+        let session = URLSession(configuration: .default)
         dataTaskFunc (session, request) { (data, res, error) in
             guard nil == error else {
                 completion (Result.failure(SystemClientError.submission (error!))) // NSURLErrorDomain
                 return
             }
-
+            
             guard let res = res as? HTTPURLResponse else {
                 completion (Result.failure (SystemClientError.url ("No Response")))
                 return
             }
-
+            
             guard responseSuccess.contains(res.statusCode) else {
                 let json = data
                     .flatMap { try? JSONSerialization.jsonObject(with: $0, options: []) as? [String:Any] }
-
+                
                 // It is an error if there IS data but IS NOT json (could not parse).
                 let jsonError = nil != data && nil == json
-
+                
                 completion (Result.failure (SystemClientError.response(res.statusCode, json, jsonError)))
                 return
             }
-
+            
             completion (deserializer (data))
-            }.resume()
+        }.resume()
     }
 
     /// Update `request` with 'application/json' headers and the httpMethod
