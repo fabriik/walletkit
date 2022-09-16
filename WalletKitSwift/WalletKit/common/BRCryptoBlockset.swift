@@ -61,7 +61,7 @@ public class BlocksetSystemClient: SystemClient {
 
     /// Base URL (String) for BRD API Services
     let apiBaseURL: String
-    
+
     // The session to use for DataTaskFunc as in `session.dataTask (with: request, ...)`.
     private var sessions: [URLSession] = []
     
@@ -229,6 +229,7 @@ public class BlocksetSystemClient: SystemClient {
     public func cancelAll () {
         print ("SYS: BDB: Cancel All")
         sessions.forEach { $0.getAllTasks(completionHandler: { $0.forEach { $0.cancel () } }) }
+        sessions.removeAll()
     }
 
     ///
@@ -1371,7 +1372,7 @@ public class BlocksetSystemClient: SystemClient {
             return Result.failure (SystemClientError.jsonParse (jsonError))
         }
     }
-    
+
     private func sendRequest<T> (_ request: URLRequest,
                                  _ dataTaskFunc: DataTaskFunc,
                                  _ responseSuccess: [Int],
@@ -1401,6 +1402,8 @@ public class BlocksetSystemClient: SystemClient {
                 completion (Result.failure (SystemClientError.response(res.statusCode, json, jsonError)))
                 return
             }
+            
+            self.sessions.removeAll(where: { $0 == session })
             
             completion (deserializer (data))
         }.resume()
