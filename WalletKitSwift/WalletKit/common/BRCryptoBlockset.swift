@@ -63,7 +63,7 @@ public class BlocksetSystemClient: SystemClient {
     let apiBaseURL: String
 
     // The session to use for DataTaskFunc as in `session.dataTask (with: request, ...)`.
-    private var sessions: [URLSession] = []
+    let session = URLSession (configuration: .default)
     
     /// A DispatchQueue Used for certain queries that can't be accomplished in the session's data
     /// task.  Such as when multiple request are needed in getTransactions().
@@ -228,8 +228,7 @@ public class BlocksetSystemClient: SystemClient {
 
     public func cancelAll () {
         print ("SYS: BDB: Cancel All")
-        sessions.forEach { $0.getAllTasks(completionHandler: { $0.forEach { $0.cancel () } }) }
-        sessions.removeAll()
+        session.getAllTasks(completionHandler: { $0.forEach { $0.cancel () } })
     }
 
     ///
@@ -1378,12 +1377,7 @@ public class BlocksetSystemClient: SystemClient {
                                  _ responseSuccess: [Int],
                                  deserializer: @escaping (_ data: Data?) -> Result<T, SystemClientError>,
                                  completion: @escaping (Result<T, SystemClientError>) -> Void) {
-        let session = URLSession(configuration: .default)
-        sessions.append(session)
-        
         dataTaskFunc (session, request) { [weak self] (data, res, error) in
-            self?.sessions.removeAll(where: { $0 === session })
-            
             guard nil == error else {
                 completion (Result.failure(SystemClientError.submission (error!))) // NSURLErrorDomain
                 return
