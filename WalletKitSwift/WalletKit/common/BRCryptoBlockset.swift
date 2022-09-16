@@ -1382,7 +1382,7 @@ public class BlocksetSystemClient: SystemClient {
         sessions.append(session)
         
         dataTaskFunc (session, request) { (data, res, error) in
-            self.sessions.removeAll(where: { $0 == session })
+            self.sessions.removeAll(where: { $0 === session })
             
             guard nil == error else {
                 completion (Result.failure(SystemClientError.submission (error!))) // NSURLErrorDomain
