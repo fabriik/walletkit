@@ -34,10 +34,10 @@ public enum SystemClientError: Error {
 }
 
 public protocol SystemClient {
-    
+
     // pause, resume, cancel, ...
     func cancelAll ()
-    
+
     
     // Blockchain
     
