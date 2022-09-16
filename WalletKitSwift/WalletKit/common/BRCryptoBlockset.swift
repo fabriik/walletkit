@@ -1377,7 +1377,7 @@ public class BlocksetSystemClient: SystemClient {
                                  _ responseSuccess: [Int],
                                  deserializer: @escaping (_ data: Data?) -> Result<T, SystemClientError>,
                                  completion: @escaping (Result<T, SystemClientError>) -> Void) {
-        dataTaskFunc (session, request) { [weak self] (data, res, error) in
+        dataTaskFunc (session, request) { (data, res, error) in
             guard nil == error else {
                 completion (Result.failure(SystemClientError.submission (error!))) // NSURLErrorDomain
                 return
