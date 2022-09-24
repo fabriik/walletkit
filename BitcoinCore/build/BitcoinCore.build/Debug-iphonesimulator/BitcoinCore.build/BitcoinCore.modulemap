@@ -1,0 +1,4 @@
+module BitcoinCore {
+umbrella "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include"
+export *
+}

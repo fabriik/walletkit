@@ -1,0 +1,4 @@
+module WalletKitCore {
+umbrella "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include"
+export *
+}

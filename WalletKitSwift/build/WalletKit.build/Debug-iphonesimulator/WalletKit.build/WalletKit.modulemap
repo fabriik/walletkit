@@ -1,0 +1,4 @@
+module WalletKit {
+header "WalletKit-Swift.h"
+export *
+}

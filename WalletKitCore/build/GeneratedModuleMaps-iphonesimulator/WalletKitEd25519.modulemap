@@ -1,0 +1,4 @@
+module WalletKitEd25519 {
+umbrella "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/vendor/ed25519/include"
+export *
+}

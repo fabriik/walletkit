@@ -1,0 +1,37 @@
+version: "Apple Swift version 5.5.2 (swiftlang-1300.0.47.5 clang-1300.0.29.30)"
+options: "659f2b3536f8f3d1667a21d00d52c05f43569fe8186b039af356aa968f4d8806"
+build_start_time: [1662654955, 580932140]
+build_end_time: [1662654957, 733371973]
+inputs:
+  "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoAccount.swift": !private [1660330853, 218461275]
+  "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoAddress.swift": !private [1660330853, 218719005]
+  "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoAmount.swift": !private [1660330853, 218927383]
+  "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoClient.swift": !private [1662123965, 75678348]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoCurrency.swift"
+  : !private [1660330853, 219304561]
+  "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoKey.swift": !private [1660330853, 219532012]
+  "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoNetwork.swift": !private [1660339184, 688791275]
+  "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoPayment.swift": !private [1660330853, 220172643]
+  "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoSystem.swift": !private [1662123965, 120911359]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoTransfer.swift"
+  : !private [1662132208, 917688846]
+  "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoUnit.swift": !private [1660330853, 221584796]
+  "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoWallet.swift": !private [1660655791, 901375770]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/BRCryptoWalletManager.swift"
+  : !private [1660741510, 819642066]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/common/BRCryptoBitcoinRPC.swift"
+  : !private [1662473423, 478356361]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/common/BRCryptoBlockset.swift"
+  : !private [1662123965, 53634166]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/common/BRCryptoCipher.swift"
+  : !private [1660330853, 223744869]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/common/BRCryptoCoder.swift"
+  : !private [1660330853, 224095821]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/common/BRCryptoHasher.swift"
+  : !private [1660330853, 224255561]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/common/BRCryptoSigner.swift"
+  : !private [1660330853, 224478244]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/common/BRCryptoWhatsOnChain.swift"
+  : !private [1662126290, 339718341]
+  ? "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitSwift/WalletKit/common/BRSupport.swift"
+  : !private [1660330853, 224733352]

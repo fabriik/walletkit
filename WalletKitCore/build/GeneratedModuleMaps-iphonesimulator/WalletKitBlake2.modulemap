@@ -1,0 +1,4 @@
+module WalletKitBlake2 {
+umbrella "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/vendor/blake2/include"
+export *
+}

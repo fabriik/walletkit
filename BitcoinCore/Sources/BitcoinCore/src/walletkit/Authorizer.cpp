@@ -23,12 +23,18 @@
 #include <sqlite3.h>
 #include <regex>
 
+#include <stdlib.h> /* exit, atoi, malloc, free */
+#include <unistd.h> /* read, write, close */
+#include <sys/socket.h> /* socket, connect */
+#include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
+#include <netdb.h> /* struct hostent, gethostbyname */
+
 #define WIPE 0
 
 //#define ZEROBSV 1
 #define ZEROBSV 0
 
-#define MAINNET 0
+#define MAINNET 1
 
 #define BIP_44_ADDRESS_GAP_LIMIT 20
 #define TRANSACTION_FEE_PER_BYTE 0.6
@@ -427,8 +433,8 @@ unsigned int BaseConverter::base2dec(const std::string& baseDigits, const std::s
 // Multiplies str1 and str2, and prints result.
 static std::string multiply(std::string num1, std::string num2)
 {
-    int len1 = num1.size();
-    int len2 = num2.size();
+    int len1 = (int) num1.size();
+    int len2 = (int) num2.size();
     if (len1 == 0 || len2 == 0)
     return "0";
 
@@ -481,7 +487,7 @@ static std::string multiply(std::string num1, std::string num2)
     }
 
     // ignore '0's from the right
-    int i = result.size() - 1;
+    int i = (int) result.size() - 1;
     while (i>=0 && result[i] == 0)
     i--;
 
@@ -515,7 +521,7 @@ static std::string add(std::string str1, std::string str2)
     std::string str = "";
 
     // Calculate length of both string
-    int n1 = str1.length(), n2 = str2.length();
+    int n1 = (int) str1.length(), n2 = (int) str2.length();
 
     // Reverse both of strings
     reverse(str1.begin(), str1.end());
@@ -1005,11 +1011,11 @@ static std::vector<unsigned char> getLittleEndian(CKey privKey, std::vector<unsi
 
     const BaseConverter& hex2dec = BaseConverter::HexToDecimalConverter();
 
-    std::string d = hex2dec.Convert(bnStr.c_str()); //"5264b9cc16e3205b2114bb36bc3c660dc24fc16f99bb79b1a95136aff3f08596"
+    std::string d = hex2dec.Convert(bnStr.c_str());
 
-    std::string r = hex2dec.Convert(rStr.c_str()); //"1c9b0e71d32fcedb7c5a644c6dcf30a52691c67abc18de3508689b2748bc2edf"
+    std::string r = hex2dec.Convert(rStr.c_str());
 
-    std::string e = hex2dec.Convert(hashBufStr.c_str()); //"502d9839d55f6c5acd0daf920186e93f8a606c42d92e698be81b6d275eb1e23a"
+    std::string e = hex2dec.Convert(hashBufStr.c_str());
 
     std::string kinvmN = hex2dec.Convert("73f7579deedd822d7cb84fd5f85aa3f135eb6f35c67dc6dc5fad77b6696e0718");
 
@@ -1051,8 +1057,7 @@ static std::vector<unsigned char> getLittleEndian(CKey privKey, std::vector<unsi
 
     std::string newSigStr = prefix + rStr + prefix2 + result4_hex;
 
-    printf("newSigStr = %s\n", newSigStr.c_str());
-
+    //printf("newSigStr = %s\n", newSigStr.c_str());
     return hexToUchBuffer(newSigStr);
 }
 
@@ -1472,9 +1477,9 @@ static void writeReverse (std::vector<unsigned char>& bw, std::vector<unsigned c
     for (size_t i = 0; i < buf2.size(); i++) {
         buf2[i] = buf[buf.size() - 1 - i];
         bw.push_back(buf2[i]);
-        printf("%02x ", buf2[i]);
+        //printf("%02x ", buf2[i]);
     }
-    printf("\n");
+    //printf("\n");
 }
 
 static void writeUInt64LEBn(std::vector<unsigned char>& bw, int bn) {
@@ -1482,7 +1487,7 @@ static void writeUInt64LEBn(std::vector<unsigned char>& bw, int bn) {
     sprintf(ch, "%016x", bn);
     //printf("%s\n", ch);
     std::string str = std::string(ch);
-    printf("writeUInt64LEBn: %s\n", str.c_str());
+    //printf("writeUInt64LEBn: %s\n", str.c_str());
     std::vector<unsigned char> buf = hexToUchBuffer(str);
 
     writeReverse(bw, buf);
@@ -1506,10 +1511,10 @@ static std::vector<unsigned char> varIntBufNum (long n) {
         bufWriteInt32LE(buf, n & -1, 1);
         bufWriteUInt32LE(buf, floor(n / 0x100000000), 5);
     }
-    for(size_t i = 0; i < buf.size(); i++) {
+    /*for(size_t i = 0; i < buf.size(); i++) {
         printf("%02x ", buf[i]);
     }
-    printf("\n");
+    printf("\n");*/
     return buf;
 }
 
@@ -1602,6 +1607,163 @@ class SigOperations {
 
         setMany(txHashBuf, txOutNum, arr);
       }
+    
+        std::string toJSON() {
+            std::string labelStr("{ \"label\": ");
+            std::string sigOpCountStr("\"sigOpCount\": ");
+            std::string nScriptChunkStr("\"nScriptChunk\": ");
+            std::string typeStr("\"type\": ");
+            std::string addressStr("\"addressStr\": ");
+            std::string nHashTypeStr("\"nHashType\": ");
+            
+            std::map<std::string, std::vector<SigOpStruct>>::iterator it;
+            for (it = map.begin(); it != map.end(); it++)
+            {
+                std::vector<SigOpStruct> arr = it->second;
+                if(it == map.begin()) {
+                    labelStr = labelStr + std::string("\"") + it->first + std::string("\"");
+                    sigOpCountStr = sigOpCountStr + std::string("\"") + std::to_string(arr.size()) + std::string("\"");
+                } else {
+                    labelStr = labelStr + std::string(", \"") + it->first + std::string("\"");
+                    sigOpCountStr = sigOpCountStr + std::string(", \"") + std::to_string(arr.size()) + std::string("\"");
+                }
+                for(size_t i = 0; i < arr.size(); i++) {
+                    if(it == map.begin() && i == 0) {
+                        nScriptChunkStr = nScriptChunkStr + std::string("\"") + std::to_string(arr[i].nScriptChunk) + std::string("\"");
+                        typeStr = typeStr + std::string("\"") + arr[i].type + std::string("\"");
+                        addressStr = addressStr + std::string("\"") + arr[i].addressStr + std::string("\"");
+                        nHashTypeStr = nHashTypeStr + std::string("\"") + std::to_string(arr[i].nHashType) + std::string("\"");
+                    } else {
+                        nScriptChunkStr = nScriptChunkStr + std::string(", \"") + std::to_string(arr[i].nScriptChunk) + std::string("\"");
+                        typeStr = typeStr + std::string(", \"") + arr[i].type + std::string("\"");
+                        addressStr = addressStr + std::string(", \"") + arr[i].addressStr + std::string("\"");
+                        nHashTypeStr = nHashTypeStr + std::string(", \"") + std::to_string(arr[i].nHashType) + std::string("\"");
+                    }
+                }
+            }
+            labelStr = labelStr + std::string(",");
+            sigOpCountStr = sigOpCountStr + std::string(",");
+            nScriptChunkStr = nScriptChunkStr + std::string(",");
+            typeStr = typeStr + std::string(",");
+            addressStr = addressStr + std::string(",");
+            nHashTypeStr = nHashTypeStr + std::string(" }");
+            
+            return labelStr + sigOpCountStr + nScriptChunkStr + typeStr + addressStr + nHashTypeStr;
+        }
+    
+        void fromJSON(std::string json) {
+            SigOperations sigOps;
+            std::string delimiterLabel("label");
+            std::string delimiterSigOpCount("sigOpCount");
+            std::string delimiterNScriptChunk("nScriptChunk");
+            std::string delimiterType("type");
+            std::string delimiterAddressStr("addressStr");
+            std::string delimiterNHashType("nHashType");
+            std::string delimiterComma("\", \"");
+            std::string delimiterCloseBrace("}");
+            
+            std::vector<std::string> labelVec;
+            std::vector<std::string> sigOpCountVec;
+            std::vector<std::string> nScriptChunkVec;
+            std::vector<std::string> typeVec;
+            std::vector<std::string> addressStrVec;
+            std::vector<std::string> nHashTypeVec;
+            
+            std::string labels = json.substr(json.find(delimiterLabel) + 8, (json.find(delimiterSigOpCount) - (json.find(delimiterLabel) + 8 + 2)));
+            printf("labels = %s\n", labels.c_str());
+            
+            std::string sigOpCounts = json.substr(json.find(delimiterSigOpCount) + 13, (json.find(delimiterNScriptChunk) - (json.find(delimiterSigOpCount) + 13 + 2)));
+            printf("sigOpCounts = %s\n", sigOpCounts.c_str());
+            
+            std::string nScriptChunks = json.substr(json.find(delimiterNScriptChunk) + 15, (json.find(delimiterType) - (json.find(delimiterNScriptChunk) + 15 + 2)));
+            printf("nScriptChunks = %s\n", nScriptChunks.c_str());
+            
+            std::string types = json.substr(json.find(delimiterType) + 7, (json.find(delimiterAddressStr) - (json.find(delimiterType) + 7 + 2)));
+            printf("types = %s\n", types.c_str());
+            
+            std::string addressStrs = json.substr(json.find(delimiterAddressStr) + 13, (json.find(delimiterNHashType) - (json.find(delimiterAddressStr) + 13 + 2)));
+            printf("addressStrs = %s\n", addressStrs.c_str());
+            
+            std::string nHashTypes = json.substr(json.find(delimiterNHashType) + 12, (json.find(delimiterCloseBrace) - (json.find(delimiterNHashType) + 12 + 1)));
+            printf("nHashTypes = %s\n", nHashTypes.c_str());
+            
+            size_t pos = 0;
+            std::string token;
+            labels = labels.substr(1, labels.length()-2);
+            while ((pos = labels.find(delimiterComma)) != std::string::npos) {
+                token = labels.substr(0, pos);
+                //printf("token = %s\n", token.c_str());
+                labelVec.push_back(token);
+                labels.erase(0, pos + delimiterComma.length());
+            }
+            labelVec.push_back(labels);
+            //printf("labels = %s\n", labels.c_str());
+            
+            pos = 0;
+            sigOpCounts = sigOpCounts.substr(1, sigOpCounts.length()-2);
+            while ((pos = sigOpCounts.find(delimiterComma)) != std::string::npos) {
+                token = sigOpCounts.substr(0, pos);
+                sigOpCountVec.push_back(token);
+                sigOpCounts.erase(0, pos + delimiterComma.length());
+            }
+            sigOpCountVec.push_back(sigOpCounts);
+            
+            pos = 0;
+            nScriptChunks = nScriptChunks.substr(1, nScriptChunks.length()-2);
+            while ((pos = nScriptChunks.find(delimiterComma)) != std::string::npos) {
+                token = nScriptChunks.substr(0, pos);
+                nScriptChunkVec.push_back(token);
+                nScriptChunks.erase(0, pos + delimiterComma.length());
+            }
+            nScriptChunkVec.push_back(nScriptChunks);
+            
+            pos = 0;
+            types = types.substr(1, types.length()-2);
+            while ((pos = types.find(delimiterComma)) != std::string::npos) {
+                token = types.substr(0, pos);
+                typeVec.push_back(token);
+                types.erase(0, pos + delimiterComma.length());
+            }
+            typeVec.push_back(types);
+            
+            pos = 0;
+            addressStrs = addressStrs.substr(1, addressStrs.length()-2);
+            while ((pos = addressStrs.find(delimiterComma)) != std::string::npos) {
+                token = addressStrs.substr(0, pos);
+                addressStrVec.push_back(token);
+                addressStrs.erase(0, pos + delimiterComma.length());
+            }
+            addressStrVec.push_back(addressStrs);
+            
+            pos = 0;
+            nHashTypes = nHashTypes.substr(1, nHashTypes.length()-2);
+            while ((pos = nHashTypes.find(delimiterComma)) != std::string::npos) {
+                token = nHashTypes.substr(0, pos);
+                nHashTypeVec.push_back(token);
+                nHashTypes.erase(0, pos + delimiterComma.length());
+            }
+            nHashTypeVec.push_back(nHashTypes);
+            
+            int sigOpsIndex = 0;
+            for(size_t i = 0; i < labelVec.size(); i++) {
+                std::vector<SigOpStruct> arr;
+                int numSigOps = atoi(sigOpCountVec[i].c_str());
+                for(int j = 0; j < numSigOps; j++) {
+                    SigOpStruct op;
+                    op.nScriptChunk = atoi(nScriptChunkVec[sigOpsIndex].c_str());
+                    op.type = typeVec[sigOpsIndex];
+                    op.addressStr = addressStrVec[sigOpsIndex];
+                    op.nHashType = (unsigned long) std::stoll(nHashTypeVec[sigOpsIndex]);
+                    arr.push_back(op);
+                    sigOpsIndex++;
+                }
+                //std::pair<std::string,std::vector<SigOpStruct>> mypair(labelVec[i],arr);
+                //std::pair<std::string,int> mypair(labelVec[i],3);
+                map.insert(std::pair<std::string,std::vector<SigOpStruct>>(labelVec[i],arr));
+                //sigOps.map.insert(mypair);
+                //printf("Debugging\n");
+            }
+        }
 };
 
 typedef struct KeyPair {
@@ -1863,7 +2025,7 @@ static void importUtxosIntoTxBuilder (TxBuilder *bsvTxBuilder, std::vector<Utxo>
             unsigned long nHashType = SigOperations::SIGHASH_ALL | SigOperations::SIGHASH_FORKID;
 
             uint256 txHashBuf = uint256S(txid);
-        bsvTxBuilder->inputFromPubKeyHash(txHashBuf, vout, txOut, pubKey, -1, nHashType);
+            bsvTxBuilder->inputFromPubKeyHash(txHashBuf, vout, txOut, pubKey, -1, nHashType);
         }
 
     }
@@ -1998,10 +2160,10 @@ std::vector<unsigned char> TxBuilder::hashPrevouts () {
         CTxIn txIn = tx.vin[i];
         std::vector<unsigned char> txHashBuf = getTxHashBuf(txIn.prevout.hash);
         write(bw, txHashBuf);
-        for(size_t j = 0; j < bw.size(); j++) {
+        /*for(size_t j = 0; j < bw.size(); j++) {
             printf("%02x ", bw[j]);
         }
-        printf("\n");
+        printf("\n"); */
         writeUInt32LE(bw, txIn.prevout.n);
         //bw.writeUInt32LE(txIn.txOutNum) // outpoint (2/2)
     }
@@ -2014,7 +2176,7 @@ std::vector<unsigned char> TxBuilder::hashSequence () {
     for (size_t i = 0; i < tx.vin.size(); i++) {
         CTxIn txIn = tx.vin[i];
 
-        printf("txIn.nSequence = %d\n", txIn.nSequence);
+        //printf("txIn.nSequence = %d\n", txIn.nSequence);
         writeUInt32LE(bw, txIn.nSequence);
         //bw.writeUInt32LE(txIn.txOutNum) // outpoint (2/2)
     }
@@ -2059,11 +2221,11 @@ std::vector<unsigned char> TxBuilder::sighashPreimage (unsigned long nHashType, 
         } else {
             hashPrevouts_ = bufferAlloc(32);
         }
-        printf("hashPrevouts_: \n");
+        /*printf("hashPrevouts_: \n");
         for(size_t i = 0; i < hashPrevouts_.size(); i++) {
             printf("%02x ", hashPrevouts_[i]);
         }
-        printf("\n");
+        printf("\n");*/
 
         if (
             !(nHashType & SigOperations::SIGHASH_ANYONECANPAY) &&
@@ -2074,11 +2236,11 @@ std::vector<unsigned char> TxBuilder::sighashPreimage (unsigned long nHashType, 
         } else {
             hashSequence_ = bufferAlloc(32);
         }
-        printf("hashSequence_: \n");
+        /*printf("hashSequence_: \n");
         for(size_t i = 0; i < hashSequence_.size(); i++) {
             printf("%02x ", hashSequence_[i]);
         }
-        printf("\n");
+        printf("\n");*/
 
         if (
             (nHashType & 0x1f) != SigOperations::SIGHASH_SINGLE &&
@@ -2097,11 +2259,11 @@ std::vector<unsigned char> TxBuilder::sighashPreimage (unsigned long nHashType, 
         } else {
             hashOutputs_ = bufferAlloc(32);
         }
-        printf("hashOutputs_: \n");
+        /*printf("hashOutputs_: \n");
         for(size_t i = 0; i < hashOutputs_.size(); i++) {
             printf("%02x ", hashOutputs_[i]);
         }
-        printf("\n");
+        printf("\n");*/
 
         printf("SUBSCRIPT\n");
         std::vector<Chunks> chunks = getChunks(subScript);
@@ -2137,13 +2299,13 @@ std::vector<unsigned char> TxBuilder::sighashPreimage (unsigned long nHashType, 
         write(bw, getTxHashBuf(tx.vin[nIn].prevout.hash));
         writeUInt32LE(bw, tx.vin[nIn].prevout.n);
         writeVarIntNum(bw, subScript.size());
-        printf("bw: \n");
+        /*printf("bw: \n");
         for(size_t i = 0; i < bw.size(); i++) {
             printf("%02x", bw[i]);
         }
-        printf("\n");
+        printf("\n");*/
         write(bw, scriptToBuffer(subScript));
-      writeUInt64LEBn(bw, valueBn);
+        writeUInt64LEBn(bw, valueBn);
         writeUInt32LE(bw, tx.vin[nIn].nSequence);
         write(bw, hashOutputs_);
         writeUInt32LE(bw, tx.nLockTime);
@@ -2177,7 +2339,6 @@ std::vector<unsigned char> TxBuilder::sighashPreimage (unsigned long nHashType, 
     txcopy.vin[nIn].scriptSig = subScript;
 
     if ((nHashType & 31) == SigOperations::SIGHASH_NONE) {
-        printf("MADE IT HERE\n");
         txcopy.vout.clear();
 
         for (size_t i = 0; i < txcopy.vin.size(); i++) {
@@ -2490,10 +2651,10 @@ int64_t TxBuilder::buildOutputs () {
         printf("out Amount BN: %lld\n", outAmountBn);
         tx.vout.push_back(vout[i]);
 
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+        /*CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
           vout[i].Serialize(ssTx);
           std::string hex_str = HexStr(ssTx);
-          printf("build outputs VOUT: %s\n", hex_str.c_str());
+          printf("build outputs VOUT: %s\n", hex_str.c_str());*/
     }
     return outAmountBn;
 }
@@ -2614,10 +2775,10 @@ bool TxBuilder::build(bool useAllInputs) {
         changeTxOut.nValue = changeAmountBn;
         tx.vout.push_back(changeTxOut); //not sure if this is correct
         
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+        /*CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
         changeTxOut.Serialize(ssTx);
           std::string hex_str = HexStr(ssTx);
-          printf("changeTxOut: %s\n", hex_str.c_str());
+          printf("changeTxOut: %s\n", hex_str.c_str()); */
 
         //printf("changeAmountBn: %lld\n", changeAmountBn);
 
@@ -3948,17 +4109,17 @@ BuildTokenStruct buildTokenTx(Sfp sfp, std::string hex, std::vector<TokenDataStr
     std::map<std::string, CTxOut> uTxOutMap = sfp.recoverUtxosMap(tx.vin);
     bsvTxBuilder->importPartiallySignedTx(tx, uTxOutMap);
     
-    CDataStream ssTx00(SER_NETWORK, PROTOCOL_VERSION | 0);
+    /*CDataStream ssTx00(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx00);
     std::string hex_str00 = HexStr(ssTx00);
-    printf("hex_str00: %s\n", hex_str00.c_str());
+    printf("hex_str00: %s\n", hex_str00.c_str()); */
     
     tokenTx->importInputs(bsvTxBuilder);
     
-    CDataStream ssTx01(SER_NETWORK, PROTOCOL_VERSION | 0);
+    /*CDataStream ssTx01(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx01);
     std::string hex_str01 = HexStr(ssTx01);
-    printf("hex_str01: %s\n", hex_str01.c_str());
+    printf("hex_str01: %s\n", hex_str01.c_str()); */
     
     tokenTx->importOutputs(bsvTxBuilder);
     /*for(int i = 0; i < bsvTxBuilder->tx.vout.size(); i++) {
@@ -3966,16 +4127,16 @@ BuildTokenStruct buildTokenTx(Sfp sfp, std::string hex, std::vector<TokenDataStr
     }*/
     
     
-    CDataStream ssTx02(SER_NETWORK, PROTOCOL_VERSION | 0);
+    /*CDataStream ssTx02(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx02);
     std::string hex_str02 = HexStr(ssTx02);
-    printf("hex_str02: %s\n", hex_str02.c_str());
+    printf("hex_str02: %s\n", hex_str02.c_str()); */
     
     tokenTx->createOutputs(bsvTxBuilder, outputs);
-    CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
+    /*CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx0);
     std::string hex_str0 = HexStr(ssTx0);
-    printf("CREATE OUTPUTS: %s\n", hex_str0.c_str());
+    printf("CREATE OUTPUTS: %s\n", hex_str0.c_str()); */
 
     BuildTokenStruct tokenData;
     tokenData.bsvTxBuilder = bsvTxBuilder;
@@ -3983,19 +4144,225 @@ BuildTokenStruct buildTokenTx(Sfp sfp, std::string hex, std::vector<TokenDataStr
     return tokenData;
 }
 
+static void error(const char *msg) { perror(msg); exit(0); }
+
+static void makeRequest(const char *host_, const char *port, const char *method, const char *path, const char *data, char *responseStr)
+{
+    int i;
+
+    /* first where are we going to send it? */
+    int portno = atoi(port)>0?atoi(port):80;
+    char *host = strlen(host_)>0?(char *) host_:(char *) "localhost";
+
+    struct hostent *server;
+    struct sockaddr_in serv_addr;
+    int sockfd, bytes, sent, received, total, message_size;
+    char *message, response[10000];
+
+    /* How big is the message? */
+    message_size=0;
+    if(!strcmp(method,"GET"))
+    {
+        message_size+=strlen("%s %s%s%s HTTP/1.0\r\n");        /* method         */
+        message_size+=strlen(method);                         /* path           */
+        message_size+=strlen(path);                         /* headers        */
+        //if(argc>5)
+            message_size+=strlen(data);                     /* query string   */
+        //for(i=6;i<argc;i++)                                    /* headers        */
+        //    message_size+=strlen(argv[i])+strlen("\r\n");
+        message_size+=strlen("\r\n");                          /* blank line     */
+    }
+    else
+    {
+        message_size+=strlen("%s %s HTTP/1.0\r\n");
+        message_size+=strlen(method);                         /* method         */
+        message_size+=strlen(path);                         /* path           */
+        //for(i=6;i<argc;i++)                                    /* headers        */
+        //    message_size+=strlen(argv[i])+strlen("\r\n");
+        //if(argc>5)
+            message_size+=strlen("Content-Length: %d\r\n")+10; /* content length */
+        message_size+=strlen("\r\n");                          /* blank line     */
+        //if(argc>5)
+            message_size+=strlen(data);                     /* body           */
+    }
+
+    /* allocate space for the message */
+    message= (char *) malloc(message_size);
+
+    /* fill in the parameters */
+    if(!strcmp(method,"GET"))
+    {
+        //if(argc>5)
+            sprintf(message,"%s %s%s%s HTTP/1.0\r\n",
+                strlen(method)>0?method:"GET",               /* method         */
+                strlen(path)>0?path:"/",                 /* path           */
+                strlen(data)>0?"?":"",                      /* ?              */
+                strlen(data)>0?data:"");                 /* query string   */
+        //else
+        //    sprintf(message,"%s %s HTTP/1.0\r\n",
+        //        strlen(method)>0?method:"GET",               /* method         */
+        //        strlen(path)>0?path:"/");                /* path           */
+        //for(i=6;i<argc;i++)                                    /* headers        */
+        //    {strcat(message,argv[i]);strcat(message,"\r\n");}
+        strcat(message,"\r\n");                                /* blank line     */
+    }
+    else
+    {
+        sprintf(message,"%s %s HTTP/1.0\r\n",
+            strlen(method)>0?method:"POST",                  /* method         */
+            strlen(path)>0?path:"/");                    /* path           */
+        //for(i=6;i<argc;i++)                                    /* headers        */
+        //    {strcat(message,argv[i]);strcat(message,"\r\n");}
+        //if(argc>5)
+            sprintf(message+strlen(message),"Content-Length: %d\r\n",strlen(data));
+        strcat(message,"\r\n");                                /* blank line     */
+        //if(argc>5)
+            strcat(message,data);                           /* body           */
+    }
+
+    /* What are we going to send? */
+    printf("Request:\n%s\n",message);
+
+    /* create the socket */
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) error("ERROR opening socket");
+
+    /* lookup the ip address */
+    server = gethostbyname(host);
+    if (server == NULL) error("ERROR, no such host");
+
+    /* fill in the structure */
+    memset(&serv_addr,0,sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(portno);
+    memcpy(&serv_addr.sin_addr.s_addr,server->h_addr,server->h_length);
+
+    /* connect the socket */
+    if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
+        error("ERROR connecting");
+
+    /* send the request */
+    total = strlen(message);
+    sent = 0;
+    do {
+        bytes = write(sockfd,message+sent,total-sent);
+        if (bytes < 0)
+            error("ERROR writing message to socket");
+        if (bytes == 0)
+            break;
+        sent+=bytes;
+    } while (sent < total);
+
+    /* receive the response */
+    memset(response,0,sizeof(response));
+    total = sizeof(response)-1;
+    received = 0;
+    do {
+        bytes = read(sockfd,response+received,total-received);
+        if (bytes < 0)
+            error("ERROR reading response from socket");
+        if (bytes == 0)
+            break;
+        received+=bytes;
+    } while (received < total);
+
+    /*
+     * if the number of received bytes is the total size of the
+     * array then we have run out of space to store the response
+     * and it hasn't all arrived yet - so that's a bad thing
+     */
+    if (received == total)
+        error("ERROR storing complete response from socket");
+
+    /* close the socket */
+    close(sockfd);
+
+    /* process response */
+    printf("Response:\n%s\n",response);
+    snprintf(responseStr, strlen(response) + 1, "%s", response);
+
+    free(message);
+}
+
+std::string buildActionToJSON(std::string hex, std::vector<TokenDataStruct> outputs) {
+    std::string hexStr("{ \"hex\": ");
+    std::string sigOpsStr("\"sigOperations\": [ ");
+    std::string assetStr("{ \"asset\": ");
+    std::string amountStr("\"amount\": ");
+    std::string addressStr("\"address\": ");
+    std::string authorizerStr("\"authorizer\": ");
+    std::string notesStr("\"notes\": ");
+    std::string issuerStr("\"issuer\": ");
+    std::string stateStr("\"state\": ");
+    std::string closeBraceStr(" }");
+    
+    std::string json = hexStr + std::string("\"") + hex + std::string("\"");
+    
+    for(size_t i = 0; i < outputs.size(); i++) {
+        json = json + std::string(", ");
+        if(i == 0) {
+            json = json + sigOpsStr;
+        }
+        json = json + assetStr + std::string("\"") + outputs[i].asset + std::string("\",");
+        json = json + amountStr + std::to_string(outputs[i].amount) + std::string(",");
+        json = json + addressStr + std::string("\"") + outputs[i].address + std::string("\",");
+        json = json + authorizerStr + std::string("\"") +  outputs[i].authorizer + std::string("\",");
+        json = json + notesStr + std::string("\"") + outputs[i].notes + std::string("\",");
+        json = json + issuerStr + std::string("\"") + outputs[i].issuer + std::string("\",");
+        json = json + stateStr + std::string("\"") + outputs[i].state + std::string("\"");
+        
+        json = json + closeBraceStr;
+        
+        if(i == (outputs.size() - 1)) {
+            json = json + std::string(" ]");
+        }
+    }
+    json = json + closeBraceStr;
+    return json;
+}
+
+std::string authoriseActionToJSON(std::string hex) {
+    std::string hexStr("{ \"hex\": ");
+    std::string closeBraceStr(" }");
+    
+    std::string json = hexStr + std::string("\"") + hex + std::string("\"");
+    
+    json = json + closeBraceStr;
+    return json;
+}
+
+std::string hexFromJSON(std::string json) {
+    std::string delimiterHex("hex");
+    std::string delimiterLabel("label");
+    
+    std::string hex = json.substr(json.find(delimiterHex) + 7, (json.find(delimiterLabel) - (json.find(delimiterHex) + 7 + 3)));
+   
+    printf("hex = %s\n", hex.c_str());
+    return hex;
+}
+
 static BuildActionStruct sendSfpBuildAction(std::string hex, std::vector<TokenDataStruct> outputs, std::string path) {
-    BuildActionStruct buildAction;
+    
+    std::string postRequest = buildActionToJSON(hex, outputs);
+    
+    printf("postRequest: %s\n", postRequest.c_str());
+    
+    /*char *response = (char *) malloc(5000);
+    
+    makeRequest("127.0.0.1", "12913", "POST", "/build", postRequest.c_str(), response);
+    
+    std::string responseStr(response);
+    
+    printf("responseStr = %s\n", responseStr.c_str());*/
+    
+    /*std::string delimiter = "{ \"hex\"";
+    std::string json = responseStr.substr(responseStr.find(delimiter), responseStr.length() - responseStr.find(delimiter));
+    printf("json: %s\n", json.c_str());*/
 
-    //printf("SENDSFPBUILDACTIONHEX: %s\n", hex.c_str());
-
+    //MOVE BELOW OUT OF WALLETKIT
     Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
 
     BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
-
-    CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
-    tokenData.bsvTxBuilder->tx.Serialize(ssTx0);
-    std::string hex_str0 = HexStr(ssTx0);
-    printf("bsvTxBuilder.tx.toHex(): %s\n", hex_str0.c_str());
 
     sfp.validate(tokenData.tokenTx);
 
@@ -4004,20 +4371,66 @@ static BuildActionStruct sendSfpBuildAction(std::string hex, std::vector<TokenDa
     std::string hex_str = HexStr(ssTx);
     printf("hex_str: %s\n", hex_str.c_str());
 
-    buildAction.hex = hex_str;
-    buildAction.sigOperations = tokenData.bsvTxBuilder->sigOperations;
+    std::string json = tokenData.bsvTxBuilder->sigOperations.toJSON();
+    
+    json = std::string("{ \"hex\": \"") + hex_str + std::string("\",") + \
+    json.substr(2,json.length()-2);
+    
+    printf("json = %s\n", json.c_str());
+    //MOVE ABOVE OUT OF WALLETKIT
+    
+    BuildActionStruct buildAction;
+    
+    //buildAction.hex = hex_str;
+    buildAction.hex = hexFromJSON(json);
+    //buildAction.sigOperations = tokenData.bsvTxBuilder->sigOperations;
+    buildAction.sigOperations.fromJSON(json);
 
     return buildAction;
+}
+
+static void sendSfpAuthoriseAction(const char *hex, char *authHexStr, size_t authHexSize, std::string path) {
+    
+    std::string postRequest = authoriseActionToJSON(hex);
+    
+    printf("postRequest: %s\n", postRequest.c_str());
+    
+    /*char *response = (char *) malloc(10000);
+    
+    makeRequest("127.0.0.1", "12913", "POST", "/authorise", postRequest.c_str(), response);
+    
+    std::string responseStr(response);
+    
+    printf("responseStr = %s\n", responseStr.c_str());*/
+    
+    //Move below out of walletkit
+    Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
+    std::vector<TokenDataStruct> outputs;
+
+    BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
+
+    sfp.validate(tokenData.tokenTx);
+
+    sfp.authorize (tokenData.bsvTxBuilder, tokenData.tokenTx);
+
+    CDataStream ssTx2(SER_NETWORK, PROTOCOL_VERSION | 0);
+    tokenData.bsvTxBuilder->tx.Serialize(ssTx2);
+    std::string hex2 = HexStr(ssTx2);
+    std::cout << "AUTHORIZE ACTION HEX: " << hex2 << "\n";
+    //printf("AUTHORIZE ACTION HEX: %s\n", hex2.c_str());
+
+    snprintf(authHexStr, authHexSize, "%s", hex2.c_str());
+    //Move above out of walletkit
 }
 
 static void build(TxBuilder *bsvTxBuilder, std::vector<TokenDataStruct> outputs, std::string path) {
     std::map<std::string, std::vector<TokenDataStruct>> outputsByAuthorizer;
   //const failedRequests = []
 
-    CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
+    /*CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx0);
     std::string hex_str0 = HexStr(ssTx0);
-    printf("hex_str0: %s\n", hex_str0.c_str());
+    printf("hex_str0: %s\n", hex_str0.c_str()); */
 
   for (size_t i = 0; i < outputs.size(); i++) {
         TokenDataStruct output = outputs[i];
@@ -4057,10 +4470,10 @@ static void build(TxBuilder *bsvTxBuilder, std::vector<TokenDataStruct> outputs,
     //bsvTxBuilder->buildInputs(0, bsvTxBuilder->tx.vin.size() - 1);
     bsvTxBuilder->buildInputs(0, bsvTxBuilder->vin.size() - 1);
 
-    CDataStream ssTx1(SER_NETWORK, PROTOCOL_VERSION | 0);
+    /*CDataStream ssTx1(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx1);
     std::string hex_str1 = HexStr(ssTx1);
-    printf("hex_str1: %s\n", hex_str1.c_str());
+    printf("hex_str1: %s\n", hex_str1.c_str()); */
 
     for(std::map<std::string, std::vector<TokenDataStruct>>::iterator it = outputsByAuthorizer.begin(); it != outputsByAuthorizer.end(); it++) {
         std::string authorizer = it->first;
@@ -4085,7 +4498,7 @@ static void build(TxBuilder *bsvTxBuilder, std::vector<TokenDataStruct> outputs,
         bsvTxBuilder->vin = bsvTxBuilder->tx.vin;
         bsvTxBuilder->vout = bsvTxBuilder->tx.vout;
 
-        for(size_t i = 0; i < bsvTxBuilder->tx.vin.size(); i++) {
+        /*for(size_t i = 0; i < bsvTxBuilder->tx.vin.size(); i++) {
             CDataStream ssTx_in(SER_NETWORK, PROTOCOL_VERSION | 0);
             bsvTxBuilder->tx.vin[i].Serialize(ssTx_in);
             std::string hex_in = HexStr(ssTx_in);
@@ -4101,9 +4514,7 @@ static void build(TxBuilder *bsvTxBuilder, std::vector<TokenDataStruct> outputs,
         CDataStream ssTx2(SER_NETWORK, PROTOCOL_VERSION | 0);
         bsvTxBuilder->tx.Serialize(ssTx2);
         std::string hex_str2 = HexStr(ssTx2);
-        printf("hex_str2: %s\n", hex_str2.c_str());
-        
-        printf("Debug\n");
+        printf("hex_str2: %s\n", hex_str2.c_str()); */
     }
 
 }
@@ -4719,10 +5130,10 @@ void TokenTransaction::createOutputs (TxBuilder *bsvTxBuilder, std::vector<Token
 
               addOutput(new TokenOutput(bsvTxBuilder->tx.vout.size(), output, txOut));
             
-            CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
+            /*CDataStream ssTx0(SER_NETWORK, PROTOCOL_VERSION | 0);
             txOut.Serialize(ssTx0);
             std::string hex_str0 = HexStr(ssTx0);
-            printf("txOut: %s\n", hex_str0.c_str());
+            printf("txOut: %s\n", hex_str0.c_str()); */
             
               bsvTxBuilder->tx.vout.push_back(txOut);
         }
@@ -4836,10 +5247,10 @@ void TxBuilder::inputFromPubKeyHash (uint256 txHashBuf, uint32_t txOutNum, CTxOu
     //printf("CHUNKS vin[] = %lu\n", chunks1.size());
     
     
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+    /*CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
     txIn.Serialize(ssTx);
       std::string hex_str = HexStr(ssTx);
-      printf("txIn: %s\n", hex_str.c_str());
+      printf("txIn: %s\n", hex_str.c_str()); */
 
     uTxOutMapSet(uTxOutMap, txHashBuf.GetHex(), txOutNum, txOut);
     //std::string address = fromTxOutScript(txOut.scriptPubKey);
@@ -4980,10 +5391,10 @@ static void addTxBuilderInputs (TxBuilder *bsvTxBuilder, int64_t walletId, std::
             std::vector<Utxo> utxos;
             utxos.push_back(utxo);
             
-            CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+            /*CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
             bsvTxBuilder->tx.Serialize(ssTx);
             std::string hex_str = HexStr(ssTx);
-            printf("hex_str: %s\n", hex_str.c_str());
+            printf("hex_str: %s\n", hex_str.c_str()); */
 
             importUtxosIntoTxBuilder (bsvTxBuilder, utxos);
 
@@ -5116,7 +5527,7 @@ static void initializeAddresses(std::string path) {
      fprintf(stdout, "Address created successfully\n");
   }
     
-    printf("PRINTING ADDRESSES TABLE\n");
+    /*printf("PRINTING ADDRESSES TABLE\n");
       sql = (char *) "SELECT * FROM ADDRESSES";
 
       rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -5125,7 +5536,7 @@ static void initializeAddresses(std::string path) {
         sqlite3_free(zErrMsg);
       } else {
         fprintf(stdout, "Operation done successfully\n");
-      }
+      }*/
 
     sqlite3_close(db);
 
@@ -5974,7 +6385,7 @@ extern void authorizerAddUtxo(const char *hex_, const char* path_) {
             }
         }
 
-    printf("PRINTING UTXOS TABLE\n");
+        /*printf("PRINTING UTXOS TABLE\n");
         sql = (char *) "SELECT * FROM UTXOS";
 
         sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -5983,7 +6394,7 @@ extern void authorizerAddUtxo(const char *hex_, const char* path_) {
             sqlite3_free(zErrMsg);
         } else {
             fprintf(stdout, "Operation done successfully\n");
-        }
+        }*/
         sqlite3_close(db);
 
     }
@@ -6352,6 +6763,149 @@ static void initializeRunWallet (std::string path) {
     sqlite3_close(db);
 }
 
+extern void initializeDeviceWallet(const char *mnemonic_, const char *path_) {
+  sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+    //const char* data = "Callback function called";
+    
+    std::string mnemonic(mnemonic_);
+    std::string path = std::string(path_) + std::string("/tokens.db");
+
+    //rc = sqlite3_open("test.db", &db);
+    rc = sqlite3_open(path.c_str(), &db);
+
+    if( rc ) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      return;
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+
+#if WIPE
+    sql = (char *) "DROP TABLE DEVICE_WALLET;";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "DROP TABLE DEVICE_WALLET_MAIN;";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+#endif
+    
+#if MAINNET
+    /* Create SQL statement */
+    sql = (char *) "CREATE TABLE DEVICE_WALLET_MAIN("  \
+      "ID INT PRIMARY KEY     NOT NULL," \
+        "PRIVKEY          CHAR(500)," \
+        "PUBKEY           CHAR(255)," \
+        "ADDRESS       CHAR(255));";
+#else
+    /* Create SQL statement */
+    sql = (char *) "CREATE TABLE DEVICE_WALLET("  \
+      "ID INT PRIMARY KEY     NOT NULL," \
+        "PRIVKEY          CHAR(500)," \
+        "PUBKEY           CHAR(255)," \
+        "ADDRESS       CHAR(255));";
+#endif
+
+    /* Execute SQL statement */
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    if( rc != SQLITE_OK ){
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "DEVICE_WALLET Table created successfully\n");
+    }
+    
+    Records records;
+    #if MAINNET
+    std::string sql_query = std::string("SELECT * FROM DEVICE_WALLET_MAIN;");
+    #else
+    std::string sql_query = std::string("SELECT * FROM DEVICE_WALLET;");
+    #endif
+    sql = (char *) sql_query.c_str();
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+
+      if(records.size() == 0)
+      {
+        #if MAINNET
+            SelectParams(CBaseChainParams::MAIN);
+        #else
+            SelectParams(CBaseChainParams::TESTNET);
+        #endif
+
+        ECC_Start();
+
+        std::vector<unsigned char> mbuf = hexToUchBuffer(stringToHex(mnemonic));
+        std::string passphrase("");
+        std::string pstr = std::string("mnemonic") + passphrase;
+        std::vector<unsigned char> pbuf = hexToUchBuffer(stringToHex(pstr));
+        uint32_t rounds = 2048;
+
+        std::vector<unsigned char, secure_allocator<unsigned char>> vchKey;
+        vchKey.resize(CSHA512::OUTPUT_SIZE);
+        BytesToKeySHA512AES_(mbuf, pbuf, rounds, vchKey.data());
+
+        char hex_[CSHA512::OUTPUT_SIZE*2];
+
+        for (int i = 0, j = 0; i < CSHA512::OUTPUT_SIZE; ++i, j += 2) {
+            sprintf(hex_ + j, "%02x", vchKey[i] & 0xff);
+        }
+        std::string seedStr(hex_);
+
+        std::vector<unsigned char> seed = hexToUchBuffer(seedStr);
+
+        CExtKey basePrivKey;
+        basePrivKey.SetSeed(seed);
+
+        std::string Wif = EncodeSecret(basePrivKey.key);
+        printf("Wif = %s\n", Wif.c_str());
+
+        CKey privKey = DecodeSecret(Wif);
+        CPubKey pubKey = privKey.GetPubKey();
+        ECC_Stop();
+        CTxDestination addr = CTxDestination(PKHash(pubKey));
+        std::string addrStr = EncodeDestination(addr);
+        printf("addrStr = %s\n", addrStr.c_str());
+
+        #if MAINNET
+        std::string sql_query = std::string("INSERT INTO DEVICE_WALLET_MAIN (ID,PRIVKEY,PUBKEY,ADDRESS) ") \
+        + std::string("VALUES (1, '") + Wif + std::string("', '") + std::string("', '") \
+        + addrStr + std::string("'); ");
+        #else
+        std::string sql_query = std::string("INSERT INTO DEVICE_WALLET (ID,PRIVKEY,PUBKEY,ADDRESS) ") \
+        + std::string("VALUES (1, '") + Wif + std::string("', '") + std::string("', '") \
+        + addrStr + std::string("'); ");
+        #endif
+
+        //sql = (char *) "INSERT INTO RUN_WALLETS (ID,PRIVKEY,PUBKEY,ADDRESS) "  \
+              "VALUES (4, 'cNgeHQBoy1qoz3iuzvgMFNKaBT4VpytjU7zoFNfNkcJbfBBPohgF'," \
+                     "'03963ff545acb08a58640308989043d91fcc534c9d5cec4179adfe4de517a3cdd9'," \
+                     "'n22U6SStMNhr3QGT4k7D9oKUiDypBEmx4X'); ";
+         
+        sql = (char *) sql_query.c_str();
+
+
+        rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+        if( rc != SQLITE_OK ){
+         fprintf(stderr, "SQL error: %s\n", zErrMsg);
+         sqlite3_free(zErrMsg);
+        } else {
+         fprintf(stdout, "DEVICE_WALLET Record created successfully\n");
+        }
+      }
+    }
+
+  sqlite3_close(db);
+}
+
 static void initializeUsers (std::string path) {
 //static void initializeUsers (const char* path) {
   sqlite3 *db;
@@ -6396,8 +6950,10 @@ static void initializeUsers (std::string path) {
   //sql = (char *) "INSERT INTO USERS (ID,ACTIVE_WALLET_ID,PRIMARY_ADDRESS) "  \
         "VALUES (5, 4,'mpk55WSdhZ7FdK1qs1MbJjwv7kUfKki6Qp'); ";
 
+    //sql = (char *) "INSERT INTO USERS (ID,ACTIVE_WALLET_ID,PRIMARY_ADDRESS,RECEIVE_ADDRESS) "  \
+          "VALUES (5, 4,'mkyEzrMcY3DobA5vzcZiA79B7ykqDFJr1L','n2LfpyLFkHaevpWDAiKx9jAwhwHnbsn3hL'); ";
     sql = (char *) "INSERT INTO USERS (ID,ACTIVE_WALLET_ID,PRIMARY_ADDRESS,RECEIVE_ADDRESS) "  \
-          "VALUES (5, 4,'mkyEzrMcY3DobA5vzcZiA79B7ykqDFJr1L','tb1qefftfgq8ljkfvhjclg7tv9e4vrtjvhf4q0ssnf'); ";
+          "VALUES (5, 4,'tb1q7wt0jfrmgw848n33xgvahzzpdhq95s72n7lw7s','tb1q22w8wv66m5nehz85u3mr0wghjjkcag55wtsvfc'); ";
     
     //sql = (char *) "INSERT INTO USERS (ID,ACTIVE_WALLET_ID,PRIMARY_ADDRESS,RECEIVE_ADDRESS) "  \
           "VALUES (5, 2,'mkyEzrMcY3DobA5vzcZiA79B7ykqDFJr1L','tb1qefftfgq8ljkfvhjclg7tv9e4vrtjvhf4q0ssnf'); ";
@@ -7183,10 +7739,10 @@ extern void initializePersistRPC(const char* path_) {
       fprintf(stderr, "Opened database successfully\n");
     }
 
-    #if WIPE
+    //#if WIPE
     sql = (char *) "DROP TABLE RPC_BUNDLES;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    #endif
+    //#endif
 
     sql = (char *) "CREATE TABLE RPC_BUNDLES("  \
       "ID INT PRIMARY KEY     NOT NULL," \
@@ -7213,10 +7769,10 @@ extern void initializePersistRPC(const char* path_) {
       fprintf(stdout, "RPC_BUNDLES Table created successfully\n");
     }
 
-    #if WIPE
+    //#if WIPE
     sql = (char *) "DROP TABLE RPC_BUNDLES_INPUTS;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    #endif
+    //#endif
 
     sql = (char *) "CREATE TABLE RPC_BUNDLES_INPUTS("  \
       "ID INT PRIMARY KEY     NOT NULL," \
@@ -7235,10 +7791,10 @@ extern void initializePersistRPC(const char* path_) {
       fprintf(stdout, "RPC_BUNDLES_INPUTS Table created successfully\n");
     }
 
-    #if WIPE
+    //#if WIPE
     sql = (char *) "DROP TABLE RPC_BUNDLES_OUTPUTS;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    #endif
+    //#endif
 
     sql = (char *) "CREATE TABLE RPC_BUNDLES_OUTPUTS("  \
       "ID INT PRIMARY KEY     NOT NULL," \
@@ -7502,6 +8058,8 @@ extern unsigned long fileServiceLoadRPCGetSize(const char *path_) {
     char *zErrMsg = 0;
     int rc;
     char *sql;
+    
+    unsigned long size = 0;
 
     std::string delimiter = "Core/";
     std::string pathStr(path_);
@@ -7513,12 +8071,10 @@ extern unsigned long fileServiceLoadRPCGetSize(const char *path_) {
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return size;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
-
-    unsigned long size = 0;
 
     Records records;
 
@@ -7560,7 +8116,7 @@ extern char* fileServiceLoadRPCGetTxHash(unsigned long index, const char *path_)
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return txHash;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -7609,7 +8165,7 @@ extern long long fileServiceLoadRPCGetFingerPrint(unsigned long index, const cha
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return fingerPrint;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -7745,7 +8301,7 @@ extern long long fileServiceLoadRPCGetVersion(unsigned long index, const char *p
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return version;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -7793,7 +8349,7 @@ extern long long fileServiceLoadRPCGetInCount(unsigned long index, const char *p
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return inCount;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -7841,7 +8397,7 @@ extern long long fileServiceLoadRPCGetOutCount(unsigned long index, const char *
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return outCount;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -7889,7 +8445,7 @@ extern long long fileServiceLoadRPCGetLockTime(unsigned long index, const char *
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return lockTime;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -7937,7 +8493,7 @@ extern long long fileServiceLoadRPCGetBlockHeight(unsigned long index, const cha
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return blockHeight;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -7985,7 +8541,7 @@ extern long long fileServiceLoadRPCGetTimestamp(unsigned long index, const char 
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return timestamp;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -8033,7 +8589,7 @@ extern char* fileServiceLoadRPCGetType(unsigned long index, const char *path_) {
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return type;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -8081,7 +8637,7 @@ extern unsigned long long fileServiceLoadRPCGetReceiveAmount(unsigned long index
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return receiveAmount;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -8129,7 +8685,7 @@ extern char* fileServiceLoadRPCGetMintId(unsigned long index, const char *path_)
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return mintId;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -8177,7 +8733,7 @@ extern char* fileServiceLoadRPCGetReceiverAdddress(unsigned long index, const ch
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return receiverAddress;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -8225,7 +8781,7 @@ extern char* fileServiceLoadRPCGetSenderAdddress(unsigned long index, const char
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return senderAddress;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
@@ -8261,6 +8817,8 @@ extern char* fileServiceLoadRPCGetInputTxHash(unsigned long index, const char *t
     char *zErrMsg = 0;
     int rc;
     char *sql;
+    
+    char *inputTxHash;
 
     std::string delimiter = "Core/";
     std::string pathStr(path_);
@@ -8272,12 +8830,10 @@ extern char* fileServiceLoadRPCGetInputTxHash(unsigned long index, const char *t
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return inputTxHash;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
-
-    char *inputTxHash;
 
     Records records;
 
@@ -8312,6 +8868,8 @@ extern char* fileServiceLoadRPCGetInputScript(unsigned long index, const char *t
     char *zErrMsg = 0;
     int rc;
     char *sql;
+    
+    char *inputScript;
 
     std::string delimiter = "Core/";
     std::string pathStr(path_);
@@ -8323,12 +8881,10 @@ extern char* fileServiceLoadRPCGetInputScript(unsigned long index, const char *t
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return inputScript;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
-
-    char *inputScript;
 
     Records records;
 
@@ -8363,6 +8919,8 @@ extern char* fileServiceLoadRPCGetInputSignature(unsigned long index, const char
     char *zErrMsg = 0;
     int rc;
     char *sql;
+    
+    char *inputSignature;
 
     std::string delimiter = "Core/";
     std::string pathStr(path_);
@@ -8374,12 +8932,10 @@ extern char* fileServiceLoadRPCGetInputSignature(unsigned long index, const char
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return inputSignature;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
-
-    char *inputSignature;
 
     Records records;
 
@@ -8463,6 +9019,8 @@ extern long long fileServiceLoadRPCGetOutputAmount(unsigned long index, const ch
     char *zErrMsg = 0;
     int rc;
     char *sql;
+    
+    long long outputAmount;
 
     std::string delimiter = "Core/";
     std::string pathStr(path_);
@@ -8474,12 +9032,10 @@ extern long long fileServiceLoadRPCGetOutputAmount(unsigned long index, const ch
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return outputAmount;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
-
-    long long outputAmount;
 
     Records records;
 
@@ -8512,6 +9068,8 @@ extern char* fileServiceLoadRPCGetScript(const char *txHash, long long walletId,
     char *zErrMsg = 0;
     int rc;
     char *sql;
+    
+    char *outputScript;
 
     std::string delimiter = "Core/";
     std::string pathStr(path_);
@@ -8523,12 +9081,10 @@ extern char* fileServiceLoadRPCGetScript(const char *txHash, long long walletId,
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return outputScript;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
-
-    char *outputScript;
 
     Records records;
 
@@ -8608,6 +9164,8 @@ extern char* fileServiceLoadRPCGetOutputScript(unsigned long index, const char *
     char *zErrMsg = 0;
     int rc;
     char *sql;
+    
+    char *outputScript;
 
     std::string delimiter = "Core/";
     std::string pathStr(path_);
@@ -8619,12 +9177,10 @@ extern char* fileServiceLoadRPCGetOutputScript(unsigned long index, const char *
 
     if( rc ) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-      return;
+      return outputScript;
     } else {
       fprintf(stderr, "Opened database successfully\n");
     }
-
-    char *outputScript;
 
     Records records;
 
@@ -8742,7 +9298,7 @@ void createSFPUtxos(std::string path) {
     }
   }
 
-  printf("PRINTING SFP_UTXOS TABLE\n");
+  /*printf("PRINTING SFP_UTXOS TABLE\n");
   sql = (char *) "SELECT * FROM SFP_UTXOS";
 
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -8751,7 +9307,7 @@ void createSFPUtxos(std::string path) {
     sqlite3_free(zErrMsg);
   } else {
     fprintf(stdout, "Operation done successfully\n");
-  }
+  }*/
 
   sqlite3_close(db);
 }
@@ -8863,7 +9419,7 @@ void createSFPAssets(std::string path) {
     }
   }
 
-  printf("PRINTING ASSETS TABLE\n");
+  /*printf("PRINTING ASSETS TABLE\n");
   sql = (char *) "SELECT * FROM ASSETS";
 
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -8883,7 +9439,7 @@ void createSFPAssets(std::string path) {
     sqlite3_free(zErrMsg);
   } else {
     fprintf(stdout, "Operation done successfully\n");
-  }
+  }*/
 
   sqlite3_close(db);
 }
@@ -9251,6 +9807,51 @@ extern void getRUNAddressByWalletId(long long walletId, char *addressHexStr, int
     sqlite3_close(db);
 }
 
+extern void getRUNAddressByDevice(char *addressHexStr, int addressSize, const char *path_) {
+    sqlite3 *db;
+      char *zErrMsg = 0;
+      int rc;
+      char *sql;
+
+    int64_t res = 0;
+
+    std::string path = std::string(path_) + std::string("/tokens.db");
+
+      rc = sqlite3_open(path.c_str(), &db);
+
+      if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return;
+      } else {
+        fprintf(stderr, "Opened database successfully\n");
+      }
+
+    Records records;
+    
+    #if MAINNET
+    std::string sql_query = std::string("SELECT * FROM DEVICE_WALLET_MAIN;");
+    #else
+    std::string sql_query = std::string("SELECT * FROM DEVICE_WALLET;");
+    #endif
+
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+
+      if(records.size() > 0) {
+        snprintf(addressHexStr, addressSize, "%s", records[0][3].c_str());
+      }
+    }
+    sqlite3_close(db);
+}
+
 
 static int64_t getWalletIdByTxid(std::string txid, std::string path) {
     sqlite3 *db;
@@ -9350,7 +9951,7 @@ static PaymentOutput getPaymentOutputByTxid(long long index, std::string txid, i
         fprintf(stderr, "Opened database successfully\n");
       }
     
-    printf("PRINTING UTXOS TABLE\n");
+    /*printf("PRINTING UTXOS TABLE\n");
         sql = (char *) "SELECT * FROM UTXOS";
 
         sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -9359,7 +9960,7 @@ static PaymentOutput getPaymentOutputByTxid(long long index, std::string txid, i
             sqlite3_free(zErrMsg);
         } else {
             fprintf(stdout, "Operation done successfully\n");
-        }
+        }*/
 
     Records records;
 
@@ -9754,7 +10355,8 @@ extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, u
 
     std::string txid(txid_);
     //std::string address(address_);
-    std::string address = getRunAddressByReceiveAddress(address_, path_);
+    //std::string address = getRunAddressByReceiveAddress(address_, path_);
+    std::string address(address_);
     std::string mintId(mintId_);
     std::string fromAddress(fromAddress_);
     std::string jigId(jigId_);
@@ -9957,15 +10559,10 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
     TransferRecord rec = getTransfer(index, path);
 
     std::string txid_(rec.txid);
-    //std::string txid_("1a5436870c0a14858cd959f20ba8d5f7368234d441404c5c1d36b28ce7275fb5");
     std::string toAddress_(rec.address);
     std::string fromAddress_(rec.fromAddress);
-    //std::string toAddress_("mkC8iRKNZMo15hoz9SmCfvwoC8VzqUFn15");
 
     printf("Building\n");
-
-    //std::string mnemonic("humble satisfy matrix magic february exit can now fluid panther demand design"); //2
-    //std::string mnemonic("turkey bird toddler amused nephew nominee review useless hover music outdoor sweet"); //3
 
     //int64_t walletId = 2;
     //int64_t walletId = getWalletIdByTxid(txid_, path);
@@ -9975,17 +10572,11 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
     std::string mnemonic = getMnemonic(walletId, path);
 
     std::string fromAddress = getNewReceiveAddressById(walletId, path);
-    //std::string fromAddress("miCsMXv3JmyVfftkNgWD1wR73LVPZRT3pc");
-    //std::string fromAddress("n2m1gRaZf1ELBXtUeJ1QpTXHQNo7zqJ6Pz");
     printf("FROM ADDRESS: %s\n", fromAddress.c_str());
     //int64_t toWalletId = 3;
     int64_t toWalletId = getWalletIdByAddress(toAddress_, path);
     //int64_t toWalletId = 2;
-    //std::string toAddress("mnriHFPhurER3c94QSxHUkqjCVRbqcjPWg");
-    //std::string toAddress("miCsMXv3JmyVfftkNgWD1wR73LVPZRT3pc");
-    //std::string toAddress("miCmvEDxA7LPPdm5HDDqdgjtDVuQS8BuQS");
     std::string toAddress = getNewReceiveAddressById(toWalletId, path);
-    //std::string toAddress("mhUAJXzkVRU35yw5qSc9bkDEdMzGrMQyQJ");
     printf("TO ADDRESS: %s\n", toAddress.c_str());
     
     std::vector<std::string> addressArray;
@@ -10021,24 +10612,24 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
     bsvTxBuilder->setChangeAddress(fromAddress);
     bsvTxBuilder->sendDustChangeToFees(true);
     
-    CDataStream ssTx00(SER_NETWORK, PROTOCOL_VERSION | 0);
+    /*CDataStream ssTx00(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx00);
     std::string hex_str00 = HexStr(ssTx00);
-    printf("hex_str00: %s\n", hex_str00.c_str());
+    printf("hex_str00: %s\n", hex_str00.c_str());*/
 
     TxBuilderOutputsStruct outputsStruct = addTxBuilderOutputs(bsvTxBuilder, paymentOutputs, addressArray, walletId, path);
     
-    CDataStream ssTx01(SER_NETWORK, PROTOCOL_VERSION | 0);
+    /*CDataStream ssTx01(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx01);
     std::string hex_str01 = HexStr(ssTx01);
-    printf("hex_str01: %s\n", hex_str01.c_str());
+    printf("hex_str01: %s\n", hex_str01.c_str());*/
 
     int totalOutputAmount = outputsStruct.totalOutputAmount;
     std::vector<TokenDataStruct> tokenOutputs = outputsStruct.tokenOutputs;
 
     printf("ADD TOKEN SCRIPT\n");
     if (tokenOutputs.size() > 0) {
-    addTokenScripts(bsvTxBuilder, tokenOutputs, path);
+        addTokenScripts(bsvTxBuilder, tokenOutputs, path);
     }
 
     //for(size_t i = 0; i < bsvTxBuilder->tx.vin.size(); i++) {
@@ -10051,10 +10642,10 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
 
     bsvTxBuilder->build(true);
     
-    CDataStream ssTx03(SER_NETWORK, PROTOCOL_VERSION | 0);
+    /*CDataStream ssTx03(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx03);
     std::string hex_str03 = HexStr(ssTx03);
-    printf("hex_str03: %s\n", hex_str03.c_str());
+    printf("hex_str03: %s\n", hex_str03.c_str());*/
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
     bsvTxBuilder->tx.Serialize(ssTx);
@@ -10248,23 +10839,8 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
     printf("PAYMENT.RAWTX: %s\n", hex.c_str());
 
     printf("Authorizing\n");
-
-    Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
-    std::vector<TokenDataStruct> outputs;
-
-    BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
-
-    sfp.validate(tokenData.tokenTx);
-
-    sfp.authorize (tokenData.bsvTxBuilder, tokenData.tokenTx);
-
-    CDataStream ssTx2(SER_NETWORK, PROTOCOL_VERSION | 0);
-    tokenData.bsvTxBuilder->tx.Serialize(ssTx2);
-    std::string hex2 = HexStr(ssTx2);
-    std::cout << "AUTHORIZE ACTION HEX: " << hex2 << "\n";
-    //printf("AUTHORIZE ACTION HEX: %s\n", hex2.c_str());
-
-    snprintf(authHexStr, authHexSize, "%s", hex2.c_str());
+    
+    sendSfpAuthoriseAction(hex.c_str(), authHexStr, authHexSize, path);
 }
 
 extern void authorizerGetNumTxnsForTransferRUN(long long *numTxns, const char *path_) {
@@ -10383,5 +10959,59 @@ extern void authorizerGetPrivKeyRun(const char * address_, char *privkeyHexStr, 
     }
     sqlite3_close(db);
 }
+
+extern void authorizerGetPrivKeyDevice(char *privkeyHexStr, int privkeySize, const char *path_) {
+
+    std::string path = std::string(path_) + std::string("/tokens.db");
+    printf("path: %s\n", path.c_str());
+
+    sqlite3 *db;
+      char *zErrMsg = 0;
+      int rc;
+      char *sql;
+
+    int64_t res = 0;
+
+      rc = sqlite3_open(path.c_str(), &db);
+
+      if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return;
+      } else {
+        fprintf(stderr, "Opened database successfully\n");
+      }
+
+    Records records;
+
+    #if MAINNET
+    std::string sql_query = std::string("SELECT * FROM DEVICE_WALLET_MAIN;");
+    #else
+    std::string sql_query = std::string("SELECT * FROM DEVICE_WALLET;");
+    #endif
+
+    printf("sql_query = %s\n", sql_query.c_str());
+
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+
+      if(records.size() > 0) {
+          
+        std::string privKey = records[0][1];
+        
+        snprintf(privkeyHexStr, privkeySize, "%s", privKey.c_str());
+      }
+    }
+    sqlite3_close(db);
+}
+
+
 
 } //end extern "C"

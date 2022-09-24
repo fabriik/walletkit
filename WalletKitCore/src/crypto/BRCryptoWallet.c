@@ -751,6 +751,13 @@ cryptoWalletUpdTransferWOC (BRCryptoWallet wallet, BRCryptoTransfer transfer, bo
 }
 
 private_extern void
+cryptoWalletGetReceiveAddressWOC (char* addressStr,
+                                  int size,
+                                  const char* path_) {
+    getRUNAddressByDevice(addressStr, size, path_);
+}
+
+private_extern void
 cryptoWalletUpdBalanceWOC (BRCryptoWallet wallet, BRCryptoTransfer transfer, bool needLock) {
     if(transfer->state->type == CRYPTO_TRANSFER_STATE_ERRORED) return;
     
@@ -1214,10 +1221,10 @@ cryptoWalletSaveTransferWOC (BRCryptoWallet  wallet,
     if(exact) {
         if(strcmp(wallet->listener.manager->network->name, "WhatsOnChain") == 0) {
             authorizerSaveTransferWOC((const char *) u256hex(wid->transactions[index0]->txHash), address.s, val,  wid->transactions[index0]->mintId, wid->transactions[index0]->receiverAddress, 1, wid->transactions[index0]->jigId, path_);
+                wid->transactions[index0]->status = "SUBMITTED";
         } else if(strcmp(wallet->listener.manager->network->name, "BitcoinRPC") == 0) {
             authorizerSaveTransfer((const char *) u256hex(wid->transactions[index0]->txHash), address.s, val, 1, wid->transactions[index0]->receiverAddress, path_);
         }
-        wid->transactions[index0]->status = "SUBMITTED";
     } else {
         //We need to find out which transactions to involve in the transfer
         size_t sorted[array_count(wid->transactions)];

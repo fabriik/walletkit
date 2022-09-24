@@ -243,7 +243,11 @@ cryptoTransferCreateAsBTC (BRCryptoTransferListener listener,
     } else if(strcmp(listener.manager->network->name, "WhatsOnChain") == 0) {
         transfer->tokenId = tid->name;
         transfer->txUrl = (char*) malloc(255);
-        snprintf(transfer->txUrl, 255, "https://testnet.jig.city/jig/%s_o1", tid->mintId);
+        if(strcmp(listener.manager->network->uids, "whattsonchain-testnet") == 0) {
+            snprintf(transfer->txUrl, 255, "https://testnet.jig.city/jig/%s_o1", tid->mintId);
+        } else {
+            snprintf(transfer->txUrl, 255, "https://jig.city/jig/%s_o1", tid->mintId);
+        }
     }
 
     cryptoTransferStateGive (state);

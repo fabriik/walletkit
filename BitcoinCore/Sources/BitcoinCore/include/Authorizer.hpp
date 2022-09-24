@@ -30,6 +30,10 @@ extern bool fileServiceIsTxidUnspentSFPToken (const char *txid_, const char *fro
 
 extern void authorizerInitializeTables(const char *path_);
 
+extern void initializeDeviceWallet(const char *mnemonic_, const char *path);
+
+extern void getRUNAddressByDevice(char *addressHexStr, int addressSize, const char *path_);
+
 extern void authorizerAddUtxo(const char *hex_, const char* path_);
 
 extern void authorizerAddUtxoTest(const char* path_);
@@ -57,6 +61,8 @@ extern void authorizerGetNumTxnsForTransferRUN(long long *numTxns, const char *p
 extern void fileServiceGetNumTxnsForTransferRUN(long long *numTxns, const char *path_);
 
 extern void authorizerGetPrivKeyRun(const char * address_, char *privkeyHexStr, int privkeySize, const char *path_);
+
+extern void authorizerGetPrivKeyDevice(char *privkeyHexStr, int privkeySize, const char *path_);
 
 extern long long getWalletIdByPrimaryAddress(const char *address_, const char *path);
 

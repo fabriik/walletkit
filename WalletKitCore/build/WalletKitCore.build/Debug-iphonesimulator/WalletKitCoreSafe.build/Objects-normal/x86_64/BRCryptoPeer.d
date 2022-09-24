@@ -1,0 +1,34 @@
+dependencies: \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/src/crypto/BRCryptoPeer.c \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/kcdata.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/uuid.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/netinet6.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/machine.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/device.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/mach_debug.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/mach_machine.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/mach.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/bank.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/darwin_posix_sys_types.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/netinet.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/net.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator15.2.sdk/usr/include/darwin_cdefs.modulemap \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/src/support/BRArray.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/src/support/BRInt.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoPeer.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoBase.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoNetwork.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoAccount.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoAddress.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoAmount.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoCurrency.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoUnit.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoSync.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoListener.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/event/BRCryptoTransfer.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoFeeBasis.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/event/BRCryptoWallet.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/event/BRCryptoNetwork.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/event/BRCryptoWalletManager.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/event/BRCryptoSystem.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/include/BRCryptoHash.h

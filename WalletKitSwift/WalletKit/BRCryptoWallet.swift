@@ -74,6 +74,14 @@ public final class Wallet: Equatable {
     public var target: Address {
         return targetForScheme (manager.addressScheme)
     }
+    
+    public var targetWOC: String {
+        let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
+        var addressBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
+        cryptoWalletGetReceiveAddressWOC(&addressBuf, Int32(addressBuf.count), storagePath)
+        let address = String(cString: addressBuf)
+        return address
+    }
 
     public func targetForScheme (_ scheme: AddressScheme) -> Address {
         return Address (core: cryptoWalletGetAddress (core, scheme.core), take: false)

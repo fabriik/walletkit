@@ -196,8 +196,10 @@ static void fileServiceLoadRPC(const char* path, BRSet *transactionSet, unsigned
             tx->outputs[i].amount = (uint64_t) outputAmount;
             tx->outputs[i].scriptLen = strlen(outputScript);
             //tx->outputs[i].script = (uint8_t *) bundle->outputs[i]->script;
-            array_new(tx->outputs[i].script, tx->outputs[i].scriptLen);
-            array_add_array(tx->outputs[i].script, (uint8_t *) outputScript, tx->outputs[i].scriptLen);
+            //array_new(tx->outputs[i].script, tx->outputs[i].scriptLen);
+            //array_add_array(tx->outputs[i].script, (uint8_t *) outputScript, tx->outputs[i].scriptLen);
+            tx->outputs[i].script = (uint8_t  *) malloc(strlen(outputScript) + 1);
+            snprintf((char *) tx->outputs[i].script, strlen(outputScript) + 1, "%s", outputScript);
         }
         
         //void *oldEntity = BRSetAdd (transactionSet, tx);

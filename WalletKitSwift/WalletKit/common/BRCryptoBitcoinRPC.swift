@@ -1403,6 +1403,7 @@ public class BitcoinRPCSystemClient: SystemClient {
         for addresses in chunkedAddresses {
             print("addresses: \(addresses)")
         }
+        print("chunkedAddresses[0][0]: \(chunkedAddresses[0][0])")
         
         //let walletId: Int64 = 2 //FIX LATER
         //let walletId: Int64 = 3 //FIX LATER
@@ -1653,7 +1654,7 @@ public class BitcoinRPCSystemClient: SystemClient {
         if(numTxns >= 2) {
             for index in 0...(numTxns - 2) {
                 
-                var authorizerHexBuf0 = [Int8](repeating: 0, count: 5000) // Buffer for C string
+                var authorizerHexBuf0 = [Int8](repeating: 0, count: 10000) // Buffer for C string
                 authorizerCreateSerialization(index, &authorizerHexBuf0, Int32(authorizerHexBuf0.count), storagePath)
                 let authorizerHex0 = String(cString: authorizerHexBuf0)
                 
@@ -1693,6 +1694,7 @@ public class BitcoinRPCSystemClient: SystemClient {
                                     if let result = json!["result"] as? String? {
                                         let hex = BitcoinRPCSystemClient.getTransactionHex (hash: result!)
                                         authorizerAddUtxo(hex, storagePath)
+                                    } else { completion (Result.failure(SystemClientError.url("Broadcast Error"))); return
                                     }
                                 }
                             } else {
@@ -1708,7 +1710,7 @@ public class BitcoinRPCSystemClient: SystemClient {
             }
         }
         
-        var authorizerHexBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
+        var authorizerHexBuf = [Int8](repeating: 0, count: 10000) // Buffer for C string
         authorizerCreateSerialization(numTxns - 1, &authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
         //authorizerCreateSerialization(0, &authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
         let authorizerHex = String(cString: authorizerHexBuf)
@@ -1791,7 +1793,7 @@ public class BitcoinRPCSystemClient: SystemClient {
         if(numTxns >= 2) {
             for index in 0...(numTxns - 2) {
                 
-                var authorizerHexBuf0 = [Int8](repeating: 0, count: 5000) // Buffer for C string
+                var authorizerHexBuf0 = [Int8](repeating: 0, count: 10000) // Buffer for C string
                 authorizerCreateSerialization(index, &authorizerHexBuf0, Int32(authorizerHexBuf0.count), storagePath)
                 let authorizerHex0 = String(cString: authorizerHexBuf0)
                 
@@ -1846,7 +1848,7 @@ public class BitcoinRPCSystemClient: SystemClient {
             }
         }
         
-        var authorizerHexBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
+        var authorizerHexBuf = [Int8](repeating: 0, count: 10000) // Buffer for C string
         authorizerCreateSerialization(numTxns - 1, &authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
         //authorizerCreateSerialization(0, &authorizerHexBuf, Int32(authorizerHexBuf.count), storagePath)
         let authorizerHex = String(cString: authorizerHexBuf)

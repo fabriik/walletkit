@@ -1,0 +1,26 @@
+dependencies: \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/random.cpp \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/random.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/crypto/chacha20.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/crypto/common.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/compat/endian.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/compat/byteswap.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/span.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/uint256.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/compat/cpuid.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/crypto/sha256.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/crypto/sha512.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/support/cleanse.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/logging.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/fs.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/tinyformat.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/threadsafety.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/util/string.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/util/spanparsing.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/randomenv.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/support/allocators/secure.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/support/lockedpool.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/sync.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/util/macros.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/util/time.h \
+  /Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/BitcoinCore/Sources/BitcoinCore/include/bitcoin/src/compat.h

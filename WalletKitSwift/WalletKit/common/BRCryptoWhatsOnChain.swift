@@ -495,7 +495,8 @@ public class WhatsOnChainSystemClient: SystemClient {
         
         static internal func getSenderAddress (hash: String, blockchainId: String) -> String {
             var blockchain : String = "test"
-            if(blockchainId == "whatsonchain-mainnet") {
+            //if(blockchainId == "whatsonchain-mainnet") {
+            if(blockchainId == "whatsonchainMain-testnet") {
                 blockchain = "main"
             }
             
@@ -693,7 +694,8 @@ public class WhatsOnChainSystemClient: SystemClient {
             
             let outCount = outputs.count
             
-            var blockchainId : String = String("whatsonchain-mainnet")
+            //var blockchainId : String = String("whatsonchain-mainnet")
+            var blockchainId : String = String("whatsonchainMain-testnet")
             
             let session = URLSession (configuration: .default)
             var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/main/tx/\(hash)/hex")!);
@@ -808,7 +810,8 @@ public class WhatsOnChainSystemClient: SystemClient {
             guard let id         = json.asString(name: "txid")
             else { return nil }
             
-            var blockchainId : String = String("whatsonchain-mainnet")
+            //var blockchainId : String = String("whatsonchain-mainnet")
+            var blockchainId : String = String("whatsonchainMain-testnet")
             
             let session = URLSession (configuration: .default)
             var request = URLRequest(url: URL(string: "http://api.whatsonchain.com/v1/bsv/main/tx/\(id)/hex")!);
@@ -1090,7 +1093,8 @@ public class WhatsOnChainSystemClient: SystemClient {
     
     public func getBlockchain (blockchainId: String, completion: @escaping (Result<SystemClient.Blockchain,SystemClientError>) -> Void) {
         var blockchain : String = "test"
-        if(blockchainId == "whatsonchain-mainnet") {
+        //if(blockchainId == "whatsonchain-mainnet") {
+        if(blockchainId == "whatsonchainMain-testnet") {
             blockchain = "main"
         }
         //bdbMakeRequest(path: "blockchains/\(blockchainId)", query: zip(["verified"], ["true"]), embedded: false) {
@@ -1416,8 +1420,11 @@ public class WhatsOnChainSystemClient: SystemClient {
                 
                 let beginOfSentence = str.firstIndex(of: "[")!
                 let firstIndex = str.index(beginOfSentence, offsetBy: 2)
-                let endOfSentence = str.firstIndex(of: "_")!
-                let lastIndex = str.index(endOfSentence, offsetBy: -1)
+                let endOfSentence = str.firstIndex(of: "_")
+                if(endOfSentence == nil) {
+                    return ret
+                }
+                let lastIndex = str.index(endOfSentence!, offsetBy: -1)
                 //let substring = str[beginOfSentence...endOfSentence]
                 let substring = str[firstIndex...lastIndex]
                 ret = String(substring)
@@ -1459,10 +1466,11 @@ public class WhatsOnChainSystemClient: SystemClient {
         
         let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
         
-        let walletId : Int64 = getWalletIdByPrimaryAddress(chunkedAddresses[0][0], storagePath)
+        //let walletId : Int64 = getWalletIdByPrimaryAddress(chunkedAddresses[0][0], storagePath)
         
         var addressHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
-        getRUNAddressByWalletId(walletId, &addressHexBuf, Int32(addressHexBuf.count), storagePath)
+        //getRUNAddressByWalletId(walletId, &addressHexBuf, Int32(addressHexBuf.count), storagePath)
+        getRUNAddressByDevice(&addressHexBuf, Int32(addressHexBuf.count), storagePath)
         let address = String(cString: addressHexBuf)
         
         //let address = chunkedAddresses[0][0]
@@ -1470,7 +1478,8 @@ public class WhatsOnChainSystemClient: SystemClient {
         //let address = "n2DXd5qGBnNGHQ2jtd162RjwgBRYdxxYiq"
         
         var blockchain : String = "test"
-        if(blockchainId == "whatsonchain-mainnet") {
+        //if(blockchainId == "whatsonchain-mainnet") {
+        if(blockchainId == "whatsonchainMain-testnet") {
             blockchain = "main"
         }
         
@@ -1514,7 +1523,8 @@ public class WhatsOnChainSystemClient: SystemClient {
                             print("HASH: \(hash)")
                             
                             var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
-                            authorizerGetPrivKeyRun(address, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+                            //authorizerGetPrivKeyRun(address, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+                            authorizerGetPrivKeyDevice(&privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
                             let privkeyHex = String(cString: privkeyHexBuf)
                             
                             var data0_: JSON.Dict?
@@ -1526,45 +1536,49 @@ public class WhatsOnChainSystemClient: SystemClient {
                             
                             let mintId : String = WhatsOnChainSystemClient.getMintId(json: data_!);
                             
-                            //let deployId : String = WhatsOnChainSystemClient.getDeployId(json: data_!);
+                            if(mintId != "") {
                             
-                            let data: JSON.Dict = [
-                                "txid"  : "\(hash)",
-                                "mintId" : "\(mintId)",
-                                //"deployId" : "\(deployId)",
-                                "privkey" : "\(privkeyHex)",
-                                "network" : "\(blockchain)"
-                            ]
-                            
-                            /*if(hash == "1ce49b150b24afe1db4df4ae4da378840355db0269bf39f79e7e9861b7926f6d") {
-                                print("Debugging")
-                            }*/
-                            
-                           //if let data = data {
-                                do { request0.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
-                                catch let jsonError as NSError {
-                                    let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(data.description)'"
-                                    completion (Result.failure (SystemClientError.model(warnString)))
-                                }
-                            //}
-                            
-                            semaphore = DispatchSemaphore(value: 0)
-                                //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-                            let task0 = WhatsOnChainSystemClient.defaultDataTaskFuncSetJSON (session_, request0, data0_) { (data, res, error) in
-                                    do {
-                                        if(data != nil) {
-                                            let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
-                                            data0_ = json
-                                        } else {
-                                            data0_ = nil
-                                        }
-                                    } catch let error as NSError {
-                                        print(error.localizedDescription)
+                                //let deployId : String = WhatsOnChainSystemClient.getDeployId(json: data_!);
+                                
+                                let data: JSON.Dict = [
+                                    "txid"  : "\(hash)",
+                                    "mintId" : "\(mintId)",
+                                    //"deployId" : "\(deployId)",
+                                    "privkey" : "\(privkeyHex)",
+                                    "network" : "\(blockchain)"
+                                ]
+                                
+                                /*if(hash == "1ce49b150b24afe1db4df4ae4da378840355db0269bf39f79e7e9861b7926f6d") {
+                                    print("Debugging")
+                                }*/
+                                
+                               //if let data = data {
+                                    do { request0.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
+                                    catch let jsonError as NSError {
+                                        let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(data.description)'"
+                                        completion (Result.failure (SystemClientError.model(warnString)))
                                     }
-                                    semaphore.signal()
-                                }
-                                task0.resume()
-                                semaphore.wait()
+                                //}
+                                
+                                semaphore = DispatchSemaphore(value: 0)
+                                    //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+                                let task0 = WhatsOnChainSystemClient.defaultDataTaskFuncSetJSON (session_, request0, data0_) { (data, res, error) in
+                                        do {
+                                            if(data != nil) {
+                                                let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                                                data0_ = json
+                                            } else {
+                                                data0_ = nil
+                                            }
+                                        } catch let error as NSError {
+                                            print(error.localizedDescription)
+                                        }
+                                        semaphore.signal()
+                                    }
+                                    task0.resume()
+                                    semaphore.wait()
+                                
+                            }
                             
                             if(data0_ != nil) {
                                 let txid : String = data0_!["txid"] as! String
@@ -1709,7 +1723,8 @@ public class WhatsOnChainSystemClient: SystemClient {
             let jigIdHex = String(cString: jigIdHexBuf)
             
             var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
-            authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+            //authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+            authorizerGetPrivKeyDevice(&privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
             let privkeyHex = String(cString: privkeyHexBuf)
             
             txnIdList = txnIdList + txnIdHex
@@ -1744,7 +1759,8 @@ public class WhatsOnChainSystemClient: SystemClient {
         }*/
         
         var blockchain : String = "test"
-        if(blockchainId == "whatsonchain-mainnet") {
+        //if(blockchainId == "whatsonchain-mainnet") {
+        if(blockchainId == "whatsonchainMain-testnet") {
             blockchain = "main"
         }
         
@@ -1816,7 +1832,8 @@ public class WhatsOnChainSystemClient: SystemClient {
             let jigIdHex = String(cString: jigIdHexBuf)
             
             var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
-            authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+            //authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+            authorizerGetPrivKeyDevice(&privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
             let privkeyHex = String(cString: privkeyHexBuf)
             
             txnIdList = txnIdList + txnIdHex
@@ -1851,7 +1868,8 @@ public class WhatsOnChainSystemClient: SystemClient {
         }*/
         
         var blockchain : String = "test"
-        if(blockchainId == "whatsonchain-mainnet") {
+        //if(blockchainId == "whatsonchain-mainnet") {
+        if(blockchainId == "whatsonchainMain-testnet") {
             blockchain = "main"
         }
         

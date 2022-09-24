@@ -1,0 +1,4 @@
+module WalletKitHederaProto {
+umbrella "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/src/hedera/proto/include"
+export *
+}

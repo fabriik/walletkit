@@ -184,6 +184,11 @@ extern "C" {
                                 BRCryptoAmount  amount,
                                  const char* path_);
 
+    extern void
+    cryptoWalletGetReceiveAddressWOC (char* addressStr,
+                                 int size,
+                                 const char* path_);
+
     extern BRCryptoTransfer
     cryptoWalletCreateTransferForPaymentProtocolRequest (BRCryptoWallet wallet,
                                                          BRCryptoPaymentProtocolRequest request,

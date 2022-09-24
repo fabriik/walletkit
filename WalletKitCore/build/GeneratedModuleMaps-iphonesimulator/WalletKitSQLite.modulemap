@@ -1,0 +1,4 @@
+module WalletKitSQLite {
+umbrella "/Users/christinapeterson/Documents/WalletKitFabriik/wallet-ios/external/walletkit/WalletKitCore/vendor/sqlite3/include"
+export *
+}
