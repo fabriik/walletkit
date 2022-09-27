@@ -64,7 +64,7 @@ public class BlocksetSystemClient: SystemClient {
 
     // The session to use for DataTaskFunc as in `session.dataTask (with: request, ...)`.
     let session = URLSession (configuration: .default)
-    
+
     /// A DispatchQueue Used for certain queries that can't be accomplished in the session's data
     /// task.  Such as when multiple request are needed in getTransactions().
     let queue = DispatchQueue.init(label: "BlocksetSystemClient")
@@ -1007,7 +1007,8 @@ public class BlocksetSystemClient: SystemClient {
                      path: "/transactions",
                      query: zip(["estimate_fee"], ["true"]),
                      data: json,
-                     httpMethod: "POST") {
+                     httpMethod: "POST",
+                     session: URLSession(configuration: .default)) {
                         self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
                             (more: URL?, res: Result<[JSON], SystemClientError>) in
                             precondition (nil == more)
@@ -1373,34 +1374,36 @@ public class BlocksetSystemClient: SystemClient {
     }
 
     private func sendRequest<T> (_ request: URLRequest,
+                                 _ session: URLSession? = nil,
                                  _ dataTaskFunc: DataTaskFunc,
                                  _ responseSuccess: [Int],
                                  deserializer: @escaping (_ data: Data?) -> Result<T, SystemClientError>,
                                  completion: @escaping (Result<T, SystemClientError>) -> Void) {
+        let session = session ?? self.session
         dataTaskFunc (session, request) { (data, res, error) in
             guard nil == error else {
                 completion (Result.failure(SystemClientError.submission (error!))) // NSURLErrorDomain
                 return
             }
-            
+
             guard let res = res as? HTTPURLResponse else {
                 completion (Result.failure (SystemClientError.url ("No Response")))
                 return
             }
-            
+
             guard responseSuccess.contains(res.statusCode) else {
                 let json = data
                     .flatMap { try? JSONSerialization.jsonObject(with: $0, options: []) as? [String:Any] }
-                
+
                 // It is an error if there IS data but IS NOT json (could not parse).
                 let jsonError = nil != data && nil == json
-                
+
                 completion (Result.failure (SystemClientError.response(res.statusCode, json, jsonError)))
                 return
             }
-            
+
             completion (deserializer (data))
-        }.resume()
+            }.resume()
     }
 
     /// Update `request` with 'application/json' headers and the httpMethod
@@ -1465,12 +1468,13 @@ public class BlocksetSystemClient: SystemClient {
     internal func makeRequest<T> (_ dataTaskFunc: DataTaskFunc,
                                   url: URL,
                                   httpMethod: String = "POST",
+                                  session: URLSession? = nil,
                                   deserializer: @escaping (_ data: Data?) -> Result<T, SystemClientError> = deserializeAsJSON,
                                   completion: @escaping (Result<T, SystemClientError>) -> Void) {
         print ("SYS: BDB: Request: \(url.absoluteString): Method: \(httpMethod): Data: []")
         var request = URLRequest (url: url)
         decorateRequest(&request, httpMethod: httpMethod)
-        sendRequest (request, dataTaskFunc, responseSuccess (httpMethod), deserializer: deserializer, completion: completion)
+        sendRequest (request, session, dataTaskFunc, responseSuccess (httpMethod), deserializer: deserializer, completion: completion)
     }
 
     /// Make a request by building a URL request from baseURL, path, query and data.  Once we have
@@ -1481,6 +1485,7 @@ public class BlocksetSystemClient: SystemClient {
                                   query: Zip2Sequence<[String],[String]>? = nil,
                                   data: JSON.Dict? = nil,
                                   httpMethod: String = "POST",
+                                  session: URLSession? = nil,
                                   deserializer: @escaping (_ data: Data?) -> Result<T, SystemClientError> = deserializeAsJSON,
                                   completion: @escaping (Result<T, SystemClientError>) -> Void) {
         guard var urlBuilder = URLComponents (string: baseURL)
@@ -1507,7 +1512,7 @@ public class BlocksetSystemClient: SystemClient {
             }
         }
 
-        sendRequest (request, dataTaskFunc, responseSuccess (httpMethod), deserializer: deserializer, completion: completion)
+        sendRequest (request, session, dataTaskFunc, responseSuccess (httpMethod), deserializer: deserializer, completion: completion)
     }
 
     /// We have two flavors of bdbMakeRequest but they both handle their result identically.
