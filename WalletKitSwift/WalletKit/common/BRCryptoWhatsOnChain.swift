@@ -105,7 +105,17 @@ public class WhatsOnChainSystemClient: SystemClient {
         _ completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask in
         session.dataTask (with: request, completionHandler: completionHandler)
     }
-
+    
+    typealias DataTaskFuncSetJSONArray = (URLSession, URLRequest, [JSON.Dict]?, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask
+    
+    static let defaultDataTaskFuncSetJSONArray: DataTaskFuncSetJSONArray = {
+        (_ session: URLSession,
+        _ request: URLRequest,
+         _ data: [JSON.Dict]?,
+        _ completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask in
+        session.dataTask (with: request, completionHandler: completionHandler)
+    }
+    
     ///
     /// A Subscription allows for BlockchainDB 'Asynchronous Notifications'.
     ///
@@ -1435,6 +1445,115 @@ public class WhatsOnChainSystemClient: SystemClient {
         return ret
     }
     
+    static internal func wocGetRequestArray (requestString: String) -> [JSON.Dict]? {
+        
+        var data_: [JSON.Dict]?
+        let session_ = URLSession (configuration: .default)
+        var request = URLRequest(url: URL(string: requestString)!);
+        request.httpMethod = "GET"
+        
+        var semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+            //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+        let task = WhatsOnChainSystemClient.defaultDataTaskFuncSetJSONArray (session_, request, data_) { (data, res, error) in
+                do {
+                    if(data != nil) {
+                        //let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                        let json = try JSONSerialization.jsonObject(with: data!, options: []) as? [JSON.Dict]
+                        data_ = json
+                    } else {
+                        data_ = nil
+                    }
+                } catch let error as NSError {
+                    print(error.localizedDescription)
+                }
+                semaphore.signal()
+            }
+            task.resume()
+            semaphore.wait()
+        
+        return data_
+    }
+    
+    static internal func wocGetRequestData (requestString: String) -> String? {
+        
+        var data_: Data?
+        let session_ = URLSession (configuration: .default)
+        var request = URLRequest(url: URL(string: requestString)!);
+        request.httpMethod = "GET"
+        
+        var semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+            //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+        let task = WhatsOnChainSystemClient.defaultDataTaskFuncSet (session_, request, data_) { (data, res, error) in
+            data_ = data
+            semaphore.signal()
+        }
+        task.resume()
+        semaphore.wait()
+        
+        let str = String(decoding: data_!, as: UTF8.self)
+        
+        return str
+    }
+    
+    static internal func wocGetRequestParents (blockchain: String, parentTxids: String) -> String? {
+        
+        let txids = parentTxids.split(separator: ",")
+        
+        var parents : String = String("")
+        
+        for txid in txids {
+            if(parents != String("")) {
+                parents = parents + String(",")
+            }
+            let requestString : String = "https://api.whatsonchain.com/v1/bsv/" + blockchain + "/tx/" + txid + "/hex"
+            let hex = wocGetRequestData(requestString: requestString)
+            parents = parents + hex!
+        }
+        return parents
+    }
+    
+    static internal func wocPostRequest (requestString: String, signedHex: String) -> JSON.Dict? {
+        
+        var data_: JSON.Dict?
+        let session_ = URLSession (configuration: .default)
+        var request = URLRequest(url: URL(string: requestString)!);
+        request.httpMethod = "POST"
+        
+        let data: JSON.Dict = [
+            "txhex"  : "\(signedHex)"
+        ]
+        
+       //if let data = data {
+            do { request.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
+            catch let jsonError as NSError {
+                print("JSON.Error: '\(jsonError.description)'; Data: '\(data.description)'")
+            }
+        //}
+        
+        var semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+            //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+        let task = WhatsOnChainSystemClient.defaultDataTaskFuncSetJSON (session_, request, data_) { (data, res, error) in
+                do {
+                    if(data != nil) {
+                        //let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                        //let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                        let json = try JSONSerialization.jsonObject(with: data!, options: [])
+                        //data_ = json
+                        print("Debugging")
+                    } else {
+                        data_ = nil
+                    }
+                } catch let error as NSError {
+                    print(error.localizedDescription)
+                }
+                semaphore.signal()
+            }
+            task.resume()
+            semaphore.wait()
+        
+        return data_
+    }
+    
     static internal func getDeployId (json: JSON.Dict) -> String {
         
         let vin = json["vin"] as! [NSDictionary]
@@ -1522,14 +1641,17 @@ public class WhatsOnChainSystemClient: SystemClient {
                             let hash : String = data_!["hash"] as! String
                             print("HASH: \(hash)")
                             
-                            var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
-                            //authorizerGetPrivKeyRun(address, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
-                            authorizerGetPrivKeyDevice(&privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
-                            let privkeyHex = String(cString: privkeyHexBuf)
+//                            var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
+//                            //authorizerGetPrivKeyRun(address, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+//                            authorizerGetPrivKeyDevice(&privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+//                            let privkeyHex = String(cString: privkeyHexBuf)
+                            
+                            var addressHexBuf = [Int8](repeating: 0, count: 255)
+                            getRUNAddressByDevice(&addressHexBuf, Int32(addressHexBuf.count), storagePath)
+                            
+                            let addressHex = String(cString: addressHexBuf)
                             
                             var data0_: JSON.Dict?
-                            
-                            
                             
                             var request0 = URLRequest(url: URL(string: "http://localhost:8000/inventory/")!);
                             self.decorateRequest(&request0, httpMethod: "POST")
@@ -1544,7 +1666,8 @@ public class WhatsOnChainSystemClient: SystemClient {
                                     "txid"  : "\(hash)",
                                     "mintId" : "\(mintId)",
                                     //"deployId" : "\(deployId)",
-                                    "privkey" : "\(privkeyHex)",
+                                    //"privkey" : "\(privkeyHex)",
+                                    "ownerAddress" : "\(addressHex)",
                                     "network" : "\(blockchain)"
                                 ]
                                 
@@ -1690,6 +1813,12 @@ public class WhatsOnChainSystemClient: SystemClient {
     public func createTransaction(blockchainId: String, transaction: Data, identifier: String?, exchangeId: String?, completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
         let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
         
+        var blockchain : String = "test"
+        //if(blockchainId == "whatsonchain-mainnet") {
+        if(blockchainId == "whatsonchainMain-testnet") {
+            blockchain = "main"
+        }
+        
         var txnIdList : String = String("")
         var mintIdList : String = String("")
         var privkeyList : String = String("")
@@ -1727,6 +1856,174 @@ public class WhatsOnChainSystemClient: SystemClient {
             authorizerGetPrivKeyDevice(&privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
             let privkeyHex = String(cString: privkeyHexBuf)
             
+            var data0_: JSON.Dict?
+            
+            let session_ = URLSession (configuration: .default)
+            
+            var request0 = URLRequest(url: URL(string: "http://localhost:8000/build/")!);
+            self.decorateRequest(&request0, httpMethod: "POST")
+            
+            let data: JSON.Dict = [
+                "txhash"  : "\(txnIdHex)",
+                "mintId" : "\(mintIdHex)",
+                "address" : "\(addressHex)",
+                "amount" : amount,
+                "jigId" : "\(jigIdHex)"
+            ]
+            
+           //if let data = data {
+                do { request0.httpBody = try JSONSerialization.data (withJSONObject: data, options: []) }
+                catch let jsonError as NSError {
+                    let warnString = "JSON.Error: '\(jsonError.description)'; Data: '\(data.description)'"
+                    completion (Result.failure (SystemClientError.model(warnString)))
+                }
+            //}
+            
+            var semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+                //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+            let task0 = WhatsOnChainSystemClient.defaultDataTaskFuncSetJSON (session_, request0, data0_) { (data, res, error) in
+                    do {
+                        if(data != nil) {
+                            let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+                            data0_ = json
+                        } else {
+                            data0_ = nil
+                        }
+                    } catch let error as NSError {
+                        print(error.localizedDescription)
+                    }
+                    semaphore.signal()
+                }
+                task0.resume()
+                semaphore.wait()
+                
+            
+            if(data0_ != nil) {
+                var scriptBuf = [Int8](repeating: 0, count: 500)
+                authorizerRunGetScript(&scriptBuf, Int32(scriptBuf.count))
+                let scriptUtxo = String(cString: scriptBuf)
+                
+                let rawtx : String = data0_!["rawtx"] as! String
+                print("rawtx: \(rawtx)")
+                let parents : [NSDictionary] = data0_!["parents"] as! [NSDictionary]
+                
+                var scriptList : String = String("")
+                var satoshisList : String = String("")
+                var tx_posList : String = String("")
+                var valueList : String = String("")
+                var heightList : String = String("")
+                var tx_hashList : String = String("")
+                var scriptUtxoList : String = String("")
+                var rawHexList : String = String("")
+                
+                for anItem in parents {
+                    if(scriptList != String("")) {
+                        scriptList = scriptList + String(",")
+                        satoshisList = satoshisList + String(",")
+                    }
+                    let scriptStr : String = anItem["script"] as! String
+                    scriptList = scriptList + scriptStr
+                    let val = anItem["satoshis"] as! Int64
+                    satoshisList = satoshisList + String(val)
+                }
+                
+                var scriptHashBuf = [Int8](repeating: 0, count: 500)
+                authorizerRunGetScriptHash(&scriptHashBuf, Int32(scriptHashBuf.count))
+                let scriptHash = String(cString: scriptHashBuf)
+                
+                let requestString : String = "https://api.whatsonchain.com/v1/bsv/" + blockchain + "/script/" + scriptHash + "/unspent"
+                
+                let data1_: [JSON.Dict]? = WhatsOnChainSystemClient.wocGetRequestArray(requestString: requestString)
+                
+                if(data1_ != nil) {
+                    print("Debugging")
+                    
+//                    let parents : [NSDictionary] = data0_!["parents"] as! [NSDictionary]
+//
+                    for anItem in data1_! {
+                        if(tx_posList != String("")) {
+                            tx_posList = tx_posList + String(",")
+                            valueList = valueList + String(",")
+                            heightList = heightList + String(",")
+                            tx_hashList = tx_hashList + String(",")
+                            scriptUtxoList = scriptUtxoList + String(",")
+                            rawHexList = rawHexList + String(",")
+                        }
+                        let tx_pos = anItem["tx_pos"] as! Int64
+                        tx_posList = tx_posList + String(tx_pos)
+                        let val = anItem["value"] as! Int64
+                        valueList = valueList + String(val)
+                        let height = anItem["height"] as! Int64
+                        heightList = heightList + String(height)
+                        let tx_hashStr : String = anItem["tx_hash"] as! String
+                        tx_hashList = heightList + tx_hashStr
+                        
+                        scriptUtxoList = scriptUtxoList + scriptUtxo
+                        
+                        let requestString2 : String = "https://api.whatsonchain.com/v1/bsv/" + blockchain + "/tx/" + tx_hashStr + "/hex"
+                        
+                        let rawHex: String? = WhatsOnChainSystemClient.wocGetRequestData(requestString: requestString2)
+                        
+                        rawHexList = rawHexList + rawHex!
+                        
+                        print("Debugging")
+                    }
+                    
+                }
+                var paidHexBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
+                var parentTxidsBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
+                authorizerRunPay(&paidHexBuf, Int32(paidHexBuf.count), &parentTxidsBuf, Int32(parentTxidsBuf.count), privkeyHex, rawtx, scriptList, satoshisList, tx_posList, tx_hashList, valueList, scriptUtxoList, rawHexList)
+                let paidHex = String(cString: paidHexBuf)
+                let parentTxids = String(cString: parentTxidsBuf)
+                
+                let parentHexStrs: String? = WhatsOnChainSystemClient.wocGetRequestParents(blockchain: blockchain, parentTxids: parentTxids)
+                
+                var signedHexBuf = [Int8](repeating: 0, count: 5000) // Buffer for C string
+                authorizerRunSign(&signedHexBuf, Int32(signedHexBuf.count), parentHexStrs, privkeyHex, paidHex);
+                
+//                let requestString3 : String = "https://api.whatsonchain.com/v1/bsv/" + blockchain + "/tx/raw"
+//                
+////                let data3_: JSON.Dict? = WhatsOnChainSystemClient.wocPostRequest(requestString: requestString3, signedHex: signedHex)
+//                
+//                var data3_: JSON.Dict?
+//                let session3_ = URLSession (configuration: .default)
+//                var request3 = URLRequest(url: URL(string: requestString3)!);
+//                //request.httpMethod = "POST"
+//                self.decorateRequest(&request3, httpMethod: "POST")
+//                
+//                let data3: JSON.Dict = [
+//                    "txhex"  : "\(signedHex)"
+//                ]
+//                
+//               //if let data = data {
+//                    do { request3.httpBody = try JSONSerialization.data (withJSONObject: data3, options: []) }
+//                    catch let jsonError as NSError {
+//                        print("JSON.Error: '\(jsonError.description)'; Data: '\(data3.description)'")
+//                    }
+//                //}
+//                
+//                var semaphore3: DispatchSemaphore = DispatchSemaphore(value: 0)
+//                    //let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+//                let task3 = WhatsOnChainSystemClient.defaultDataTaskFuncSetJSON (session3_, request3, data3_) { (data, res, error) in
+//                        do {
+//                            if(data != nil) {
+//                                //let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+//                                //let json = try JSONSerialization.jsonObject(with: data!, options: []) as? JSON.Dict
+//                                let json = try JSONSerialization.jsonObject(with: data!, options: [])
+//                                //data_ = json
+//                                print("Debugging")
+//                            } else {
+//                                data3_ = nil
+//                            }
+//                        } catch let error as NSError {
+//                            print(error.localizedDescription)
+//                        }
+//                        semaphore3.signal()
+//                    }
+//                    task3.resume()
+//                    semaphore3.wait()
+            }
+            
             txnIdList = txnIdList + txnIdHex
             mintIdList = mintIdList + mintIdHex
             privkeyList = privkeyList + privkeyHex
@@ -1736,33 +2033,27 @@ public class WhatsOnChainSystemClient: SystemClient {
         }
         
         
-        /*let data            = transaction.base64EncodedString()
-        let json: JSON.Dict = [
-            "blockchain_id"  : blockchainId,
-            "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
-            "data"           : transaction.base64EncodedString()
-        ]
-
-        makeRequest (bdbDataTaskFunc, bdbBaseURL,
-                     path: "/transactions",
-                     data: json,
-                     httpMethod: "POST") {
-            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
-                (more: URL?, res: Result<[JSON], SystemClientError>) in
-                precondition(nil == more)
-                completion (res.flatMap {
-                    WhatsOnChainSystemClient.getOneExpected (id: "POST /transactions",
-                                                         data: $0,
-                                                         transform: Model.asTransactionIdentifier)
-                })
-            }
-        }*/
-        
-        var blockchain : String = "test"
-        //if(blockchainId == "whatsonchain-mainnet") {
-        if(blockchainId == "whatsonchainMain-testnet") {
-            blockchain = "main"
-        }
+//        let data            = transaction.base64EncodedString()
+//        let json: JSON.Dict = [
+//            "blockchain_id"  : blockchainId,
+//            "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
+//            "data"           : transaction.base64EncodedString()
+//        ]
+//
+//        makeRequest (bdbDataTaskFunc, bdbBaseURL,
+//                     path: "/transactions",
+//                     data: json,
+//                     httpMethod: "POST") {
+//            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+//                (more: URL?, res: Result<[JSON], SystemClientError>) in
+//                precondition(nil == more)
+//                completion (res.flatMap {
+//                    WhatsOnChainSystemClient.getOneExpected (id: "POST /transactions",
+//                                                         data: $0,
+//                                                         transform: Model.asTransactionIdentifier)
+//                })
+//            }
+//        }
         
         let json: JSON.Dict = [
             //"txid"  : "\(txnIdHex)",
@@ -1792,113 +2083,113 @@ public class WhatsOnChainSystemClient: SystemClient {
         }
     }
 
-    public func createTransaction (blockchainId: String,
-                                   transaction: Data,
-                                   identifier: String?,
-                                   completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
-        
-        let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
-        
-        var txnIdList : String = String("")
-        var mintIdList : String = String("")
-        var privkeyList : String = String("")
-        var addressList : String = String("")
-        var amountList : String = String("")
-        var jigIdList : String = String("")
-        
-        var numTxns : Int64 = 1
-        authorizerGetNumTxnsForTransferRUN(&numTxns, storagePath)
-        for index in 0...(numTxns - 1) {
-            if(index != 0) {
-                txnIdList = txnIdList + String(",")
-                mintIdList = mintIdList + String(",")
-                privkeyList = privkeyList + String(",")
-                addressList = addressList + String(",")
-                amountList = amountList + String(",")
-                jigIdList = amountList + String(",")
-            }
-            var txnIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
-            var addressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
-            var mintIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
-            var fromAddressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
-            var amount : Int64 = 1
-            var jigIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
-            
-            authorizerGetTransferDataRUN(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, &jigIdHexBuf, Int32(jigIdHexBuf.count), storagePath)
-            let txnIdHex = String(cString: txnIdHexBuf)
-            let addressHex = String(cString: addressHexBuf)
-            let mintIdHex = String(cString: mintIdHexBuf)
-            let fromAddressHex = String(cString: fromAddressHexBuf)
-            let jigIdHex = String(cString: jigIdHexBuf)
-            
-            var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
-            //authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
-            authorizerGetPrivKeyDevice(&privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
-            let privkeyHex = String(cString: privkeyHexBuf)
-            
-            txnIdList = txnIdList + txnIdHex
-            mintIdList = mintIdList + mintIdHex
-            privkeyList = privkeyList + privkeyHex
-            addressList = addressList + addressHex
-            amountList = amountList + String(amount)
-            jigIdList = jigIdList + jigIdHex
-        }
-        
-        
-        /*let data            = transaction.base64EncodedString()
-        let json: JSON.Dict = [
-            "blockchain_id"  : blockchainId,
-            "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
-            "data"           : transaction.base64EncodedString()
-        ]
-
-        makeRequest (bdbDataTaskFunc, bdbBaseURL,
-                     path: "/transactions",
-                     data: json,
-                     httpMethod: "POST") {
-            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
-                (more: URL?, res: Result<[JSON], SystemClientError>) in
-                precondition(nil == more)
-                completion (res.flatMap {
-                    WhatsOnChainSystemClient.getOneExpected (id: "POST /transactions",
-                                                         data: $0,
-                                                         transform: Model.asTransactionIdentifier)
-                })
-            }
-        }*/
-        
-        var blockchain : String = "test"
-        //if(blockchainId == "whatsonchain-mainnet") {
-        if(blockchainId == "whatsonchainMain-testnet") {
-            blockchain = "main"
-        }
-        
-        let json: JSON.Dict = [
-            //"txid"  : "\(txnIdHex)",
-            "txid"  : "\(txnIdList)",
-            "mintId"  : "\(mintIdList)",
-            "privkey"  : "\(privkeyList)",
-            "address"  : "\(addressList)",
-            "amount" : "\(amountList)",
-            "network" : blockchain
-        ]
-        
-        //makeRequest (bdbDataTaskFunc, bdbBaseURL,
-        makeRequest (bdbDataTaskFunc, "http://localhost:8000",
-                     path: "/transfer",
-                     data: json,
-                     httpMethod: "POST") {
-            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
-                (more: URL?, res: Result<[JSON], SystemClientError>) in
-                precondition(nil == more)
-                completion (res.flatMap {
-                    WhatsOnChainSystemClient.getOneExpected (id: blockchainId,
-                                                         data: $0,
-                                                         transform: Model.asTransactionIdentifierWOC)
-                })
-            }
-        }
-    }
+//    public func createTransaction (blockchainId: String,
+//                                   transaction: Data,
+//                                   identifier: String?,
+//                                   completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
+//
+//        let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
+//
+//        var txnIdList : String = String("")
+//        var mintIdList : String = String("")
+//        var privkeyList : String = String("")
+//        var addressList : String = String("")
+//        var amountList : String = String("")
+//        var jigIdList : String = String("")
+//
+//        var numTxns : Int64 = 1
+//        authorizerGetNumTxnsForTransferRUN(&numTxns, storagePath)
+//        for index in 0...(numTxns - 1) {
+//            if(index != 0) {
+//                txnIdList = txnIdList + String(",")
+//                mintIdList = mintIdList + String(",")
+//                privkeyList = privkeyList + String(",")
+//                addressList = addressList + String(",")
+//                amountList = amountList + String(",")
+//                jigIdList = amountList + String(",")
+//            }
+//            var txnIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+//            var addressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+//            var mintIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+//            var fromAddressHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+//            var amount : Int64 = 1
+//            var jigIdHexBuf = [Int8](repeating: 0, count: 100) // Buffer for C string
+//
+//            authorizerGetTransferDataRUN(index, &txnIdHexBuf, Int32(txnIdHexBuf.count), &addressHexBuf, Int32(addressHexBuf.count), &mintIdHexBuf, Int32(mintIdHexBuf.count), &fromAddressHexBuf, Int32(fromAddressHexBuf.count), &amount, &jigIdHexBuf, Int32(jigIdHexBuf.count), storagePath)
+//            let txnIdHex = String(cString: txnIdHexBuf)
+//            let addressHex = String(cString: addressHexBuf)
+//            let mintIdHex = String(cString: mintIdHexBuf)
+//            let fromAddressHex = String(cString: fromAddressHexBuf)
+//            let jigIdHex = String(cString: jigIdHexBuf)
+//
+//            var privkeyHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
+//            //authorizerGetPrivKeyRun(fromAddressHex, &privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+//            authorizerGetPrivKeyDevice(&privkeyHexBuf, Int32(privkeyHexBuf.count), storagePath)
+//            let privkeyHex = String(cString: privkeyHexBuf)
+//
+//            txnIdList = txnIdList + txnIdHex
+//            mintIdList = mintIdList + mintIdHex
+//            privkeyList = privkeyList + privkeyHex
+//            addressList = addressList + addressHex
+//            amountList = amountList + String(amount)
+//            jigIdList = jigIdList + jigIdHex
+//        }
+//
+//
+//        /*let data            = transaction.base64EncodedString()
+//        let json: JSON.Dict = [
+//            "blockchain_id"  : blockchainId,
+//            "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
+//            "data"           : transaction.base64EncodedString()
+//        ]
+//
+//        makeRequest (bdbDataTaskFunc, bdbBaseURL,
+//                     path: "/transactions",
+//                     data: json,
+//                     httpMethod: "POST") {
+//            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+//                (more: URL?, res: Result<[JSON], SystemClientError>) in
+//                precondition(nil == more)
+//                completion (res.flatMap {
+//                    WhatsOnChainSystemClient.getOneExpected (id: "POST /transactions",
+//                                                         data: $0,
+//                                                         transform: Model.asTransactionIdentifier)
+//                })
+//            }
+//        }*/
+//
+//        var blockchain : String = "test"
+//        //if(blockchainId == "whatsonchain-mainnet") {
+//        if(blockchainId == "whatsonchainMain-testnet") {
+//            blockchain = "main"
+//        }
+//
+//        let json: JSON.Dict = [
+//            //"txid"  : "\(txnIdHex)",
+//            "txid"  : "\(txnIdList)",
+//            "mintId"  : "\(mintIdList)",
+//            "privkey"  : "\(privkeyList)",
+//            "address"  : "\(addressList)",
+//            "amount" : "\(amountList)",
+//            "network" : blockchain
+//        ]
+//
+//        //makeRequest (bdbDataTaskFunc, bdbBaseURL,
+//        makeRequest (bdbDataTaskFunc, "http://localhost:8000",
+//                     path: "/transfer",
+//                     data: json,
+//                     httpMethod: "POST") {
+//            self.bdbHandleResult ($0, embedded: false, embeddedPath: "") {
+//                (more: URL?, res: Result<[JSON], SystemClientError>) in
+//                precondition(nil == more)
+//                completion (res.flatMap {
+//                    WhatsOnChainSystemClient.getOneExpected (id: blockchainId,
+//                                                         data: $0,
+//                                                         transform: Model.asTransactionIdentifierWOC)
+//                })
+//            }
+//        }
+//    }
 
     public func estimateTransactionFee (blockchainId: String,
                                         transaction: Data,

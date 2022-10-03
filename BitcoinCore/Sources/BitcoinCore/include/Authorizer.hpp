@@ -42,6 +42,14 @@ extern void authorizerAddUtxoTest(const char* path_);
 //extern void authorizerCreateSerialization(const char *toAddress, const char *fromAddress, const char *txid, long long vout, long long satoshis, const char *script_, const char *txid0, long long vout0, long long satoshis0, const char *script0, const char *address0, const char *path);
 extern void authorizerCreateSerialization(long long index, char *authHexStr, int authHexSize, const char *path_);
 
+extern void authorizerRunGetScriptHash(char *scriptHashStr, int scriptHashSize);
+
+extern void authorizerRunGetScript(char *scriptStr, int scriptSize);
+
+extern char* authorizerRunPay(char* paidHex, int paidHexSize, char *parentTxids, int parentTxidsSize, const char* ownerWif_, const char* buildTx_, const char* scriptList_, const char* satoshisList_, const char* tx_posList_, const char* tx_hashList_, const char* valueList_, const char* scriptUtxoList_, const char* rawHexList_);
+
+extern char* authorizerRunSign(char* signedHex, int signedHexSize, const char* parentHexStrs_, const char* ownerWif_, const char* paidTx_);
+
 extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsigned long long amount_, unsigned long numTxns, const char *fromAddress_, const char *path_);
 
 extern void authorizerSaveTransferWOC(const char *txid_, const char *address_, unsigned long long amount_, const char * mintId_, const char * fromAddress_, unsigned long numTxns, const char * jigId, const char *path_);

@@ -29,12 +29,38 @@
 #include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
 #include <netdb.h> /* struct hostent, gethostbyname */
 
+//#include <curl/curl.h> // RUN
+//#include <curl.h> // RUN
+
+#define LOCK_DOMAIN 108// RUN
+#define DUST_AMOUNT 546 // RUN
+#define FEEPERKB 50 // RUN
+#define DEFAULT_UNLOCK_SCRIPT_SIZE 500 // RUN
+
+// Script: PUSH + SIG + PUSH + PUBKEY
+// const P2PKH_SIGSCRIPT_SIZE = 1 + 73 + 1 + 33
+#define P2PKH_SIGSCRIPT_SIZE 108 // RUN
+
+// Output: Satoshis + Varint + Script
+// Script: OP_DUP + OP_HASH16 + PUSH + HASH + OP_EQUAL + OP_CHECKSIG
+// const P2PKH_OUTPUT_SIZE = 8 + 1 + 1 + 1 + 1 + 20 + 1 + 1
+#define P2PKH_OUTPUT_SIZE 34 // RUN
+
+// Input: Outpoint + Push + Signature + Sequence
+// const P2PKH_INPUT_SIZE = 36 + 1 + P2PKH_SIGSCRIPT_SIZE + 4
+#define P2PKH_INPUT_SIZE 149 // RUN
+
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; }) // RUN
+
 #define WIPE 0
 
 //#define ZEROBSV 1
 #define ZEROBSV 0
 
-#define MAINNET 1
+#define MAINNET 0
 
 #define BIP_44_ADDRESS_GAP_LIMIT 20
 #define TRANSACTION_FEE_PER_BYTE 0.6
@@ -1524,6 +1550,7 @@ static void writeVarIntNum(std::vector<unsigned char>& bw, long bn) {
 }
 
 static std::vector<unsigned char> getTxHashBuf(uint256 hash) {
+    printf("prevTxid = %s\n", hash.GetHex().c_str());
     return toLittleEndianUch(hexToUchBuffer(hash.GetHex()));
 }
 
@@ -1790,6 +1817,8 @@ class TxBuilder {
         //std::map<std::string, UTxOutData*> uTxOutMap;
         std::map<std::string, CTxOut> uTxOutMap;
         SigOperations sigOperations;
+    
+        std::vector<CTxOut> txInputsOutput;
 
         TxBuilder() {
             versionBytesNum = 1;
@@ -1819,6 +1848,11 @@ class TxBuilder {
             feePerKbNum = feePerKbNumAmount;
             printf("feePerKbNum: %.2f\n", feePerKbNum);
         }
+    
+        void setFeeAmountBn(int64_t feeAmount) {
+            if(feeAmount < 0) printf("cannot set a fee of zero or less\n");
+            feeAmountBn = feeAmount;
+        }
 
         void setChangeAddress(std::string fromAddress) {
             std::vector<unsigned char> buf;
@@ -1834,14 +1868,16 @@ class TxBuilder {
             CScript script(vec.begin(), vec.end());
             writeOpCode(script, OP_DUP);
             writeOpCode(script, OP_HASH160);
-        writeBuffer(script, hashBuf);
-        writeOpCode(script, OP_EQUALVERIFY);
-        writeOpCode(script, OP_CHECKSIG);
+            writeBuffer(script, hashBuf);
+            writeOpCode(script, OP_EQUALVERIFY);
+            writeOpCode(script, OP_CHECKSIG);
 
             getChunks(script);
 
             changeScript = script;
         }
+    
+        void change(std::string address);
 
         void sendDustChangeToFees(bool dustChangeToFeesAmount) {
             dustChangeToFees = dustChangeToFeesAmount;
@@ -1851,9 +1887,12 @@ class TxBuilder {
         std::vector<unsigned char> hashSequence();
         std::vector<unsigned char> hashOutputs();
         std::vector<unsigned char> sighashPreimage (unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
+        std::vector<unsigned char> _sighashPreimage (unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
         std::vector<unsigned char> sighash (unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
+        std::vector<unsigned char> _sighash (unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
         std::vector<unsigned char> sign (KeyPair keyPair, unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
         std::vector<unsigned char> sign_authorizer (KeyPair keyPair, unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
+        std::vector<unsigned char> _signature (KeyPair keyPair, unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
         std::vector<unsigned char> getSig (KeyPair keyPair, unsigned long nHashType, size_t nIn, CScript subScript, unsigned long flags);
         void fillSig (size_t nIn, int nScriptChunk, std::vector<unsigned char> sig);
         void signTxIn(size_t nIn, KeyPair keyPair, CTxOut *txOut, int nScriptChunk, unsigned long nHashType, unsigned long flags);
@@ -2188,6 +2227,9 @@ std::vector<unsigned char> TxBuilder::hashOutputs () {
     std::vector<unsigned char> bw;
     for (size_t i = 0; i < tx.vout.size(); i++) {
         CTxOut txOut = tx.vout[i];
+        std::string str(txOut.scriptPubKey.begin(), txOut.scriptPubKey.end());
+        printf("txOut.script = %s\n", stringToHex(str).c_str());
+        printf("txOut.nValue = %lld\n", txOut.nValue);
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
         txOut.Serialize(ssTx);
@@ -2197,6 +2239,11 @@ std::vector<unsigned char> TxBuilder::hashOutputs () {
         std::vector<unsigned char> txOutBuffer = hexToUchBuffer(hex_str);
         write(bw, txOutBuffer);
     }
+    printf("bw: \n");
+    for(size_t i = 0; i < bw.size(); i++) {
+        printf("%02x", bw[i]);
+    }
+    printf("\n");
     return HashSha256Sha256(bw);
     //return Hash.sha256Sha256(bw.toBuffer())
 }
@@ -2221,11 +2268,11 @@ std::vector<unsigned char> TxBuilder::sighashPreimage (unsigned long nHashType, 
         } else {
             hashPrevouts_ = bufferAlloc(32);
         }
-        /*printf("hashPrevouts_: \n");
-        for(size_t i = 0; i < hashPrevouts_.size(); i++) {
-            printf("%02x ", hashPrevouts_[i]);
-        }
-        printf("\n");*/
+//        printf("hashPrevouts_: \n");
+//        for(size_t i = 0; i < hashPrevouts_.size(); i++) {
+//            printf("%02x ", hashPrevouts_[i]);
+//        }
+//        printf("\n");
 
         if (
             !(nHashType & SigOperations::SIGHASH_ANYONECANPAY) &&
@@ -2236,11 +2283,11 @@ std::vector<unsigned char> TxBuilder::sighashPreimage (unsigned long nHashType, 
         } else {
             hashSequence_ = bufferAlloc(32);
         }
-        /*printf("hashSequence_: \n");
-        for(size_t i = 0; i < hashSequence_.size(); i++) {
-            printf("%02x ", hashSequence_[i]);
-        }
-        printf("\n");*/
+//        printf("hashSequence_: \n");
+//        for(size_t i = 0; i < hashSequence_.size(); i++) {
+//            printf("%02x ", hashSequence_[i]);
+//        }
+//        printf("\n");
 
         if (
             (nHashType & 0x1f) != SigOperations::SIGHASH_SINGLE &&
@@ -2259,11 +2306,11 @@ std::vector<unsigned char> TxBuilder::sighashPreimage (unsigned long nHashType, 
         } else {
             hashOutputs_ = bufferAlloc(32);
         }
-        /*printf("hashOutputs_: \n");
-        for(size_t i = 0; i < hashOutputs_.size(); i++) {
-            printf("%02x ", hashOutputs_[i]);
-        }
-        printf("\n");*/
+//        printf("hashOutputs_: \n");
+//        for(size_t i = 0; i < hashOutputs_.size(); i++) {
+//            printf("%02x ", hashOutputs_[i]);
+//        }
+//        printf("\n");
 
         printf("SUBSCRIPT\n");
         std::vector<Chunks> chunks = getChunks(subScript);
@@ -2310,11 +2357,251 @@ std::vector<unsigned char> TxBuilder::sighashPreimage (unsigned long nHashType, 
         write(bw, hashOutputs_);
         writeUInt32LE(bw, tx.nLockTime);
         writeUInt32LE(bw, nHashType >> 0);
-        /*(printf("bw: \n");
+        /*printf("bw: \n");
         for(size_t i = 0; i < bw.size(); i++) {
             printf("%02x ", bw[i]);
         }
         printf("\n");*/
+
+        return bw;
+    }
+
+    CMutableTransaction txcopy = tx;
+
+    //subScript = new Script().fromBuffer(subScript.toBuffer())
+    //subScript.removeCodeseparators()
+
+    for (size_t i = 0; i < txcopy.vin.size(); i++) {
+        printf("nSequence: %d\n", txcopy.vin[i].nSequence);
+        printf("txHashBuf: %s\n", txcopy.vin[i].prevout.hash.GetHex().c_str());
+        printf("txOutNum: %d\n", txcopy.vin[i].prevout.n);
+        //std::string str(txcopy.vin[i].scriptSig.begin(), txcopy.vin[i].scriptSig.end());
+        std::vector<unsigned char> vec;
+        CScript script(vec.begin(), vec.end());
+        txcopy.vin[i].scriptSig = script;
+        std::string str(txcopy.vin[i].scriptSig.begin(), txcopy.vin[i].scriptSig.end());
+        printf("script: %s\n", str.c_str());
+    }
+
+    txcopy.vin[nIn].scriptSig = subScript;
+
+    if ((nHashType & 31) == SigOperations::SIGHASH_NONE) {
+        txcopy.vout.clear();
+
+        for (size_t i = 0; i < txcopy.vin.size(); i++) {
+            if (i != nIn) {
+                txcopy.vin[i].nSequence = 0;
+            }
+        }
+    } else if ((nHashType & 31) == SigOperations::SIGHASH_SINGLE) {
+        // The SIGHASH_SINGLE bug.
+        // https://bitcointalk.org/index.php?topic=260595.0
+        if (nIn > txcopy.vout.size() - 1) {
+            std::string ret("0000000000000000000000000000000000000000000000000000000000000001");
+            return hexToUchBuffer(ret);
+        }
+
+        CTxOut txOut;
+        txcopy.vout.push_back(txOut);
+
+        for (size_t i = 0; i < txcopy.vout.size(); i++) {
+            if (i < nIn) {
+                std::vector<unsigned char> str;
+                CScript script(str.begin(), str.end());
+                txcopy.vout[i].nValue = bufferToNumber(stringToBuffer("ffffffffffffffff"));
+                txcopy.vout[i].scriptPubKey = script;
+            }
+        }
+
+        for (size_t i = 0; i < txcopy.vin.size(); i++) {
+            if (i != nIn) {
+                txcopy.vin[i].nSequence = 0;
+            }
+        }
+    }
+    // else, SIGHASH_ALL
+
+    if (nHashType & SigOperations::SIGHASH_ANYONECANPAY) {
+        txcopy.vin.clear();
+        txcopy.vin.push_back(txcopy.vin[nIn]);
+    }
+
+    std::vector<unsigned char> bw;
+
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+    txcopy.Serialize(ssTx);
+    std::string hex_str = HexStr(ssTx);
+    std::vector<unsigned char> txcopyOutBuffer = hexToUchBuffer(hex_str);
+    write(bw, txcopyOutBuffer);
+    writeInt32LE(bw, nHashType);
+
+    return bw;
+}
+
+std::vector<unsigned char> TxBuilder::_sighashPreimage (unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags = 0) {
+    printf("NHASHTYPE = %lu\n", nHashType);
+    printf("NIN = %zu\n", nIn);
+    printf("VALUEBN = %lld\n", valueBn);
+    printf("FLAGS = %lu\n", flags);
+    if (
+        nHashType & SigOperations::SIGHASH_FORKID && flags & SCRIPT_ENABLE_SIGHASH_FORKID
+    ) {
+        //let hashPrevouts = Buffer.alloc(32, 0);
+        //let hashSequence = Buffer.alloc(32, 0);
+        //let hashOutputs = Buffer.alloc(32, 0);
+        std::vector<unsigned char> hashPrevouts_;
+        std::vector<unsigned char> hashSequence_;
+        std::vector<unsigned char> hashOutputs_;
+
+        if (!(nHashType & SigOperations::SIGHASH_ANYONECANPAY)) {
+            hashPrevouts_ = hashPrevouts();
+        } else {
+            hashPrevouts_ = bufferAlloc(32);
+        }
+        printf("hashPrevouts_: \n");
+        for(size_t i = 0; i < hashPrevouts_.size(); i++) {
+            printf("%02x ", hashPrevouts_[i]);
+        }
+        printf("\n");
+
+        if (
+            !(nHashType & SigOperations::SIGHASH_ANYONECANPAY) &&
+            (nHashType & 0x1f) != SigOperations::SIGHASH_SINGLE &&
+            (nHashType & 0x1f) != SigOperations::SIGHASH_NONE
+        ) {
+            hashSequence_ = hashSequence ();
+        } else {
+            hashSequence_ = bufferAlloc(32);
+        }
+        printf("hashSequence_: \n");
+        for(size_t i = 0; i < hashSequence_.size(); i++) {
+            printf("%02x ", hashSequence_[i]);
+        }
+        printf("\n");
+
+        if (
+            (nHashType & 0x1f) != SigOperations::SIGHASH_SINGLE &&
+            (nHashType & 0x1f) != SigOperations::SIGHASH_NONE
+        ) {
+            hashOutputs_ = hashOutputs();
+        } else if (
+            (nHashType & 0x1f) == SigOperations::SIGHASH_SINGLE &&
+            nIn < tx.vout.size()
+        ) {
+            CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+            tx.vout[nIn].Serialize(ssTx);
+            std::string hex_str = HexStr(ssTx);
+            std::vector<unsigned char> txOutBuffer = hexToUchBuffer(hex_str);
+            hashOutputs_ = HashSha256Sha256(txOutBuffer);
+        } else {
+            hashOutputs_ = bufferAlloc(32);
+        }
+        printf("hashOutputs_: \n");
+        for(size_t i = 0; i < hashOutputs_.size(); i++) {
+            printf("%02x ", hashOutputs_[i]);
+        }
+        printf("\n");
+
+        printf("SUBSCRIPT\n");
+        std::vector<Chunks> chunks = getChunks(subScript);
+
+        /*if(chunks[0].opCodeNum == OP_DUP && chunks[1].opCodeNum == OP_HASH160 && chunks[3].opCodeNum == OP_EQUALVERIFY && chunks[4].opCodeNum == OP_CHECKSIG) {
+            printf("SUBSCRIPT MATCH\n");
+            std::string delimiter;
+            #if MAINNET
+                delimiter = std::string("00");
+            #else
+                delimiter = std::string("6f");
+            #endif
+
+
+            std::string prefix = chunks[2].buf.substr(0, 2);
+            printf("PREFIX: %s\n", prefix.c_str());
+            std::string domain;
+            if(prefix == delimiter)
+                domain = chunks[2].buf.substr(2, chunks[2].buf.size());
+            else
+                domain = chunks[2].buf;
+            printf("DOMAIN: %s\n", domain.c_str());
+
+            setChunk(subScript, 2, hexToUchBuffer(domain));
+
+            getChunks(subScript);
+        }*/
+
+        std::vector<unsigned char> bw;
+        writeUInt32LE(bw, tx.nVersion);
+        printf("bw:nVersion \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        write(bw, hashPrevouts_);
+        printf("bw:hashPrevouts \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        write(bw, hashSequence_);
+        printf("bw:hashSequence \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        write(bw, getTxHashBuf(tx.vin[nIn].prevout.hash));
+        printf("bw:getTxHashBu \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        writeUInt32LE(bw, tx.vin[nIn].prevout.n);
+        printf("bw:prevout \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        writeVarIntNum(bw, subScript.size());
+        printf("bw:subScript.size \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        write(bw, scriptToBuffer(subScript));
+        printf("bw:subScript \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        writeUInt64LEBn(bw, valueBn);
+        printf("bw:valueBn \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        writeUInt32LE(bw, tx.vin[nIn].nSequence);
+        printf("bw:nSequence \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        write(bw, hashOutputs_);
+        printf("bw:hashOutputs \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        writeUInt32LE(bw, tx.nLockTime);
+        printf("bw:nLockTime \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
+        writeUInt32LE(bw, nHashType >> 0);
+        printf("bw:nHashType \n");
+        for(size_t i = 0; i < bw.size(); i++) {
+            printf("%02x", bw[i]);
+        }
+        printf("\n");
 
         return bw;
     }
@@ -2405,6 +2692,22 @@ std::vector<unsigned char> TxBuilder::sighash (unsigned long nHashType, size_t n
 
     //return bufReadReverse(HashSha256Sha256(buf));
     return HashSha256Sha256(buf);
+}
+
+std::vector<unsigned char> TxBuilder::_sighash (unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags = 0) {
+    std::vector<unsigned char> buf = _sighashPreimage(nHashType, nIn, subScript, valueBn, flags);
+    printf("PREIMAGE: \n");
+    for(size_t i = 0; i < buf.size(); i++) {
+        printf("%02x", buf[i]);
+    }
+    printf("\n");
+    std::vector<unsigned char> buf2 = hexToUchBuffer("0000000000000000000000000000000000000000000000000000000000000001");
+    if(compareUchBuffers(buf, buf2) == 0) {
+        return buf;
+    }
+
+    return bufReadReverse(HashSha256Sha256(buf));
+    //return HashSha256Sha256(buf);
 }
 
 std::vector<unsigned char> TxBuilder::sign_authorizer (KeyPair keyPair, unsigned long nHashType, \
@@ -10843,6 +11146,1068 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
     sendSfpAuthoriseAction(hex.c_str(), authHexStr, authHexSize, path);
 }
 
+typedef struct Parent {
+  std::string script;
+  int64_t satoshis;
+}Parent;
+
+typedef struct Lock {
+  std::string address;
+}Lock;
+
+typedef struct UtxoRun {
+  int vout;
+  std::string txid;
+  int64_t satoshis;
+  std::string script;
+}UtxoRun;
+
+CScript buildPublicKeyHashOut (std::string address) {
+    std::vector<unsigned char> vchRet;
+    int max_ret_len = 100;
+    bool res = DecodeBase58Check(address, vchRet, max_ret_len);
+
+    std::vector<unsigned char> vchRet2;
+    for(size_t i = 1; i < vchRet.size(); i++) {
+        vchRet2.push_back(vchRet[i]);
+    }
+
+    CScript script;
+    writeOpCode(script, OP_DUP);
+    writeOpCode(script, OP_HASH160);
+    //writeBuffer(script, vchRet);
+    writeBuffer(script, vchRet2);
+    writeOpCode(script, OP_EQUALVERIFY);
+    writeOpCode(script, OP_CHECKSIG);
+
+    return script;
+}
+
+class LocalPurse {
+    size_t splits;
+    double feePerKb;
+
+    CKey bsvPrivateKey;
+    CPubKey bsvPublicKey;
+    CTxDestination bsvAddress;
+    CScript bsvScript;
+
+    std::string privkey;
+    std::string address;
+    std::string script;
+
+    bool jigFilter;
+    bool cacheUtxos;
+
+    std::vector<UtxoRun> utxos;
+    std::map<std::string, std::string> pendingSpends;
+  public:
+
+    #if MAINNET
+    const char *pubKeyHash = "00";
+    #else
+    const char *pubKeyHash = "6f";
+    #endif
+
+    LocalPurse(std::string wif) {
+        jigFilter = true;
+        //cacheUtxos = true;
+        cacheUtxos = false;
+
+        splits = 1;
+        feePerKb = (double) FEEPERKB;
+
+        #if MAINNET
+        SelectParams(CBaseChainParams::MAIN);
+        #else
+        SelectParams(CBaseChainParams::TESTNET);
+        #endif
+        bsvPrivateKey = DecodeSecret(wif);
+        ECC_Start();
+        bsvPublicKey = bsvPrivateKey.GetPubKey();
+        ECC_Stop();
+        CTxDestination bsvAddress = CTxDestination(PKHash(bsvPublicKey));
+        address = EncodeDestination(bsvAddress);
+
+        // if (address.isPayToScriptHash()) {
+        //   bsvScript = Script.buildScriptHashOut(address);
+        // } else if (address.isPayToPublicKeyHash()) {
+        //   bsvScript = Script.buildPublicKeyHashOut(address)
+        bsvScript = buildPublicKeyHashOut(address);
+        // }
+
+        privkey = wif;
+        script = stringToHex(std::string(bsvScript.begin(), bsvScript.end()));
+
+        printf("LocalPurse script = %s\n", script.c_str());
+    }
+
+    bool isJig (std::string rawtx, int vout);
+    std::string pay(std::string rawtx, std::vector<Parent> parents, std::vector<UtxoRun> utxos_, std::vector<std::string> rawHexVec);
+    std::string payWithUtxos(TxBuilder *bsvTxBuilder, std::vector<Parent> parents, std::vector<UtxoRun> utxos, std::vector<std::string> rawHexVec);
+};
+
+class LocalOwner {
+
+    CKey bsvPrivateKey;
+    CPubKey bsvPublicKey;
+    CTxDestination bsvAddress;
+    CScript bsvScript;
+
+    std::string privkey;
+    std::string address;
+    std::string script;
+
+  public:
+
+        #if MAINNET
+            const char *pubKeyHash = "00";
+        #else
+            const char *pubKeyHash = "6f";
+        #endif
+
+        LocalOwner(std::string wif) {
+      #if MAINNET
+        SelectParams(CBaseChainParams::MAIN);
+      #else
+        SelectParams(CBaseChainParams::TESTNET);
+      #endif
+      bsvPrivateKey = DecodeSecret(wif);
+      ECC_Start();
+      bsvPublicKey = bsvPrivateKey.GetPubKey();
+      ECC_Stop();
+      CTxDestination bsvAddress = CTxDestination(PKHash(bsvPublicKey));
+      address = EncodeDestination(bsvAddress);
+
+      // if (address.isPayToScriptHash()) {
+      //   bsvScript = Script.buildScriptHashOut(address);
+      // } else if (address.isPayToPublicKeyHash()) {
+      //   bsvScript = Script.buildPublicKeyHashOut(address)
+      bsvScript = buildPublicKeyHashOut(address);
+      // }
+
+      privkey = wif;
+      script = stringToHex(std::string(bsvScript.begin(), bsvScript.end()));
+
+      printf("LocalOwner script = %s\n", script.c_str());
+
+        }
+
+    std::string sign(std::string rawtx, std::vector<Parent> parents, std::vector<Lock> locks);
+};
+
+std::string LocalOwner::sign(std::string rawtx, std::vector<Parent> parents, std::vector<Lock> locks) {
+
+  CMutableTransaction tx;
+  bool res = DecodeHexTx(tx, rawtx, true);
+
+  if(res) printf("Decode success!\n");
+
+  TxBuilder *bsvTxBuilder = new TxBuilder();
+  bsvTxBuilder->tx = tx;
+
+  for(size_t n = 0; n < parents.size(); n++) {
+    CTxOut txOut;
+    txOut.nValue = parents[n].satoshis;
+    std::vector<unsigned char> parentScript = hexToUchBuffer(parents[n].script);
+    CScript outputScript(parentScript.begin(), parentScript.end());
+    txOut.scriptPubKey = outputScript;
+    bsvTxBuilder->txInputsOutput.push_back(txOut);
+  }
+
+  for (size_t i = 0; i < bsvTxBuilder->tx.vin.size(); i++) {
+    // Sign P2PKH inputs
+    Lock lock;
+    if(i < locks.size()) {
+      lock = locks[i];
+    }
+
+    bool isPayToPublicKeyHashOut = false;
+    if(i < bsvTxBuilder->txInputsOutput.size()) {
+      std::string outputAddress = TxBuilder::fromTxOutScript (bsvTxBuilder->txInputsOutput[i].scriptPubKey);
+      printf("outputAddress: %s\n", outputAddress.c_str());
+      isPayToPublicKeyHashOut = TxBuilder::isPubKeyHashOut(bsvTxBuilder->txInputsOutput[i].scriptPubKey) && outputAddress == address;
+    }
+
+    //if (isCommonLock || isPayToPublicKeyHashOut) {
+    if (i < locks.size() && isPayToPublicKeyHashOut) {
+      std::vector<unsigned char> parentScriptBuffer = hexToUchBuffer(parents[i].script);
+      CScript parentScript(parentScriptBuffer.begin(), parentScriptBuffer.end());
+      std::string parentScriptAddress = TxBuilder::fromTxOutScript (parentScript);
+      if (parentScriptAddress != address) continue;
+
+      KeyPair keyPair;
+      keyPair.PrivKey = bsvPrivateKey;
+      keyPair.pubKey = bsvPublicKey;
+
+      //bsvTxBuilder->sign_authorizer (keyPair, 0, i, prevout.scriptPubKey, prevout.nValue);
+      std::vector<unsigned char> sig = bsvTxBuilder->_signature(keyPair, 0, i, parentScript, parents[i].satoshis, TxBuilder::SCRIPT_ENABLE_SIGHASH_FORKID);
+      printf("sig:\n");
+        for(size_t j = 0; j < sig.size(); j++) {
+            printf("%02x", sig[j]);
+        }
+        printf("\n");
+
+      CDataStream ssTx_(SER_NETWORK, PROTOCOL_VERSION | 0);
+      bsvPublicKey.Serialize(ssTx_);
+      std::string bsvPublicKeyStr = HexStr(ssTx_);
+      printf("bsvPublicKeyStr: %s\n", bsvPublicKeyStr.c_str());
+
+      std::vector<unsigned char> bsvPublicKeyBuffer = hexToUchBuffer(bsvPublicKeyStr);
+
+      std::vector<unsigned char> scriptBuffer;
+
+      std::vector<unsigned char> prefix = hexToUchBuffer(std::string("47"));
+      for(size_t j = 0; j < prefix.size(); j++) {
+        scriptBuffer.push_back(prefix[j]);
+      }
+
+      for(size_t j = 0; j < sig.size(); j++) {
+        scriptBuffer.push_back(sig[j]);
+      }
+
+      for(size_t j = 0; j < bsvPublicKeyBuffer.size(); j++) {
+        scriptBuffer.push_back(bsvPublicKeyBuffer[j]);
+      }
+
+      CScript inputScript(scriptBuffer.begin(), scriptBuffer.end());
+      // std::string str(inputScript.begin(), inputScript.end());
+      // printf("str = %s\n", stringToHex(str).c_str());
+
+      bsvTxBuilder->tx.vin[i].scriptSig = inputScript;
+        
+        CDataStream ssTx__(SER_NETWORK, PROTOCOL_VERSION | 0);
+        bsvTxBuilder->tx.Serialize(ssTx__);
+        std::string signedTx1 = HexStr(ssTx__);
+        printf("signedTx1: %s\n", signedTx1.c_str());
+        printf("Debugging\n");
+
+      // Sign multi-sig inputs
+    }
+
+  }
+
+  CDataStream ssTx_(SER_NETWORK, PROTOCOL_VERSION | 0);
+  bsvTxBuilder->tx.Serialize(ssTx_);
+  std::string signedTx = HexStr(ssTx_);
+  printf("signedTx: %s\n", signedTx.c_str());
+
+  return signedTx;
+}
+
+
+static int64_t getInputAmount(std::vector<CTxOut> txInputsOutput) {
+  int64_t inputAmount = 0;
+  for(size_t i = 0; i < txInputsOutput.size(); i++) {
+    inputAmount += txInputsOutput[i].nValue;
+  }
+  return inputAmount;
+}
+
+static int64_t getOutputAmount(CMutableTransaction tx) {
+  int64_t outputAmount = 0;
+  for(size_t i = 0; i < tx.vout.size(); i++) {
+    outputAmount += tx.vout[i].nValue;
+  }
+  return outputAmount;
+}
+
+void TxBuilder::change(std::string address) {
+  std::vector<unsigned char> buf;
+  int max_ret_len = 100;
+  bool res = DecodeBase58Check(address, buf, max_ret_len);
+  std::vector<unsigned char> hashBuf = sliceBufferUch(buf, 1, buf.size());
+  for(size_t i = 0; i < hashBuf.size(); i++) {
+    printf("%02x", hashBuf[i]);
+  }
+  printf("\n");
+
+  std::vector<unsigned char> vec;
+  CScript script(vec.begin(), vec.end());
+  writeOpCode(script, OP_DUP);
+  writeOpCode(script, OP_HASH160);
+  writeBuffer(script, hashBuf);
+  writeOpCode(script, OP_EQUALVERIFY);
+  writeOpCode(script, OP_CHECKSIG);
+
+  getChunks(script);
+
+  changeScript = script;
+
+  int64_t available = getInputAmount(txInputsOutput) - getOutputAmount(tx);
+
+  int64_t changeAmount = available - feeAmountBn;
+
+  if (changeAmount >= DUST_AMOUNT) {
+    CTxOut txOut;
+    txOut.scriptPubKey = changeScript;
+    std::string str(txOut.scriptPubKey.begin(), txOut.scriptPubKey.end());
+    printf("txOut.scriptPubKey = %s\n", stringToHex(str).c_str());
+    txOut.nValue = changeAmount;
+    printf("txOut.nValue = %lld\n", txOut.nValue);
+    tx.vout.push_back(txOut);
+  }
+}
+
+static size_t getMetadataVRun(CMutableTransaction tx) {
+  std::vector<Chunks> chunks;
+  CMutableTransaction base;
+
+  for (size_t i = 0; i < tx.vout.size(); i++) {
+    chunks = getChunks(tx.vout[i].scriptPubKey);
+
+    // printf("chunks.length: %lu\n", chunks.size());
+    // printf("chunks[0].opcodenum: %d\n", chunks[0].opCodeNum);
+    // printf("chunks[1].opcodenum: %d\n", chunks[1].opCodeNum);
+    // printf("chunks[2].buf.toString(): %s\n", hexToString(chunks[2].buf).c_str());
+
+    bool badProtocol =
+      chunks.size() != 6 ||
+      chunks[0].opCodeNum != 0 || // OP_FALSE
+      chunks[1].opCodeNum != 106 || // OP_RETURN
+      hexToString(chunks[2].buf) != std::string("run");
+
+    if (!badProtocol) {
+      break;
+    } else {
+      base.vout.push_back(tx.vout[i]);
+      chunks.clear();
+    }
+  }
+  return base.vout.size();
+}
+
+static int getMetadataOut(CMutableTransaction tx) {
+  std::vector<Chunks> chunks;
+
+  for (size_t i = 0; i < tx.vout.size(); i++) {
+    chunks = getChunks(tx.vout[i].scriptPubKey);
+
+    bool badProtocol =
+      chunks.size() != 6 ||
+      chunks[0].opCodeNum != 0 || // OP_FALSE
+      chunks[1].opCodeNum != 106 || // OP_RETURN
+      hexToString(chunks[2].buf) != std::string("run");
+
+    if (!badProtocol) {
+      break;
+    } else {
+      chunks.clear();
+    }
+  }
+  std::string json = hexToString(chunks[5].buf);
+
+  // printf("json = %s\n", json.c_str());
+
+  std::string delimiterOut("\"out\":[\"");
+  std::string delimiterComma("\", \"");
+  std::string delimiterDel(",\"del\":");
+  std::string delimiterCloseBracket("]");
+
+  std::string outStr = json.substr(json.find(delimiterOut) + 8, json.find(delimiterDel) - (json.find(delimiterOut) + 8 + 2));
+  // printf("outStr = %s\n", outStr.c_str());
+  int out = 0;
+  if(outStr.size() != 0) out++;
+  size_t pos = 0;
+  std::string token;
+  while ((pos = outStr.find(delimiterComma)) != std::string::npos) {
+      token = outStr.substr(0, pos);
+      outStr.erase(0, pos + delimiterComma.length());
+      out++;
+  }
+  return out;
+}
+
+static void fromUtxo(TxBuilder *bsvTxBuilder, UtxoRun utxo) {
+  CTxIn txIn;
+  txIn.prevout.hash = uint256S(utxo.txid);
+  txIn.prevout.n = (uint32_t) utxo.vout;
+  CScript emptyScript;
+  txIn.scriptSig = emptyScript;
+  bsvTxBuilder->tx.vin.push_back(txIn);
+  CTxOut txOut;
+  txOut.nValue = utxo.satoshis;
+  std::vector<unsigned char> utxoScript = hexToUchBuffer(utxo.script);
+  CScript outputScript(utxoScript.begin(), utxoScript.end());
+  txOut.scriptPubKey = outputScript;
+  bsvTxBuilder->txInputsOutput.push_back(txOut);
+}
+
+static void toAddressSatoshis(TxBuilder *bsvTxBuilder, std::string address, int64_t amount) {
+  if(amount < 0) {
+    printf("Amount is expected to be a positive integer\n");
+    return;
+  }
+
+  CTxOut txOut;
+  txOut.scriptPubKey = bsvTxBuilder->toTxOutScript(address);
+
+  std::string scriptPubKey(txOut.scriptPubKey.begin(), txOut.scriptPubKey.end());
+  printf("txOut.scriptPubKey %s\n", scriptPubKey.c_str());
+  txOut.nValue = amount;
+  bsvTxBuilder->tx.vout.push_back(txOut);
+}
+
+bool LocalPurse::isJig (std::string rawtx, int vout) {
+  CMutableTransaction tx;
+  bool res = DecodeHexTx(tx, rawtx, true);
+
+  if(res) printf("Decode success!\n");
+
+  size_t vrun = getMetadataVRun(tx);
+  int out = getMetadataOut(tx);
+
+  // printf("vout = %d\n", vout);
+  // printf("vrun = %lu\n", vrun);
+  // printf("out = %d\n", out);
+
+  return vout > vrun && vout < (out + vrun + 1);
+}
+
+std::vector<unsigned char> TxBuilder::_signature (KeyPair keyPair, unsigned long nHashType, \
+    size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags = SCRIPT_ENABLE_SIGHASH_FORKID) {
+    std::vector<unsigned char> vchSig;
+    if (nHashType == 0) {
+        nHashType = SigOperations::SIGHASH_ALL | SigOperations::SIGHASH_FORKID;
+    }
+    printf("NHASHTYPE: %lu\n", nHashType);
+    printf("nIn: %lu\n", nIn);
+    std::string str(subScript.begin(), subScript.end());
+    printf("subScript: %s\n", stringToHex(str).c_str());
+    printf("valueBn: %lld\n", valueBn);
+    std::vector<unsigned char> hashBuf = _sighash(nHashType, nIn, subScript, valueBn, flags);
+    printf("HASHBUF: \n");
+    for(int i = 0; i < hashBuf.size(); i++) {
+        printf("%02x ", hashBuf[i]);
+    }
+    printf("\n");
+
+    ECC_Start();
+
+    std::string hashBuf_str = uchbufToString(hashBuf);
+    uint256 hashBuf_ = uint256S(hashBuf_str);
+
+    bool res_message = keyPair.PrivKey.Sign(hashBuf_, vchSig);
+    //bool res_message = keyPair.PrivKey.Sign(hashBuf_, vchSig, false, 0);
+    printf("vchSig:\n");
+    for(int i = 0; i < vchSig.size(); i++) {
+        printf("%02x", vchSig[i]);
+    }
+    printf("\n");
+    //std::string chunk6 = uchbufToString(chunk6_buf);
+    //printf("chunk6: %s\n", chunk6.c_str());
+
+    if(res_message) printf("SIGN SUCCESS\n");
+    else printf("SIGN FAILED\n");
+
+    ECC_Stop();
+
+    //vchSig = getLittleEndian(keyPair.PrivKey, vchSig, hashBuf);
+
+    vchSig.push_back((unsigned char) nHashType);
+
+    return vchSig;
+}
+
+extern void authorizerRunGetScriptHash(char *scriptHashStr, int scriptHashSize) {
+    #if MAINNET
+    std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh"); //CHANGE LATER
+    #else
+    std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh");
+    #endif
+    
+    #if MAINNET
+    SelectParams(CBaseChainParams::MAIN);
+    #else
+    SelectParams(CBaseChainParams::TESTNET);
+    #endif
+    
+    CKey privkey = DecodeSecret(purseWif);
+    ECC_Start();
+    CPubKey pubkey = privkey.GetPubKey();
+    ECC_Stop();
+    CTxDestination bsvAddress = CTxDestination(PKHash(pubkey));
+    std::string address = EncodeDestination(bsvAddress);
+
+    // if (address.isPayToScriptHash()) {
+    //   bsvScript = Script.buildScriptHashOut(address);
+    // } else if (address.isPayToPublicKeyHash()) {
+    //   bsvScript = Script.buildPublicKeyHashOut(address)
+    CScript bsvScript = buildPublicKeyHashOut(address);
+    // }
+
+    std::string script = stringToHex(std::string(bsvScript.begin(), bsvScript.end()));
+    
+    std::vector<unsigned char> buffer = hexToUchBuffer(script);
+
+    unsigned char buf[CSHA256::OUTPUT_SIZE];
+
+    std::vector<unsigned char> bufferSha256;
+
+    CSHA256 di_;
+
+    di_.Write(buffer.data(), buffer.size());
+    di_.Finalize(buf);
+
+    printf("buf: \n");
+    for(size_t i = 0; i < CSHA256::OUTPUT_SIZE; i++) {
+        printf("%02x", buf[i]);
+        bufferSha256.push_back(buf[i]);
+    }
+    printf("\n");
+
+    std::string scripthash = uchbufToString(toLittleEndianUch(bufferSha256));
+
+    printf("scripthash: %s\n", scripthash.c_str());
+    
+    snprintf(scriptHashStr, scriptHashSize, "%s", scripthash.c_str());
+}
+
+extern void authorizerRunGetScript(char *scriptStr, int scriptSize) {
+    #if MAINNET
+    std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh"); //CHANGE LATER
+    #else
+    std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh");
+    #endif
+    
+    #if MAINNET
+    SelectParams(CBaseChainParams::MAIN);
+    #else
+    SelectParams(CBaseChainParams::TESTNET);
+    #endif
+    
+    CKey privkey = DecodeSecret(purseWif);
+    ECC_Start();
+    CPubKey pubkey = privkey.GetPubKey();
+    ECC_Stop();
+    CTxDestination bsvAddress = CTxDestination(PKHash(pubkey));
+    std::string address = EncodeDestination(bsvAddress);
+
+    // if (address.isPayToScriptHash()) {
+    //   bsvScript = Script.buildScriptHashOut(address);
+    // } else if (address.isPayToPublicKeyHash()) {
+    //   bsvScript = Script.buildPublicKeyHashOut(address)
+    CScript bsvScript = buildPublicKeyHashOut(address);
+    // }
+
+    std::string script = stringToHex(std::string(bsvScript.begin(), bsvScript.end()));
+    
+    snprintf(scriptStr, scriptSize, "%s", script.c_str());
+}
+
+std::string LocalPurse::payWithUtxos(TxBuilder *bsvTxBuilder, std::vector<Parent> parents, std::vector<UtxoRun> utxos, std::vector<std::string> rawHexVec) {
+  std::string paidTx;
+  double DUST = (double) DUST_AMOUNT;
+
+  bsvTxBuilder->setFeePerKbNum(feePerKb);
+  double _feeFactor = (double) feePerKb / 1000;
+
+  //std::vector<CTxOut> txInputsOutput;
+
+  for(size_t n = 0; n < parents.size(); n++) {
+    CTxOut txOut;
+    txOut.nValue = parents[n].satoshis;
+    std::vector<unsigned char> parentScript = hexToUchBuffer(parents[n].script);
+    CScript outputScript(parentScript.begin(), parentScript.end());
+    txOut.scriptPubKey = outputScript;
+    bsvTxBuilder->txInputsOutput.push_back(txOut);
+  }
+
+  std::vector<size_t> indices;
+  for(size_t n = 0; n < bsvTxBuilder->tx.vin.size(); n ++) {
+    CTxIn input = bsvTxBuilder->tx.vin[n];
+    if (!input.scriptSig.size()) {
+      indices.push_back(n);
+      std::vector<unsigned char> buffer = bufferAlloc(DEFAULT_UNLOCK_SCRIPT_SIZE);
+      CScript inputScript(buffer.begin(), buffer.end());
+      input.scriptSig = inputScript;
+    }
+  }
+
+  int minChangeAmount = bsvTxBuilder->tx.vout.size() == 0 ? DUST : 0;
+
+  int64_t inputAmountBefore = getInputAmount(bsvTxBuilder->txInputsOutput);
+  printf("inputAmountBefore = %lld\n", inputAmountBefore);
+  int64_t outputAmountBefore = getOutputAmount(bsvTxBuilder->tx);
+  printf("outputAmountBefore = %lld\n", outputAmountBefore);
+
+  CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+  bsvTxBuilder->tx.Serialize(ssTx);
+  std::string txBuffer = HexStr(ssTx);
+  printf("txBuffer: %s\n", txBuffer.c_str());
+
+  printf("txBuffer.size = %lu\n", (txBuffer.size() / 2));
+
+  if (inputAmountBefore - outputAmountBefore - minChangeAmount >= (txBuffer.size() / 2) * _feeFactor) {
+    int64_t fee = (int64_t) ceil((P2PKH_OUTPUT_SIZE + (txBuffer.size() / 2)) * _feeFactor);
+    if (inputAmountBefore - outputAmountBefore > DUST + fee) {
+      bsvTxBuilder->setFeeAmountBn(fee); // Fee estimation is not right inside change
+      bsvTxBuilder->change(address);
+    }
+    for(size_t n = 0; n < indices.size(); n++) {
+      CScript inputScript;
+      bsvTxBuilder->tx.vin[n].scriptSig = inputScript;
+    }
+    CDataStream ssTx_(SER_NETWORK, PROTOCOL_VERSION | 0);
+    bsvTxBuilder->tx.Serialize(ssTx_);
+    paidTx = HexStr(ssTx_);
+    printf("paidTx: %s\n", paidTx.c_str());
+    return paidTx;
+  }
+
+  // add random shuffle for utxos
+
+  // We check UTXOs after we check if we need to even pay anything
+  if (!utxos.size()) {
+    printf("Not enough funds\n\nHint: Have you funded the purse address %s\n", address.c_str());
+    CDataStream ssTx_(SER_NETWORK, PROTOCOL_VERSION | 0);
+    bsvTxBuilder->tx.Serialize(ssTx_);
+    paidTx = HexStr(ssTx_);
+    printf("paidTx: %s\n", paidTx.c_str());
+    return paidTx;
+  }
+
+  // Track how many inputs existed before, so we know which ones to sign
+  size_t numInputsBefore = bsvTxBuilder->tx.vin.size();
+
+  // Calculate fee required
+  double feeRequired = (txBuffer.size() / 2) * _feeFactor;
+
+  // The satoshisRequired is an amount that is updated for each UTXO added that
+  // estimates an upper bound on the amount of satoshis we have left to add. As soon
+  // as this goes to zero or negative, we are done.
+  double satoshisRequired = feeRequired + outputAmountBefore - inputAmountBefore;
+
+  // The number of UTXOs we've added as inputs. This reduces our splits.
+  size_t numUtxosSpent = 0;
+
+  // The number of outputs we will create after adding all UTXOs.
+  // We always need at least one change output
+  size_t numOutputsToCreate = 1;
+  feeRequired += P2PKH_OUTPUT_SIZE * _feeFactor;
+  satoshisRequired += P2PKH_OUTPUT_SIZE * _feeFactor;
+  satoshisRequired += DUST; // There is a minimum dust required in each output
+
+  // Walk through each UTXO and stop when we have enough
+  for(size_t n = 0; n < utxos.size(); n++) {
+    //const prevTx = await blockchain.fetch(utxo.txid);
+    //std::string prevTx = blockchainFetch(utxos[n].txid);
+    if(rawHexVec.size() != utxos.size()) {
+      printf("rawHexVec size not equal to utxos size\n");
+    }
+    std::string prevTx = rawHexVec[n];
+    if (jigFilter && isJig(prevTx, utxos[n].vout)) continue;
+
+    fromUtxo(bsvTxBuilder, utxos[n]);
+
+    // CDataStream ssTx_(SER_NETWORK, PROTOCOL_VERSION | 0);
+    // bsvTxBuilder->tx.Serialize(ssTx_);
+    // std::string txBuffer_ = HexStr(ssTx_);
+    // printf("txBuffer_: %s\n", txBuffer_.c_str());
+
+    satoshisRequired -= utxos[n].satoshis;
+    numUtxosSpent++;
+    feeRequired += P2PKH_INPUT_SIZE * _feeFactor;
+    satoshisRequired += P2PKH_INPUT_SIZE * _feeFactor;
+
+    size_t numOutputsToAdd = splits - utxos.size() + numUtxosSpent - numOutputsToCreate;
+    for (size_t i = 0; i < numOutputsToAdd; i++) {
+      feeRequired += P2PKH_OUTPUT_SIZE * _feeFactor;
+      satoshisRequired += P2PKH_OUTPUT_SIZE * _feeFactor;
+      satoshisRequired += DUST; // There is a minimum dust required in each output
+      numOutputsToCreate++;
+    }
+
+    // printf("feeRequired %.2f\n", feeRequired);
+    // printf("satoshisRequired %.2f\n", satoshisRequired);
+
+    // As soon as we have enough satoshis, we're done. We can add the real outputs.
+    if (satoshisRequired < 0) break;
+  }
+
+  feeRequired = ceil(feeRequired);
+  satoshisRequired = ceil(satoshisRequired);
+
+  // Check that we didn't run out of UTXOs
+  if (satoshisRequired > 0) {
+    printf("Not enough funds\n\nRequired %.2f more satoshis\n", satoshisRequired);
+    CDataStream ssTx_(SER_NETWORK, PROTOCOL_VERSION | 0);
+    bsvTxBuilder->tx.Serialize(ssTx_);
+    paidTx = HexStr(ssTx_);
+    printf("paidTx: %s\n", paidTx.c_str());
+    return paidTx;
+  }
+
+  // Calculate how much satoshis we have to distribute among out change and split outputs
+  // We subtract DUST for each output, because that dust was added as a minimum above, and
+  // isn't the real amount that goes into each output.
+  double satoshisLeftover = -satoshisRequired + numOutputsToCreate * DUST;
+  double satoshisPerOutput = max(DUST, floor(satoshisLeftover / numOutputsToCreate));
+
+  printf("satoshisLeftover %.2f\n", satoshisLeftover);
+  printf("satoshisPerOutput %.2f\n", satoshisPerOutput);
+  for (size_t i = 0; i < numOutputsToCreate; i++) {
+    if (i == (numOutputsToCreate - 1)) {
+      bsvTxBuilder->setFeeAmountBn(feeRequired); // Fee estimation is not right inside change
+      bsvTxBuilder->change(address);
+    } else {
+      toAddressSatoshis(bsvTxBuilder, address, satoshisPerOutput);
+    }
+  }
+
+  // Sign the new inputs
+  for (size_t i = numInputsBefore; i < bsvTxBuilder->tx.vin.size(); i++) {
+    CTxOut prevout = bsvTxBuilder->txInputsOutput[i];
+
+    // printf("txOut.satoshis: %lld\n", txOut.nValue);
+    // std::string str(txOut.scriptPubKey.begin(), txOut.scriptPubKey.end());
+    // printf("txOut.script: %s\n", stringToHex(str).c_str());
+    // await _signature(tx, i, prevout.script, prevout.satoshis, privateKey)
+    KeyPair keyPair;
+    keyPair.PrivKey = bsvPrivateKey;
+    keyPair.pubKey = bsvPublicKey;
+
+    //bsvTxBuilder->sign_authorizer (keyPair, 0, i, prevout.scriptPubKey, prevout.nValue);
+    std::vector<unsigned char> sig = bsvTxBuilder->_signature(keyPair, 0, i, prevout.scriptPubKey, prevout.nValue);
+    printf("sig:\n");
+      for(size_t j = 0; j < sig.size(); j++) {
+          printf("%02x", sig[j]);
+      }
+      printf("\n");
+
+    CDataStream ssTx_(SER_NETWORK, PROTOCOL_VERSION | 0);
+    bsvPublicKey.Serialize(ssTx_);
+    std::string bsvPublicKeyStr = HexStr(ssTx_);
+    printf("bsvPublicKeyStr: %s\n", bsvPublicKeyStr.c_str());
+
+    std::vector<unsigned char> bsvPublicKeyBuffer = hexToUchBuffer(bsvPublicKeyStr);
+
+    std::vector<unsigned char> scriptBuffer;
+
+    std::vector<unsigned char> prefix = hexToUchBuffer(std::string("47"));
+    for(size_t j = 0; j < prefix.size(); j++) {
+      scriptBuffer.push_back(prefix[j]);
+    }
+
+    for(size_t j = 0; j < sig.size(); j++) {
+      scriptBuffer.push_back(sig[j]);
+    }
+
+    for(size_t j = 0; j < bsvPublicKeyBuffer.size(); j++) {
+      scriptBuffer.push_back(bsvPublicKeyBuffer[j]);
+    }
+
+    CScript inputScript(scriptBuffer.begin(), scriptBuffer.end());
+    // std::string str(inputScript.begin(), inputScript.end());
+    // printf("str = %s\n", stringToHex(str).c_str());
+
+    bsvTxBuilder->tx.vin[i].scriptSig = inputScript;
+
+  }
+
+  CDataStream ssTx__(SER_NETWORK, PROTOCOL_VERSION | 0);
+  bsvTxBuilder->tx.Serialize(ssTx__);
+  paidTx = HexStr(ssTx__);
+  printf("paidTx: %s\n", paidTx.c_str());
+
+  return paidTx;
+}
+
+std::string LocalPurse::pay(std::string rawtx, std::vector<Parent> parents, std::vector<UtxoRun> utxos_, std::vector<std::string> rawHexVec) {
+
+  if (!cacheUtxos || !utxos.size()) {
+//    UtxoRun utxo = blockchainUtxos(script);
+//    utxos.push_back(utxo);
+//    pendingSpends.clear();
+      utxos = utxos_;
+      pendingSpends.clear();
+  }
+
+  CMutableTransaction tx;
+  bool res = DecodeHexTx(tx, rawtx, true);
+
+  if(res) printf("Decode success!\n");
+
+  size_t numInputsBefore = tx.vin.size();
+
+  TxBuilder *bsvTxBuilder = new TxBuilder();
+  bsvTxBuilder->tx = tx;
+
+  std::string paidTx = payWithUtxos(bsvTxBuilder, parents, utxos, rawHexVec);
+
+  // if(cacheUtxos) {
+  //
+  // }
+
+  return paidTx;
+}
+
+extern char* authorizerRunPay(char* paidHex, int paidHexSize, char *parentTxids, int parentTxidsSize, const char* ownerWif_, const char* buildTx_, const char* scriptList_, const char* satoshisList_, const char* tx_posList_, const char* tx_hashList_, const char* valueList_, const char* scriptUtxoList_, const char* rawHexList_) {
+    
+    std::string ownerWif(ownerWif_);
+
+    #if MAINNET
+    SelectParams(CBaseChainParams::MAIN);
+    #else
+    SelectParams(CBaseChainParams::TESTNET);
+    #endif
+    CKey privKey = DecodeSecret(ownerWif);
+    ECC_Start();
+    CPubKey pubKey = privKey.GetPubKey();
+    ECC_Stop();
+    CTxDestination addrDest = CTxDestination(PKHash(pubKey));
+    std::string address = EncodeDestination(addrDest);
+    printf("address: %s\n", address.c_str());
+
+    std::string buildTx(buildTx_);
+
+    CMutableTransaction tx;
+    bool res = DecodeHexTx(tx, buildTx, true);
+
+    if(res) printf("Decode success!\n");
+    
+    std::string scriptList(scriptList_);
+    std::string satoshisList(satoshisList_);
+    std::string tx_posList(tx_posList_);
+    std::string tx_hashList(tx_hashList_);
+    std::string valueList(valueList_);
+    std::string scriptUtxoList(scriptUtxoList_);
+    std::string rawHexList(rawHexList_);
+    
+    std::string delimiterComma(",");
+    
+    std::vector<std::string> scriptVec;
+    std::vector<int64_t> satoshisVec;
+    std::vector<int64_t> tx_posVec;
+    std::vector<std::string> tx_hashVec;
+    std::vector<int64_t> valueVec;
+    std::vector<std::string> scriptUtxoVec;
+    std::vector<std::string> rawHexVec;
+    
+    size_t pos = 0;
+    std::string token;
+    while ((pos = scriptList.find(delimiterComma)) != std::string::npos) {
+        token = scriptList.substr(0, pos);
+        //printf("token = %s\n", token.c_str());
+        scriptVec.push_back(token);
+        scriptList.erase(0, pos + delimiterComma.length());
+    }
+    scriptVec.push_back(scriptList);
+    
+    pos = 0;
+    while ((pos = satoshisList.find(delimiterComma)) != std::string::npos) {
+        token = satoshisList.substr(0, pos);
+        //printf("token = %s\n", token.c_str());
+        satoshisVec.push_back(std::stoll(token));
+        satoshisList.erase(0, pos + delimiterComma.length());
+    }
+    satoshisVec.push_back(std::stoll(satoshisList));
+    
+    if(scriptVec.size() != satoshisVec.size()) {
+        printf("SatoshisList and ScriptList for parents not same size\n");
+    }
+    
+    std::vector<Parent> parents;
+    for(size_t i = 0; i < scriptVec.size(); i++) {
+        Parent parent;
+        parent.script = scriptVec[i];
+        parent.satoshis = satoshisVec[i];
+        parents.push_back(parent);
+    }
+    
+    pos = 0;
+    while ((pos = tx_posList.find(delimiterComma)) != std::string::npos) {
+        token = tx_posList.substr(0, pos);
+        //printf("token = %s\n", token.c_str());
+        tx_posVec.push_back(std::stoll(token));
+        tx_posList.erase(0, pos + delimiterComma.length());
+    }
+    tx_posVec.push_back(std::stoll(tx_posList));
+    
+    pos = 0;
+    while ((pos = tx_hashList.find(delimiterComma)) != std::string::npos) {
+        token = tx_hashList.substr(0, pos);
+        //printf("token = %s\n", token.c_str());
+        tx_hashVec.push_back(token);
+        tx_hashList.erase(0, pos + delimiterComma.length());
+    }
+    tx_hashVec.push_back(tx_hashList);
+    
+    pos = 0;
+    while ((pos = valueList.find(delimiterComma)) != std::string::npos) {
+        token = valueList.substr(0, pos);
+        //printf("token = %s\n", token.c_str());
+        valueVec.push_back(std::stoll(token));
+        valueList.erase(0, pos + delimiterComma.length());
+    }
+    valueVec.push_back(std::stoll(valueList));
+    
+    pos = 0;
+    while ((pos = scriptUtxoList.find(delimiterComma)) != std::string::npos) {
+        token = scriptUtxoList.substr(0, pos);
+        //printf("token = %s\n", token.c_str());
+        scriptUtxoVec.push_back(token);
+        scriptUtxoList.erase(0, pos + delimiterComma.length());
+    }
+    scriptUtxoVec.push_back(scriptUtxoList);
+    
+    if(tx_posVec.size() != tx_hashVec.size() || valueVec.size() != tx_hashVec.size() || scriptUtxoVec.size() != tx_hashVec.size())
+    {
+        printf("Lists for utxos not same size\n");
+    }
+    
+    std::vector<UtxoRun> utxos;
+    for(size_t i = 0; i < tx_posVec.size(); i++) {
+        UtxoRun utxo;
+        utxo.vout = tx_posVec[i];
+        utxo.txid = tx_hashVec[i];
+        utxo.satoshis = valueVec[i];
+        utxo.script = scriptUtxoVec[i];
+        utxos.push_back(utxo);
+    }
+    
+    pos = 0;
+    while ((pos = rawHexList.find(delimiterComma)) != std::string::npos) {
+        token = rawHexList.substr(0, pos);
+        //printf("token = %s\n", token.c_str());
+        rawHexVec.push_back(token);
+        rawHexList.erase(0, pos + delimiterComma.length());
+    }
+    rawHexVec.push_back(rawHexList);
+    
+    std::vector<Lock> locks;
+    Lock lock;
+    lock.address = address;
+
+    locks.push_back(lock);
+    
+    std::vector<std::vector<unsigned char>> placeholders;
+    for(size_t i = 0; i < locks.size(); i++) {
+        std::vector<unsigned char> placeholder = bufferAlloc(LOCK_DOMAIN);
+        placeholders.push_back(placeholder);
+    }
+    for(size_t i = 0; i < placeholders.size(); i++) {
+        CScript script(placeholders[i].begin(), placeholders[i].end());
+        tx.vin[i].scriptSig = script;
+    }
+
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+    tx.Serialize(ssTx);
+    std::string rawtx = HexStr(ssTx);
+    printf("rawtx: %s\n", rawtx.c_str());
+    
+    #if MAINNET
+    std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh"); //CHANGE LATER
+    #else
+    std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh");
+    #endif
+    
+    LocalPurse purse(purseWif);
+
+    std::string paidTxHex = purse.pay(rawtx, parents, utxos, rawHexVec);
+    
+    printf("paidTxHex: %s\n", paidTxHex.c_str());
+    
+    CMutableTransaction paidtx;
+    bool resPaid = DecodeHexTx(paidtx, paidTxHex, true);
+
+    if(resPaid) printf("Decode success!\n");
+
+    for(size_t i = 0; i < placeholders.size(); i++) {
+        CScript script;
+        paidtx.vin[i].scriptSig = script;
+    }
+
+    CDataStream ssTx_(SER_NETWORK, PROTOCOL_VERSION | 0);
+    paidtx.Serialize(ssTx_);
+    std::string paidTxCleared = HexStr(ssTx_);
+    printf("paidTxCleared: %s\n", paidTxCleared.c_str());
+    
+    snprintf(paidHex, paidHexSize, "%s", paidTxCleared.c_str());
+    
+    std::string prevTxids;
+    for(size_t i = 0; i < paidtx.vin.size(); i++) {
+        if(i > 0) {
+            prevTxids = prevTxids + std::string(",");
+        }
+        std::string hashHex = paidtx.vin[i].prevout.hash.GetHex();
+        prevTxids = prevTxids + hashHex;
+    }
+    
+    snprintf(parentTxids, parentTxidsSize, "%s", prevTxids.c_str());
+
+//    LocalOwner owner(ownerWif);
+//    std::string signedTx = owner.sign(paidTxCleared, parents, locks);
+//    printf("signedTx: %s\n", signedTx.c_str());
+//    snprintf(signedHex, signedHexSize, "%s", signedTx.c_str());
+}
+
+extern char* authorizerRunSign(char* signedHex, int signedHexSize, const char* parentHexStrs_, const char* ownerWif_, const char* paidTx_) {
+    
+    std::string ownerWif(ownerWif_);
+
+    #if MAINNET
+    SelectParams(CBaseChainParams::MAIN);
+    #else
+    SelectParams(CBaseChainParams::TESTNET);
+    #endif
+    CKey privKey = DecodeSecret(ownerWif);
+    ECC_Start();
+    CPubKey pubKey = privKey.GetPubKey();
+    ECC_Stop();
+    CTxDestination addrDest = CTxDestination(PKHash(pubKey));
+    std::string address = EncodeDestination(addrDest);
+    printf("address: %s\n", address.c_str());
+    
+    std::string parentHexStrs(parentHexStrs_);
+    std::string paidTx(paidTx_);
+    
+    std::string delimiterComma(",");
+    std::vector<std::string> parentHexVec;
+    
+    size_t pos = 0;
+    std::string token;
+    while ((pos = parentHexStrs.find(delimiterComma)) != std::string::npos) {
+        token = parentHexStrs.substr(0, pos);
+        //printf("token = %s\n", token.c_str());
+        parentHexVec.push_back(token);
+        parentHexStrs.erase(0, pos + delimiterComma.length());
+    }
+    parentHexVec.push_back(parentHexStrs);
+    
+    CMutableTransaction tx;
+    bool res = DecodeHexTx(tx, paidTx, true);
+    if(res) printf("Decode success!\n");
+    
+    std::vector<Parent> parents;
+    
+    for(size_t i = 0; i < parentHexVec.size(); i++) {
+        CMutableTransaction tx_;
+        bool res_ = DecodeHexTx(tx_, parentHexVec[i], true);
+        if(res_) printf("Decode success!\n");
+        
+        Parent parent;
+        CScript script = tx_.vout[tx.vin[i].prevout.n].scriptPubKey;
+        
+        std::string scriptStr(script.begin(), script.end());
+        parent.script = stringToHex(scriptStr);
+        parent.satoshis = tx_.vout[tx.vin[i].prevout.n].nValue;
+        parents.push_back(parent);
+    }
+    
+    std::vector<Lock> locks;
+    Lock lock;
+    lock.address = address;
+
+    locks.push_back(lock);
+    
+    LocalOwner owner(ownerWif);
+    
+    std::string signedTx = owner.sign(paidTx, parents, locks);
+    printf("signedTx: %s\n", signedTx.c_str());
+    snprintf(signedHex, signedHexSize, "%s", signedTx.c_str());
+}
+
 extern void authorizerGetNumTxnsForTransferRUN(long long *numTxns, const char *path_) {
     std::string path = std::string(path_) + std::string("/tokens.db");
     printf("path: %s\n", path.c_str());
@@ -10863,8 +12228,6 @@ extern void fileServiceGetNumTxnsForTransferRUN(long long *numTxns, const char *
 
     *numTxns = rec.numTxns;
 }
-
-
 
 extern void authorizerGetTransferDataRUN(long long index, char *txnIdHexStr, int txnIdSize, char *addressHexStr, int addressSize, char *mintIdHexStr, int mintIdSize, char *fromAddressHexStr, int fromAddressSize, long long *amount, char *jigIdHexStr, int jigIdSize, const char *path_) {
 
