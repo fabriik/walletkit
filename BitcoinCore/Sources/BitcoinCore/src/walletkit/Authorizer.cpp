@@ -1893,6 +1893,7 @@ class TxBuilder {
         std::vector<unsigned char> sign (KeyPair keyPair, unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
         std::vector<unsigned char> sign_authorizer (KeyPair keyPair, unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
         std::vector<unsigned char> _signature (KeyPair keyPair, unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
+        std::vector<unsigned char> _signature_owner (KeyPair keyPair, unsigned long nHashType, size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags);
         std::vector<unsigned char> getSig (KeyPair keyPair, unsigned long nHashType, size_t nIn, CScript subScript, unsigned long flags);
         void fillSig (size_t nIn, int nScriptChunk, std::vector<unsigned char> sig);
         void signTxIn(size_t nIn, KeyPair keyPair, CTxOut *txOut, int nScriptChunk, unsigned long nHashType, unsigned long flags);
@@ -2531,77 +2532,77 @@ std::vector<unsigned char> TxBuilder::_sighashPreimage (unsigned long nHashType,
 
         std::vector<unsigned char> bw;
         writeUInt32LE(bw, tx.nVersion);
-        printf("bw:nVersion \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:nVersion \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         write(bw, hashPrevouts_);
-        printf("bw:hashPrevouts \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:hashPrevouts \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         write(bw, hashSequence_);
-        printf("bw:hashSequence \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:hashSequence \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         write(bw, getTxHashBuf(tx.vin[nIn].prevout.hash));
-        printf("bw:getTxHashBu \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:getTxHashBu \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         writeUInt32LE(bw, tx.vin[nIn].prevout.n);
-        printf("bw:prevout \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:prevout \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         writeVarIntNum(bw, subScript.size());
-        printf("bw:subScript.size \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:subScript.size \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         write(bw, scriptToBuffer(subScript));
-        printf("bw:subScript \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:subScript \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         writeUInt64LEBn(bw, valueBn);
-        printf("bw:valueBn \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:valueBn \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         writeUInt32LE(bw, tx.vin[nIn].nSequence);
-        printf("bw:nSequence \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:nSequence \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         write(bw, hashOutputs_);
-        printf("bw:hashOutputs \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:hashOutputs \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         writeUInt32LE(bw, tx.nLockTime);
-        printf("bw:nLockTime \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:nLockTime \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
         writeUInt32LE(bw, nHashType >> 0);
-        printf("bw:nHashType \n");
-        for(size_t i = 0; i < bw.size(); i++) {
-            printf("%02x", bw[i]);
-        }
-        printf("\n");
+//        printf("bw:nHashType \n");
+//        for(size_t i = 0; i < bw.size(); i++) {
+//            printf("%02x", bw[i]);
+//        }
+//        printf("\n");
 
         return bw;
     }
@@ -11341,7 +11342,7 @@ std::string LocalOwner::sign(std::string rawtx, std::vector<Parent> parents, std
       keyPair.pubKey = bsvPublicKey;
 
       //bsvTxBuilder->sign_authorizer (keyPair, 0, i, prevout.scriptPubKey, prevout.nValue);
-      std::vector<unsigned char> sig = bsvTxBuilder->_signature(keyPair, 0, i, parentScript, parents[i].satoshis, TxBuilder::SCRIPT_ENABLE_SIGHASH_FORKID);
+      std::vector<unsigned char> sig = bsvTxBuilder->_signature_owner(keyPair, 0, i, parentScript, parents[i].satoshis, TxBuilder::SCRIPT_ENABLE_SIGHASH_FORKID);
       printf("sig:\n");
         for(size_t j = 0; j < sig.size(); j++) {
             printf("%02x", sig[j]);
@@ -11357,7 +11358,14 @@ std::string LocalOwner::sign(std::string rawtx, std::vector<Parent> parents, std
 
       std::vector<unsigned char> scriptBuffer;
 
-      std::vector<unsigned char> prefix = hexToUchBuffer(std::string("47"));
+      //std::vector<unsigned char> prefix = hexToUchBuffer(std::string("47"));
+        
+        char len[3];
+        sprintf(len, "%02x", sig.size());
+        printf("len = %s\n", len);
+        std::string lenStr(len);
+        std::vector<unsigned char> prefix = hexToUchBuffer(lenStr);
+        
       for(size_t j = 0; j < prefix.size(); j++) {
         scriptBuffer.push_back(prefix[j]);
       }
@@ -11380,7 +11388,7 @@ std::string LocalOwner::sign(std::string rawtx, std::vector<Parent> parents, std
         bsvTxBuilder->tx.Serialize(ssTx__);
         std::string signedTx1 = HexStr(ssTx__);
         printf("signedTx1: %s\n", signedTx1.c_str());
-        printf("Debugging\n");
+
 
       // Sign multi-sig inputs
     }
@@ -11589,6 +11597,51 @@ std::vector<unsigned char> TxBuilder::_signature (KeyPair keyPair, unsigned long
 
     bool res_message = keyPair.PrivKey.Sign(hashBuf_, vchSig);
     //bool res_message = keyPair.PrivKey.Sign(hashBuf_, vchSig, false, 0);
+    printf("vchSig:\n");
+    for(int i = 0; i < vchSig.size(); i++) {
+        printf("%02x", vchSig[i]);
+    }
+    printf("\n");
+    //std::string chunk6 = uchbufToString(chunk6_buf);
+    //printf("chunk6: %s\n", chunk6.c_str());
+
+    if(res_message) printf("SIGN SUCCESS\n");
+    else printf("SIGN FAILED\n");
+
+    ECC_Stop();
+
+    //vchSig = getLittleEndian(keyPair.PrivKey, vchSig, hashBuf);
+
+    vchSig.push_back((unsigned char) nHashType);
+
+    return vchSig;
+}
+
+std::vector<unsigned char> TxBuilder::_signature_owner (KeyPair keyPair, unsigned long nHashType, \
+    size_t nIn, CScript subScript, int64_t valueBn, unsigned long flags = SCRIPT_ENABLE_SIGHASH_FORKID) {
+    std::vector<unsigned char> vchSig;
+    if (nHashType == 0) {
+        nHashType = SigOperations::SIGHASH_ALL | SigOperations::SIGHASH_FORKID;
+    }
+    printf("NHASHTYPE: %lu\n", nHashType);
+    printf("nIn: %lu\n", nIn);
+    std::string str(subScript.begin(), subScript.end());
+    printf("subScript: %s\n", stringToHex(str).c_str());
+    printf("valueBn: %lld\n", valueBn);
+    std::vector<unsigned char> hashBuf = _sighash(nHashType, nIn, subScript, valueBn, flags);
+    printf("HASHBUF: \n");
+    for(int i = 0; i < hashBuf.size(); i++) {
+        printf("%02x ", hashBuf[i]);
+    }
+    printf("\n");
+
+    ECC_Start();
+
+    std::string hashBuf_str = uchbufToString(hashBuf);
+    uint256 hashBuf_ = uint256S(hashBuf_str);
+
+    //bool res_message = keyPair.PrivKey.Sign(hashBuf_, vchSig);
+    bool res_message = keyPair.PrivKey.Sign(hashBuf_, vchSig, false, 0);
     printf("vchSig:\n");
     for(int i = 0; i < vchSig.size(); i++) {
         printf("%02x", vchSig[i]);
@@ -11883,8 +11936,13 @@ std::string LocalPurse::payWithUtxos(TxBuilder *bsvTxBuilder, std::vector<Parent
     std::vector<unsigned char> bsvPublicKeyBuffer = hexToUchBuffer(bsvPublicKeyStr);
 
     std::vector<unsigned char> scriptBuffer;
-
-    std::vector<unsigned char> prefix = hexToUchBuffer(std::string("47"));
+      
+    char len[3];
+    sprintf(len, "%02x", sig.size());
+    printf("len = %s\n", len);
+    std::string lenStr(len);
+    std::vector<unsigned char> prefix = hexToUchBuffer(lenStr);
+      
     for(size_t j = 0; j < prefix.size(); j++) {
       scriptBuffer.push_back(prefix[j]);
     }
