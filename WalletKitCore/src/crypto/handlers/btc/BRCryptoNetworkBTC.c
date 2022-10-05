@@ -187,8 +187,14 @@ cyptoNetworkCreateWOC (BRCryptoNetworkListener listener,
                        BRCryptoCurrency nativeCurrency) {
     assert (0 == strcmp (desc, (isMainnet ? "mainnet" : "testnet")));
 
+    bool isMainnetChainParams = false;
+    if(strcmp(uids, "whatsonchainMain-testnet") == 0 ) { // FIX LATER WHEN DEBUGGING FOR PRODUCTION
+        isMainnetChainParams = true;
+    }
+    
     BRCryptoNetworkCreateContextBTC contextBTC = {
-        (isMainnet ? BRWOCParams : BRWOCTestNetParams)
+//        (isMainnet ? BRWOCParams : BRWOCTestNetParams)
+        (isMainnetChainParams ? BRWOCParams : BRWOCTestNetParams)
     };
 
     return cryptoNetworkAllocAndInit (sizeof (struct BRCryptoNetworkBTCRecord),

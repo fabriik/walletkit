@@ -7087,13 +7087,13 @@ extern void initializeDeviceWallet(const char *mnemonic_, const char *path_) {
       fprintf(stderr, "Opened database successfully\n");
     }
 
-#if WIPE
+//#if WIPE
     sql = (char *) "DROP TABLE DEVICE_WALLET;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     
     sql = (char *) "DROP TABLE DEVICE_WALLET_MAIN;";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-#endif
+//#endif
     
 #if MAINNET
     /* Create SQL statement */
@@ -11664,7 +11664,7 @@ std::vector<unsigned char> TxBuilder::_signature_owner (KeyPair keyPair, unsigne
 
 extern void authorizerRunGetScriptHash(char *scriptHashStr, int scriptHashSize) {
     #if MAINNET
-    std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh"); //CHANGE LATER
+    std::string purseWif("KxZfskuLBDxscekzao9LCApzXpQ8umCw8q5f9VASPjmAxLq3RL4b"); //CHANGE LATER
     #else
     std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh");
     #endif
@@ -11718,7 +11718,7 @@ extern void authorizerRunGetScriptHash(char *scriptHashStr, int scriptHashSize) 
 
 extern void authorizerRunGetScript(char *scriptStr, int scriptSize) {
     #if MAINNET
-    std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh"); //CHANGE LATER
+    std::string purseWif("KxZfskuLBDxscekzao9LCApzXpQ8umCw8q5f9VASPjmAxLq3RL4b"); //CHANGE LATER
     #else
     std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh");
     #endif
@@ -12155,7 +12155,7 @@ extern char* authorizerRunPay(char* paidHex, int paidHexSize, char *parentTxids,
     printf("rawtx: %s\n", rawtx.c_str());
     
     #if MAINNET
-    std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh"); //CHANGE LATER
+    std::string purseWif("KxZfskuLBDxscekzao9LCApzXpQ8umCw8q5f9VASPjmAxLq3RL4b"); //CHANGE LATER
     #else
     std::string purseWif("cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh");
     #endif

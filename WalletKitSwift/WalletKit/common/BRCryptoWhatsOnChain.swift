@@ -1814,7 +1814,8 @@ public class WhatsOnChainSystemClient: SystemClient {
                 "mintId" : "\(mintIdHex)",
                 "address" : "\(addressHex)",
                 "amount" : amount,
-                "jigId" : "\(jigIdHex)"
+                "jigId" : "\(jigIdHex)",
+                "network" : "\(blockchain)"
             ]
             
 //            let data0_: JSON.Dict? = WhatsOnChainSystemClient.wocPostRequestJSON (requestString: "http://localhost:8000/build/", data: data)
