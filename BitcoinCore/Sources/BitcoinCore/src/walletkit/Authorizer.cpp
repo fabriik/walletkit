@@ -4647,40 +4647,40 @@ std::string hexFromJSON(std::string json) {
 
 static BuildActionStruct sendSfpBuildAction(std::string hex, std::vector<TokenDataStruct> outputs, std::string path) {
     
-    std::string postRequest = buildActionToJSON(hex, outputs);
-    
-    printf("postRequest: %s\n", postRequest.c_str());
-    
-    char *response = (char *) malloc(5000);
-    
-    makeRequest("127.0.0.1", "12913", "POST", "/build", postRequest.c_str(), response);
-    
-    std::string responseStr(response);
-    
-    printf("responseStr = %s\n", responseStr.c_str());
-    
-    std::string delimiter = "{ \"hex\"";
-    std::string json = responseStr.substr(responseStr.find(delimiter), responseStr.length() - responseStr.find(delimiter));
-    printf("json: %s\n", json.c_str());
+//    std::string postRequest = buildActionToJSON(hex, outputs);
+//
+//    printf("postRequest: %s\n", postRequest.c_str());
+//
+//    char *response = (char *) malloc(5000);
+//
+//    makeRequest("127.0.0.1", "12913", "POST", "/build", postRequest.c_str(), response);
+//
+//    std::string responseStr(response);
+//
+//    printf("responseStr = %s\n", responseStr.c_str());
+//
+//    std::string delimiter = "{ \"hex\"";
+//    std::string json = responseStr.substr(responseStr.find(delimiter), responseStr.length() - responseStr.find(delimiter));
+//    printf("json: %s\n", json.c_str());
 
     //MOVE BELOW OUT OF WALLETKIT
-//    Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
-//
-//    BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
-//
-//    sfp.validate(tokenData.tokenTx);
-//
-//    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
-//    tokenData.bsvTxBuilder->tx.Serialize(ssTx);
-//    std::string hex_str = HexStr(ssTx);
-//    printf("hex_str: %s\n", hex_str.c_str());
-//
-//    std::string json = tokenData.bsvTxBuilder->sigOperations.toJSON();
-//
-//    json = std::string("{ \"hex\": \"") + hex_str + std::string("\",") + \
-//    json.substr(2,json.length()-2);
-//
-//    printf("json = %s\n", json.c_str());
+    Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
+
+    BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
+
+    sfp.validate(tokenData.tokenTx);
+
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+    tokenData.bsvTxBuilder->tx.Serialize(ssTx);
+    std::string hex_str = HexStr(ssTx);
+    printf("hex_str: %s\n", hex_str.c_str());
+
+    std::string json = tokenData.bsvTxBuilder->sigOperations.toJSON();
+
+    json = std::string("{ \"hex\": \"") + hex_str + std::string("\",") + \
+    json.substr(2,json.length()-2);
+
+    printf("json = %s\n", json.c_str());
     //MOVE ABOVE OUT OF WALLETKIT
     
     BuildActionStruct buildAction;
@@ -4695,39 +4695,39 @@ static BuildActionStruct sendSfpBuildAction(std::string hex, std::vector<TokenDa
 
 static void sendSfpAuthoriseAction(const char *hex, char *authHexStr, size_t authHexSize, std::string path) {
     
-    std::string postRequest = authoriseActionToJSON(hex);
-    
-    printf("postRequest: %s\n", postRequest.c_str());
-    
-    char *response = (char *) malloc(10000);
-    makeRequest("127.0.0.1", "12913", "POST", "/authorise", postRequest.c_str(), response);
-    std::string responseStr(response);
-    printf("responseStr = %s\n", responseStr.c_str());
-    
-    std::string delimiter = "{ \"hex\"";
-    std::string endBracket = "}";
-    std::string rawHex = responseStr.substr(responseStr.find(delimiter) + 10, responseStr.find(endBracket) - (responseStr.find(delimiter) + 10 + 2));
-    
-    printf("rawHex: %s\n", rawHex.c_str());
-    snprintf(authHexStr, authHexSize, "%s", rawHex.c_str());
+//    std::string postRequest = authoriseActionToJSON(hex);
+//
+//    printf("postRequest: %s\n", postRequest.c_str());
+//
+//    char *response = (char *) malloc(10000);
+//    makeRequest("127.0.0.1", "12913", "POST", "/authorise", postRequest.c_str(), response);
+//    std::string responseStr(response);
+//    printf("responseStr = %s\n", responseStr.c_str());
+//
+//    std::string delimiter = "{ \"hex\"";
+//    std::string endBracket = "}";
+//    std::string rawHex = responseStr.substr(responseStr.find(delimiter) + 10, responseStr.find(endBracket) - (responseStr.find(delimiter) + 10 + 2));
+//
+//    printf("rawHex: %s\n", rawHex.c_str());
+//    snprintf(authHexStr, authHexSize, "%s", rawHex.c_str());
     
     //Move below out of walletkit
-//    Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
-//    std::vector<TokenDataStruct> outputs;
-//
-//    BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
-//
-//    sfp.validate(tokenData.tokenTx);
-//
-//    sfp.authorize (tokenData.bsvTxBuilder, tokenData.tokenTx);
-//
-//    CDataStream ssTx2(SER_NETWORK, PROTOCOL_VERSION | 0);
-//    tokenData.bsvTxBuilder->tx.Serialize(ssTx2);
-//    std::string hex2 = HexStr(ssTx2);
-//    std::cout << "AUTHORIZE ACTION HEX: " << hex2 << "\n";
-//    //printf("AUTHORIZE ACTION HEX: %s\n", hex2.c_str());
-//
-//    snprintf(authHexStr, authHexSize, "%s", hex2.c_str());
+    Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
+    std::vector<TokenDataStruct> outputs;
+
+    BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
+
+    sfp.validate(tokenData.tokenTx);
+
+    sfp.authorize (tokenData.bsvTxBuilder, tokenData.tokenTx);
+
+    CDataStream ssTx2(SER_NETWORK, PROTOCOL_VERSION | 0);
+    tokenData.bsvTxBuilder->tx.Serialize(ssTx2);
+    std::string hex2 = HexStr(ssTx2);
+    std::cout << "AUTHORIZE ACTION HEX: " << hex2 << "\n";
+    //printf("AUTHORIZE ACTION HEX: %s\n", hex2.c_str());
+
+    snprintf(authHexStr, authHexSize, "%s", hex2.c_str());
     //Move above out of walletkit
 }
 
@@ -5826,7 +5826,77 @@ static void initializeAddresses(std::string path) {
            "VALUES (19, 4, 'mww7gFjtr4w4qgFfe3fxcW3KaEkqYmayYc', 12); ";
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     
-
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (20, 4, 'mhbtZaxB9nXpAdhUqDScctgjwxmy1AsiWc', 13); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (21, 5, 'muPS2JaqCsoZByyXXinYG8ymGZj9JiLvQP', 6); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (22, 4, 'mi8vzbeDG2D5TRZTSsYzAFmrgNja3DTwXm', 14); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (23, 4, 'mmwgN52ho6TmzdXGc8MGZ9khjzWXX2RsGn', 15); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (24, 5, 'mvxu41saiK2vWzYUFjLCScGHYoeFvCfUSj', 7); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (25, 4, 'mksdPeS65LCyA22n84iKhLZsy1CBARrTwb', 16); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (26, 4, 'mhT7mgdRbGKgfnJ7nbH54zR3DGykZ5zpBv', 17); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (27, 5, 'mpcaPLU5k54oPYSUbKFUHQGZncE9LMtyg2', 8); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (28, 4, 'mgCMQocCuvTMo8bJkf99gzBeG8KBc5UYVw', 18); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (29, 4, 'mrNpkUCgqpvFwm2RRhz2mCY6NFAwBg49c4', 19); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (30, 5, 'mqHKAvPRxQFVDpBqdEQnaQL8bkykK2MfaP', 9); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (31, 4, 'mxYuxqHj3p3mMhfbrSHpkJufWNCqY55s1D', 20); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (32, 4, 'mjSS7XfEwWjRx4MJJJh7CxKm3dqHXHZymk', 21); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (33, 5, 'mkgqsi6RsQQQVBaH8ZC5Qp7ntngvjFrPhy', 10); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (34, 4, 'mhSGeZ3onsgfJzUKbCDWJeadtCo666TywJ', 22); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (35, 4, 'mzAnnQ31DdjeUJLydfgpKPNUBM7ZMpuwUx', 23); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (36, 5, 'n2aC61w2RGavXu6XYv5oy25tujtgdyRFF3', 11); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    
+    sql = (char *) "INSERT INTO ADDRESSES (ID,WALLET_ID,ADDRESS,ADDRESS_INDEX) "  \
+           "VALUES (37, 4, 'muEyAT4idFJVhG9cHxbU4wvwn4p8TBexxE', 24); ";
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     
   if( rc != SQLITE_OK ){
      fprintf(stderr, "SQL error: %s\n", zErrMsg);
@@ -5835,7 +5905,7 @@ static void initializeAddresses(std::string path) {
      fprintf(stdout, "Address created successfully\n");
   }
     
-    /*printf("PRINTING ADDRESSES TABLE\n");
+    printf("PRINTING ADDRESSES TABLE\n");
       sql = (char *) "SELECT * FROM ADDRESSES";
 
       rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -5844,7 +5914,7 @@ static void initializeAddresses(std::string path) {
         sqlite3_free(zErrMsg);
       } else {
         fprintf(stdout, "Operation done successfully\n");
-      }*/
+      }
 
     sqlite3_close(db);
 
@@ -6270,6 +6340,17 @@ static void extractUtxoFromBsvjsTx(std::map<std::string,Utxo>& utxos, std::strin
         return;
     } else {
         fprintf(stderr, "Opened database successfully\n");
+    }
+    
+    printf("PRINTING ADDRESSES TABLE\n");
+    sql = (char *) "SELECT * FROM ADDRESSES";
+
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    sqlite3_free(zErrMsg);
+    } else {
+        fprintf(stdout, "Operation done successfully\n");
     }
 
     for (size_t i = 0; i < tx.vin.size(); i++) {
@@ -6929,6 +7010,20 @@ static void initializeWallet (std::string path) {
     } else {
       fprintf(stdout, "WALLETS Table created successfully\n");
     }
+    
+    sql = (char *) "INSERT INTO WALLETS (ID,USER_ID,MNEMONIC,XPUB,LAST_USED_ADDRESS_INDEX,NEXT_ADDRESS_INDEX) "  \
+          "VALUES (1, 0, 'ginger settle marine tissue robot crane night number ramp coast roast critic'," \
+                 "''," \
+                 "-1, 3); ";
+
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    if( rc != SQLITE_OK ){
+       fprintf(stderr, "SQL error: %s\n", zErrMsg);
+       sqlite3_free(zErrMsg);
+    } else {
+       fprintf(stdout, "WALLETS Record created successfully\n");
+    }
 
     sql = (char *) "INSERT INTO WALLETS (ID,USER_ID,MNEMONIC,XPUB,LAST_USED_ADDRESS_INDEX,NEXT_ADDRESS_INDEX) "  \
             "VALUES (2, 5, 'curious rule sadness often cancel uncle burger pull gesture more used measure'," \
@@ -7105,14 +7200,16 @@ extern void initializeDeviceWallet(const char *mnemonic_, const char *path_) {
       "ID INT PRIMARY KEY     NOT NULL," \
         "PRIVKEY          CHAR(500)," \
         "PUBKEY           CHAR(255)," \
-        "ADDRESS       CHAR(255));";
+        "ADDRESS           CHAR(255)," \
+        "MNEMONIC       CHAR(255));";
 #else
     /* Create SQL statement */
     sql = (char *) "CREATE TABLE DEVICE_WALLET("  \
       "ID INT PRIMARY KEY     NOT NULL," \
         "PRIVKEY          CHAR(500)," \
         "PUBKEY           CHAR(255)," \
-        "ADDRESS       CHAR(255));";
+        "ADDRESS            CHAR(255)," \
+        "MNEMONIC       CHAR(255));";
 #endif
 
     /* Execute SQL statement */
@@ -7183,13 +7280,13 @@ extern void initializeDeviceWallet(const char *mnemonic_, const char *path_) {
         printf("addrStr = %s\n", addrStr.c_str());
 
         #if MAINNET
-        std::string sql_query = std::string("INSERT INTO DEVICE_WALLET_MAIN (ID,PRIVKEY,PUBKEY,ADDRESS) ") \
+        std::string sql_query = std::string("INSERT INTO DEVICE_WALLET_MAIN (ID,PRIVKEY,PUBKEY,ADDRESS,MNEMONIC) ") \
         + std::string("VALUES (1, '") + Wif + std::string("', '") + std::string("', '") \
-        + addrStr + std::string("'); ");
+        + addrStr + std::string("', '") + mnemonic + std::string("'); ");
         #else
-        std::string sql_query = std::string("INSERT INTO DEVICE_WALLET (ID,PRIVKEY,PUBKEY,ADDRESS) ") \
+        std::string sql_query = std::string("INSERT INTO DEVICE_WALLET (ID,PRIVKEY,PUBKEY,ADDRESS, MNEMONIC) ") \
         + std::string("VALUES (1, '") + Wif + std::string("', '") + std::string("', '") \
-        + addrStr + std::string("'); ");
+        + addrStr + std::string("', '") + mnemonic + std::string("'); ");
         #endif
 
         //sql = (char *) "INSERT INTO RUN_WALLETS (ID,PRIVKEY,PUBKEY,ADDRESS) "  \
@@ -7208,6 +7305,51 @@ extern void initializeDeviceWallet(const char *mnemonic_, const char *path_) {
         } else {
          fprintf(stdout, "DEVICE_WALLET Record created successfully\n");
         }
+          
+          Records records0;
+         
+          std::string sql_query0 = std::string("SELECT * FROM WALLETS WHERE MNEMONIC = '") + mnemonic + std::string("';");
+          
+          sql = (char *) sql_query0.c_str();
+          rc = sqlite3_exec(db, sql, select_callback, &records0, &zErrMsg);
+          if( rc != SQLITE_OK ) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+          } else {
+            fprintf(stdout, "Operation done successfully\n");
+            printf("%lu records returned\n", records0.size());
+              
+              if(records0.size() == 0) {
+                  Records records1;
+                  std::string sql_query1 = std::string("SELECT * FROM WALLETS;");
+                  
+                  sql = (char *) sql_query1.c_str();
+                  rc = sqlite3_exec(db, sql, select_callback, &records1, &zErrMsg);
+                  if( rc != SQLITE_OK ) {
+                    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+                    sqlite3_free(zErrMsg);
+                  } else {
+                    fprintf(stdout, "Operation done successfully\n");
+                    printf("%lu records returned\n", records1.size());
+                  
+                    size_t index = records1.size() + 1;
+
+                    std::string sql_query2 = std::string("INSERT INTO WALLETS (ID,USER_ID,MNEMONIC,XPUB,LAST_USED_ADDRESS_INDEX,NEXT_ADDRESS_INDEX) VALUES(") + std::to_string(index) + std::string(", 0,'") + mnemonic + std::string("', '', -1, 3);");
+                      
+                      sql = (char *) sql_query2.c_str();
+
+                    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+                    if( rc != SQLITE_OK ){
+                     fprintf(stderr, "SQL error: %s\n", zErrMsg);
+                     sqlite3_free(zErrMsg);
+                    } else {
+                     fprintf(stdout, "WALLETS Record created successfully\n");
+                    }
+                      
+                  }
+              }
+          }
       }
     }
 
@@ -10115,7 +10257,7 @@ extern void getRUNAddressByWalletId(long long walletId, char *addressHexStr, int
     sqlite3_close(db);
 }
 
-extern void getRUNAddressByDevice(char *addressHexStr, int addressSize, const char *path_) {
+extern void getAddressByDevice(char *addressHexStr, int addressSize, const char *path_) {
     sqlite3 *db;
       char *zErrMsg = 0;
       int rc;
@@ -10160,6 +10302,81 @@ extern void getRUNAddressByDevice(char *addressHexStr, int addressSize, const ch
     sqlite3_close(db);
 }
 
+extern long long getWalletIdByDevice(const char *path_) {
+    sqlite3 *db;
+      char *zErrMsg = 0;
+      int rc;
+      char *sql;
+
+    long long res = 0;
+
+    std::string path = std::string(path_) + std::string("/tokens.db");
+
+      rc = sqlite3_open(path.c_str(), &db);
+
+      if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return;
+      } else {
+        fprintf(stderr, "Opened database successfully\n");
+      }
+
+    Records records;
+    
+    #if MAINNET
+    std::string sql_query = std::string("SELECT * FROM DEVICE_WALLET_MAIN;");
+    #else
+    std::string sql_query = std::string("SELECT * FROM DEVICE_WALLET;");
+    #endif
+
+    sql = (char *) sql_query.c_str();
+
+    rc = sqlite3_exec(db, sql, select_callback, &records, &zErrMsg);
+    //sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+    } else {
+      fprintf(stdout, "Operation done successfully\n");
+      printf("%lu records returned\n", records.size());
+        
+        sql = (char *) "SELECT * FROM WALLETS";
+
+        sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+        if( rc != SQLITE_OK ) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        } else {
+            fprintf(stdout, "Operation done successfully\n");
+        }
+
+      if(records.size() > 0) {
+        std::string mnemonic = records[0][4];
+          
+          Records records0;
+          
+          std::string sql_query0 = std::string("SELECT * FROM WALLETS WHERE MNEMONIC = '") + mnemonic + std::string("';");
+
+            sql = (char *) sql_query0.c_str();
+          
+          rc = sqlite3_exec(db, sql, select_callback, &records0, &zErrMsg);
+          
+          if( rc != SQLITE_OK ) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+          } else {
+            fprintf(stdout, "Operation done successfully\n");
+            printf("%lu records returned\n", records0.size());
+
+            if(records0.size() > 0) {
+                res = std::stoll(records0[0][0]);
+            }
+          }
+      }
+    }
+    sqlite3_close(db);
+    return res;
+}
 
 static int64_t getWalletIdByTxid(std::string txid, std::string path) {
     sqlite3 *db;
@@ -10596,8 +10813,8 @@ extern void authorizerSaveTransfer(const char *txid_, const char *address_, unsi
     printf("path = %s\n", path_);
 
     std::string txid(txid_);
-    //std::string address(address_);
-    std::string address = getSfpAddressByReceiveAddress(address_, path_);
+    std::string address(address_);
+    //std::string address = getSfpAddressByReceiveAddress(address_, path_);
     
     std::string fromAddress = std::string(fromAddress_);
 
@@ -10881,10 +11098,9 @@ extern void authorizerCreateSerialization(long long index, char *authHexStr, int
 
     std::string fromAddress = getNewReceiveAddressById(walletId, path);
     printf("FROM ADDRESS: %s\n", fromAddress.c_str());
-    //int64_t toWalletId = 3;
-    int64_t toWalletId = getWalletIdByAddress(toAddress_, path);
-    //int64_t toWalletId = 2;
-    std::string toAddress = getNewReceiveAddressById(toWalletId, path);
+//    int64_t toWalletId = getWalletIdByAddress(toAddress_, path);
+//    std::string toAddress = getNewReceiveAddressById(toWalletId, path);
+    std::string toAddress(rec.address);
     printf("TO ADDRESS: %s\n", toAddress.c_str());
     
     std::vector<std::string> addressArray;
