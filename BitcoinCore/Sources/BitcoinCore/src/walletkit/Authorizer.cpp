@@ -4651,36 +4651,36 @@ static BuildActionStruct sendSfpBuildAction(std::string hex, std::vector<TokenDa
     
     printf("postRequest: %s\n", postRequest.c_str());
     
-    /*char *response = (char *) malloc(5000);
+    char *response = (char *) malloc(5000);
     
     makeRequest("127.0.0.1", "12913", "POST", "/build", postRequest.c_str(), response);
     
     std::string responseStr(response);
     
-    printf("responseStr = %s\n", responseStr.c_str());*/
+    printf("responseStr = %s\n", responseStr.c_str());
     
-    /*std::string delimiter = "{ \"hex\"";
+    std::string delimiter = "{ \"hex\"";
     std::string json = responseStr.substr(responseStr.find(delimiter), responseStr.length() - responseStr.find(delimiter));
-    printf("json: %s\n", json.c_str());*/
+    printf("json: %s\n", json.c_str());
 
     //MOVE BELOW OUT OF WALLETKIT
-    Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
-
-    BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
-
-    sfp.validate(tokenData.tokenTx);
-
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
-    tokenData.bsvTxBuilder->tx.Serialize(ssTx);
-    std::string hex_str = HexStr(ssTx);
-    printf("hex_str: %s\n", hex_str.c_str());
-
-    std::string json = tokenData.bsvTxBuilder->sigOperations.toJSON();
-    
-    json = std::string("{ \"hex\": \"") + hex_str + std::string("\",") + \
-    json.substr(2,json.length()-2);
-    
-    printf("json = %s\n", json.c_str());
+//    Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
+//
+//    BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
+//
+//    sfp.validate(tokenData.tokenTx);
+//
+//    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | 0);
+//    tokenData.bsvTxBuilder->tx.Serialize(ssTx);
+//    std::string hex_str = HexStr(ssTx);
+//    printf("hex_str: %s\n", hex_str.c_str());
+//
+//    std::string json = tokenData.bsvTxBuilder->sigOperations.toJSON();
+//
+//    json = std::string("{ \"hex\": \"") + hex_str + std::string("\",") + \
+//    json.substr(2,json.length()-2);
+//
+//    printf("json = %s\n", json.c_str());
     //MOVE ABOVE OUT OF WALLETKIT
     
     BuildActionStruct buildAction;
@@ -4699,31 +4699,35 @@ static void sendSfpAuthoriseAction(const char *hex, char *authHexStr, size_t aut
     
     printf("postRequest: %s\n", postRequest.c_str());
     
-    /*char *response = (char *) malloc(10000);
-    
+    char *response = (char *) malloc(10000);
     makeRequest("127.0.0.1", "12913", "POST", "/authorise", postRequest.c_str(), response);
-    
     std::string responseStr(response);
+    printf("responseStr = %s\n", responseStr.c_str());
     
-    printf("responseStr = %s\n", responseStr.c_str());*/
+    std::string delimiter = "{ \"hex\"";
+    std::string endBracket = "}";
+    std::string rawHex = responseStr.substr(responseStr.find(delimiter) + 10, responseStr.find(endBracket) - (responseStr.find(delimiter) + 10 + 2));
+    
+    printf("rawHex: %s\n", rawHex.c_str());
+    snprintf(authHexStr, authHexSize, "%s", rawHex.c_str());
     
     //Move below out of walletkit
-    Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
-    std::vector<TokenDataStruct> outputs;
-
-    BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
-
-    sfp.validate(tokenData.tokenTx);
-
-    sfp.authorize (tokenData.bsvTxBuilder, tokenData.tokenTx);
-
-    CDataStream ssTx2(SER_NETWORK, PROTOCOL_VERSION | 0);
-    tokenData.bsvTxBuilder->tx.Serialize(ssTx2);
-    std::string hex2 = HexStr(ssTx2);
-    std::cout << "AUTHORIZE ACTION HEX: " << hex2 << "\n";
-    //printf("AUTHORIZE ACTION HEX: %s\n", hex2.c_str());
-
-    snprintf(authHexStr, authHexSize, "%s", hex2.c_str());
+//    Sfp sfp("cQLs3wbw3fUCZRe6KyWmu1DE4UmcG2R21NB4TX2fSM6k7uBTFMJA", path);
+//    std::vector<TokenDataStruct> outputs;
+//
+//    BuildTokenStruct tokenData = buildTokenTx(sfp, hex, outputs);
+//
+//    sfp.validate(tokenData.tokenTx);
+//
+//    sfp.authorize (tokenData.bsvTxBuilder, tokenData.tokenTx);
+//
+//    CDataStream ssTx2(SER_NETWORK, PROTOCOL_VERSION | 0);
+//    tokenData.bsvTxBuilder->tx.Serialize(ssTx2);
+//    std::string hex2 = HexStr(ssTx2);
+//    std::cout << "AUTHORIZE ACTION HEX: " << hex2 << "\n";
+//    //printf("AUTHORIZE ACTION HEX: %s\n", hex2.c_str());
+//
+//    snprintf(authHexStr, authHexSize, "%s", hex2.c_str());
     //Move above out of walletkit
 }
 
