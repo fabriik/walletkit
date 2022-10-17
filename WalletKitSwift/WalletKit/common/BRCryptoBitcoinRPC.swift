@@ -1410,7 +1410,14 @@ public class BitcoinRPCSystemClient: SystemClient {
         
         let storagePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.path
         
-        let walletId : Int64 = getWalletIdByPrimaryAddress(chunkedAddresses[0][0], storagePath)
+//        let walletId : Int64 = getWalletIdByPrimaryAddress(chunkedAddresses[0][0], storagePath)
+        
+        var addressHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
+        //getRUNAddressByWalletId(walletId, &addressHexBuf, Int32(addressHexBuf.count), storagePath)
+        getAddressByDevice(&addressHexBuf, Int32(addressHexBuf.count), storagePath)
+        let address = String(cString: addressHexBuf)
+        
+        let walletId : Int64 = getWalletIdByDevice(storagePath)
 
         getTransactionHistory(blockchainId: blockchainId) {
             (res: Result<[SystemClient.TransactionHistory], SystemClientError>) in

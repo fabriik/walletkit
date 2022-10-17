@@ -754,7 +754,14 @@ private_extern void
 cryptoWalletGetReceiveAddressWOC (char* addressStr,
                                   int size,
                                   const char* path_) {
-    getRUNAddressByDevice(addressStr, size, path_);
+    getAddressByDevice(addressStr, size, path_);
+}
+
+private_extern void
+cryptoWalletGetReceiveAddressRPC (char* addressStr,
+                                  int size,
+                                  const char* path_) {
+    getAddressByDeviceRPC(addressStr, size, path_);
 }
 
 private_extern void

@@ -34,6 +34,8 @@ extern void initializeDeviceWallet(const char *mnemonic_, const char *path);
 
 extern void getAddressByDevice(char *addressHexStr, int addressSize, const char *path_);
 
+extern void getAddressByDeviceRPC(char *addressHexStr, int addressSize, const char *path_);
+
 extern long long getWalletIdByDevice(const char *path_);
 
 extern void authorizerAddUtxo(const char *hex_, const char* path_);

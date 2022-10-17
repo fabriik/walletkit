@@ -1547,7 +1547,7 @@ public class WhatsOnChainSystemClient: SystemClient {
         
         var addressHexBuf = [Int8](repeating: 0, count: 255) // Buffer for C string
         //getRUNAddressByWalletId(walletId, &addressHexBuf, Int32(addressHexBuf.count), storagePath)
-        getRUNAddressByDevice(&addressHexBuf, Int32(addressHexBuf.count), storagePath)
+        getAddressByDevice(&addressHexBuf, Int32(addressHexBuf.count), storagePath)
         let address = String(cString: addressHexBuf)
         
         //let address = chunkedAddresses[0][0]
@@ -1605,7 +1605,7 @@ public class WhatsOnChainSystemClient: SystemClient {
 //                            let privkeyHex = String(cString: privkeyHexBuf)
                             
                             var addressHexBuf = [Int8](repeating: 0, count: 255)
-                            getRUNAddressByDevice(&addressHexBuf, Int32(addressHexBuf.count), storagePath)
+                            getAddressByDevice(&addressHexBuf, Int32(addressHexBuf.count), storagePath)
                             
                             let addressHex = String(cString: addressHexBuf)
                             
