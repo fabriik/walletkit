@@ -15,6 +15,7 @@ android {
 
         minSdkVersion androidConfig.minSdkVersion
         targetSdkVersion androidConfig.targetSdkVersion
+        ndkVersion '21.1.6352462'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
