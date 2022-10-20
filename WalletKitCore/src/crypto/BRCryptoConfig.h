@@ -115,7 +115,7 @@ DEFINE_MODES            ("bitcoinsv-testnet", CRYPTO_SYNC_MODE_P2P_ONLY)
 // MARK: - ETH
 
 #define NETWORK_NAME    "Ethereum"
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_ETH,  "ethereum-mainnet", NETWORK_NAME, "mainnet", true, 11779945, 6, 15)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_ETH,  "ethereum-mainnet", NETWORK_NAME, "mainnet", true, 11779945, 6, 10 * 60)
 DEFINE_NETWORK_FEE_ESTIMATE ("ethereum-mainnet", "25000000000", "1m", 1 * 60 * 1000)
 DEFINE_CURRENCY ("ethereum-mainnet",     "ethereum-mainnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_ETH,  "native",   NULL,   true)
     DEFINE_UNIT ("ethereum-mainnet:__native__",      "Wei",         "wei",      0,      "WEI")
@@ -166,7 +166,7 @@ DEFINE_ADDRESS_SCHEMES  ("ethereum-mainnet", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("ethereum-mainnet", CRYPTO_SYNC_MODE_API_ONLY)
 
 #if HAS_ETH_TESTNET
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_ETH,  "ethereum-goerli", NETWORK_NAME, "testnet", false, 9588166, 6, 15)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_ETH,  "ethereum-goerli", NETWORK_NAME, "testnet", false, 9588166, 6, 10 * 60)
 DEFINE_NETWORK_FEE_ESTIMATE ("ethereum-goerli", "10000000000", "1m", 1 * 60 * 1000)
 DEFINE_CURRENCY ("ethereum-goerli",     "ethereum-goerli:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_ETH,  "native",   NULL,   true)
     DEFINE_UNIT ("ethereum-goerli:__native__",      "Wei",         "wei",      0,      "WEI")
@@ -186,7 +186,7 @@ DEFINE_MODES            ("ethereum-goerli", CRYPTO_SYNC_MODE_API_ONLY)
 // MARK: XRP
 
 #define NETWORK_NAME    "Ripple"
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_XRP,  "ripple-mainnet", NETWORK_NAME, "mainnet", true, 61321875, 1, 5)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_XRP,  "ripple-mainnet", NETWORK_NAME, "mainnet", true, 61321875, 1, 10 * 60)
 DEFINE_NETWORK_FEE_ESTIMATE ("ripple-mainnet", "10", "1m", 1 * 60 * 1000)
 DEFINE_CURRENCY ("ripple-mainnet",     "ripple-mainnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_XRP,  "native",   NULL,   true)
     DEFINE_UNIT ("ripple-mainnet:__native__",      "Drop",       "drop",      0,      "DROP")
@@ -195,7 +195,7 @@ DEFINE_ADDRESS_SCHEMES  ("ripple-mainnet", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("ripple-mainnet", CRYPTO_SYNC_MODE_API_ONLY)
 
 #if HAS_XRP_TESTNET
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_XRP,  "ripple-testnet", NETWORK_NAME, "testnet", false, 50000, 1, 5)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_XRP,  "ripple-testnet", NETWORK_NAME, "testnet", false, 50000, 1, 10 * 60)
 DEFINE_NETWORK_FEE_ESTIMATE ("ripple-testnet", "10", "1m", 1 * 60 * 1000)
 DEFINE_CURRENCY ("ripple-testnet",     "ripple-testnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_XRP,  "native",   NULL,   true)
     DEFINE_UNIT ("ripple-testnet:__native__",      "Drop",       "drop",      0,      "DROP")
@@ -208,7 +208,7 @@ DEFINE_MODES            ("ripple-testnet", CRYPTO_SYNC_MODE_API_ONLY)
 // MARK: HBAR
 
 #define NETWORK_NAME    "Hedera"
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_HBAR,  "hedera-mainnet", NETWORK_NAME, "mainnet", true, 12295580, 1, 5)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_HBAR,  "hedera-mainnet", NETWORK_NAME, "mainnet", true, 12295580, 1, 10 * 60)
 DEFINE_NETWORK_FEE_ESTIMATE ("hedera-mainnet", "500000", "1m", 1 * 60 * 1000)
 DEFINE_CURRENCY ("hedera-mainnet",     "hedera-mainnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_HBAR,  "native",   NULL,   true)
     DEFINE_UNIT ("hedera-mainnet:__native__",  "tinybar",     "thbar",  0,  "tℏ")
@@ -217,7 +217,7 @@ DEFINE_ADDRESS_SCHEMES  ("hedera-mainnet", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("hedera-mainnet", CRYPTO_SYNC_MODE_API_ONLY)
 
 #if HAS_HBAR_TESTNET
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_HBAR,  "hedera-testnet", NETWORK_NAME, "testnet", false, 50000, 1, 5)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_HBAR,  "hedera-testnet", NETWORK_NAME, "testnet", false, 50000, 1, 10 * 60)
 DEFINE_NETWORK_FEE_ESTIMATE ("hedera-testnet", "500000", "1m", 1 * 60 * 1000)
 DEFINE_CURRENCY ("hedera-testnet",     "hedera-testnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_HBAR,  "native",   NULL,   true)
     DEFINE_UNIT ("hedera-testnet:__native__",  "tinybar",     "thbar",  0,  "tℏ")
@@ -230,7 +230,7 @@ DEFINE_MODES            ("hedera-testnet", CRYPTO_SYNC_MODE_API_ONLY)
 // MARK: Tezos
 
 #define NETWORK_NAME    "Tezos"
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_XTZ,  "tezos-mainnet", NETWORK_NAME, "mainnet", true, 1328407, 6, 60)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_XTZ,  "tezos-mainnet", NETWORK_NAME, "mainnet", true, 1328407, 6, 10 * 60)
 DEFINE_NETWORK_FEE_ESTIMATE ("tezos-mainnet", "500000", "1m", 1 * 60 * 1000)
 DEFINE_CURRENCY ("tezos-mainnet",     "tezos-mainnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_XTZ,  "native",   NULL,   true)
     DEFINE_UNIT ("tezos-mainnet:__native__",  "mutez",     "mtz",   0,  "mutez")
@@ -239,7 +239,7 @@ DEFINE_ADDRESS_SCHEMES  ("tezos-mainnet", CRYPTO_ADDRESS_SCHEME_NATIVE)
 DEFINE_MODES            ("tezos-mainnet", CRYPTO_SYNC_MODE_API_ONLY)
 
 #if HAS_XTZ_TESTNET
-DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_XTZ,  "tezos-testnet", NETWORK_NAME, "testnet", false, 50000, 6, 60)
+DEFINE_NETWORK (CRYPTO_NETWORK_TYPE_XTZ,  "tezos-testnet", NETWORK_NAME, "testnet", false, 50000, 6, 10 * 60)
 DEFINE_NETWORK_FEE_ESTIMATE ("tezos-testnet", "500000", "1m", 1 * 60 * 1000)
 DEFINE_CURRENCY ("tezos-testnet",     "tezos-testnet:__native__",   NETWORK_NAME,  CRYPTO_NETWORK_CURRENCY_XTZ,  "native",   NULL,   true)
     DEFINE_UNIT ("tezos-testnet:__native__",  "mutez",     "mtz",   0,  "mutez")
