@@ -84,7 +84,7 @@ WalletKit is delivered as a Git repository for development within Xcode and Andr
 
 Clone WalletKit with
 ```
-git clone --recurse-submodules git@github.com:fabriik/walletkit.git WalletKit
+git clone --recurse-submodules
 ```
 If you've cloned WalletKit but without the `--recursive-submodules` flag then perform:
 ```
@@ -122,11 +122,9 @@ WalletKit can be started in Android Studio by opening the WalletKitJava director
 
 ## 1.0
 
-Version 1.0 is currently the basis for the Fabriik iOS and Android mobile applications
+Version 1.0 is currently the basis for the iOS and Android mobile applications
 
 # Support
-
-Contact [Fabriik](https://fabriik.com "Fabriik")
 
 [badge-languages]: https://img.shields.io/badge/languages-C%20%7C%20Swift%20%7C%20Java-orange.svg
 [badge-platforms]: https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20macOS%20%7C%20Linux-lightgrey.svg
