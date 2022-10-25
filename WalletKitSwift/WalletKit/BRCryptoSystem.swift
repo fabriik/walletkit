@@ -720,9 +720,10 @@ public final class System {
                     }
                     defer { bundles.forEach { cryptoClientCurrencyBundleRelease($0) }}
                     cryptoClientAnnounceCurrencies (self.core, &bundles, bundles.count)
-                    
-                    let event = SystemEvent.discoveredNetworks(networks: self.networks)
-                    self.listener?.handleSystemEvent(system: self, event: event)
+             
+//                    Causes the entire network to be re-discovered
+//                    let event = SystemEvent.discoveredNetworks(networks: self.networks)
+//                    self.listener?.handleSystemEvent(system: self, event: event)
                     
                     completion? (Result.success(self.networks))
                 },
